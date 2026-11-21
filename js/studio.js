@@ -947,6 +947,8 @@ $('#btnFbSend').onclick = async () => {
 async function poll(force = false) {
   try {
     const st = await (await fetch('/api/state?t=' + Date.now())).json();
+    if (pollFails > 3) { log('poll pulih — koneksi ke server kembali normal', 'ok'); }
+    pollFails = 0;
     serverState = st;
     if (st.project) $('#projName').textContent = st.project;
     $('#contractText').textContent = st.contract || '(belum ada kontrak — agent menulis contract.md sebelum coding)';
@@ -964,7 +966,13 @@ async function poll(force = false) {
         if (!first) clearDirty();
       }
     }
-  } catch (e) { log('poll gagal: ' + e.message, 'err'); }
+  } catch (e) {
+    // Gagal sementara (proxy/jaringan) wajar saat job agent berjalan — retry senyap,
+    // hanya laporkan bila benar-benar terus-menerus, dan laporkan saat pulih.
+    pollFails = (pollFails || 0) + 1;
+    if (pollFails === 4) log('poll terganggu (jaringan/proxy) — mencoba terus…', 'dim');
+    if (pollFails === 12) log('poll masih gagal: ' + e.message, 'err');
+  }
 }
 poll();
 setInterval(() => poll(), 4000);

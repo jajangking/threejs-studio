@@ -1,13 +1,29 @@
-# Kontrak — kipas angin (update)
+# Kontrak — kabel data charger
+
 ## Konsep
-Standing fan studio: 3 bilah melengkung benar-benar terpisah 120° (4 segmen twist + ujung aksen + tulang), gril sangkar 3D tertutup (cincin konsentris depan/belakang, jari-jari penuh, kawat memanjang, cincin tengah). Mekanika nyala/putar/osilasi tetap.
+Kabel data/charger USB-C premium dengan anyaman braided gelap, digelung bebas di atas tikar meja studio. Fokus pada detail konektor: housing aluminium, strain relief berusuk, tip logam, dan LED aksen biru. Suasana studio gelap sinematik dengan tiga lapis komposisi.
+
 ## Objek wajib
-base, base-ring, base-top, pole, pole-collar, collar-knob, panel, btn-1..3, panel-knob, led, cord, backdrop; head berisi motor, motor-face, motor-back, gril depan/belakang + jari-jari penuh, cage-wire-01..24, cage-hoop-1..3, grill-cap, osc-knob, rotor (hub + blade-1..3 segmen s1..s4 + tip + spine).
-## Palet
-#23262e badan, #2b2f38 motor, #c9ced8 kawat gril, #f0f4fb bilah, #ff6b4a aksen, #4ade80/#ffd166 tombol+LED, #1a1e26 tanah, #0e1118 langit.
+- desk-mat: tikar meja silindris sebagai foreground.
+- cable-braid: instances segmen silinder mengikuti spline, radius 0.06 m.
+- cable-ring-a/b: cincin logam aksen dekat konektor.
+- connector-a, connector-b: group berisi boot karet + 4 ridge + shell aluminium + seam + tip + insert + LED emissive.
+
+## Palet hex
+- Kabel anyam: #1c2633
+- Karet boot: #161d28, ridge #26303e
+- Aluminium shell: #c4ccd6, seam #7b8794
+- Tip gunmetal: #6d7a88, insert #090c12
+- LED: emissive #37e6ff
+- Tikar: #1a2331, ground #141924, background #080b12
+
 ## Kamera
-[10,6.5,12] target [0,4.2,0] fov 48.
+Posisi [7.5,9.5,11.5], target [0,0.2,0], fov 45 — pandangan atas miring, seluruh gelungan dan kedua konektor masuk frame.
+
 ## Lighting
-hemi 0.6, key directional 2.2 + bayangan, fill hangat, rim biru; bloom 0.35/0.4/0.82.
-## Acceptance
-A. Smoke 8/8. B. Terlihat jelas 3 bilah dan sangkar gril menyambung depan-belakang; mekanika masih berfungsi.
+Hemisphere #93a9cc intensity 0.9; key directional hangat #fff0da 2.4 dari [7,11,6] dengan bayangan; fill #6f8fd0 0.9; rim #b9ccff 1.1; exposure 1.25; bloom 0.55/0.5/0.75.
+
+## Acceptance criteria
+A. Smoke 8/8 lolos (terang, subjek 2-70% frame, semua objek terlihat).
+B. Konektor terbaca detail, kabel mulus tanpa jump, LED menyala dengan bloom.
+C. Gerbang estetika vision ≥6 dan verdict layak final.
