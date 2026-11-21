@@ -743,6 +743,31 @@ def _render(iter_id, notes):
 
 
 VISION_MODELS = ['meituan/longcat-2.5:free', 'qwen/qwen4-max:free']
+
+def vision_question(spec=None):
+    """Rubrik vision mengikuti kontrak proyek — jangan pakai rubrik kota untuk semua scene."""
+    spec = spec if isinstance(spec, dict) else read_json(os.path.join(ROOT, 'scene.json'), {})
+    meta = spec.get('meta') or {}
+    contract = read_text(os.path.join(ROOT, 'contract.md')) or ''
+    m = re.search(r'## Konsep\s*\n(.+)', contract)
+    concept = (meta.get('concept') or (m.group(1).strip() if m else '') or meta.get('name') or 'subjek utama')
+    names = [o.get('id') for o in (spec.get('objects') or [])[:14] if o.get('id')]
+    return (
+        'Kritik render 3D ini sebagai karya FINAL (bukan cek teknis), sesuai proyek berikut. '
+        f'NAMA: {meta.get("name", "scene")}. KONSEP: {concept[:350]}. '
+        f'KOMPONEN KUNCI: {", ".join(names)}. '
+        'Nilai 1-10 tiap dimensi: '
+        'komposisi (kedalaman 3 lapis, subjek sesuai konsep jadi focal point), '
+        'detail (komponen kunci terbaca, tidak berantakan/aliasing), '
+        'material (metal/plastik/kaca terbaca, tidak flat atau blowout), '
+        'cahaya (arah konsisten, bayangan masuk akal, highlight tidak berlebihan), '
+        'atmosfer (mood sesuai konsep, latar tidak mengganggu subjek). '
+        'Cek pula: apakah subjek utama sesuai konsep benar-benar terlihat jelas? '
+        'Jangan menyebut objek yang tidak ada di daftar komponen di atas. '
+        'WAJIB akhiri respons dengan tiga baris persis format ini:\n'
+        'SKOR: komposisi=<n> detail=<n> material=<n> cahaya=<n> atmosfer=<n>\n'
+        'VERDICT: <LAYAK FINAL atau MASIH TUTORIAL>\n'
+        'KRITIK: <satu kalimat perbaikan paling berdampak, bahasa Indonesia>')
 VISION_QUESTION = (
     'Kritik render 3D ini sebagai karya final (bukan cek teknis). Nilai 1-10 tiap dimensi: '
     'komposisi (kedalaman 3 lapis, focal point), detail (jendela individual, atap, elemen kehidupan), '
@@ -765,7 +790,7 @@ def vision_gate(iter_id):
             data = http_json(ROUTER_URL, {
                 'model': vm, 'max_tokens': 700, 'temperature': 0.1,
                 'messages': [{'role': 'user', 'content': [
-                    {'type': 'text', 'text': VISION_QUESTION},
+                    {'type': 'text', 'text': vision_question()},
                     {'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,' + img}},
                 ]}],
             }, timeout=90)
@@ -1685,6 +1710,16 @@ class Handler(SimpleHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length) or b'{}')
         except Exception as e:
             return self._send(400, {'ok': False, 'error': str(e)})
+        if path == '/api/vision/check':
+            it = payload.get('iter') or ''
+            if not it:
+                ds = [d for d in os.listdir(os.path.join(ROOT, 'iterations')) if os.path.isdir(os.path.join(ROOT, 'iterations', d))]
+                it = sorted(ds)[-1] if ds else ''
+            v = vision_gate(it)
+            if v:
+                with open(os.path.join(ROOT, 'vision-final.json'), 'w') as f:
+                    json.dump({'iteration': it, **v}, f, ensure_ascii=False, indent=2)
+            return self._send(200, {'ok': bool(v), 'iteration': it, 'vision': v})
         if path == '/api/reference':
             data = payload.get('data', '')
             if ',' in data:

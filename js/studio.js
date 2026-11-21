@@ -500,6 +500,14 @@ function renderBedahPanel() {
   const v1 = document.createElement('span'); v1.className = 'mech-val'; v1.textContent = Math.round(explodeFactor * 100) + '%';
   s1.oninput = () => { explodeFactor = parseFloat(s1.value); v1.textContent = Math.round(explodeFactor * 100) + '%'; };
   r1.append(l1, s1, v1); body.appendChild(r1);
+  const rp = document.createElement('div'); rp.className = 'mech-row bedah-toggles';
+  [[0, 'Rapat'], [0.35, 'Lapisan'], [0.7, 'Terbuka']].forEach(([f, label]) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.onclick = () => { explodeFactor = f; s1.value = f; v1.textContent = Math.round(f * 100) + '%'; if (handle) { applyExplode(handle, f); lastExplode = f; } };
+    rp.appendChild(b);
+  });
+  body.appendChild(rp);
 
   // Section
   const r2 = document.createElement('div'); r2.className = 'mech-row';
@@ -1206,6 +1214,16 @@ $('#btnExpHtml').onclick = () => { location.href = '/api/export?format=html'; to
 $('#btnExpZip').onclick = () => { location.href = '/api/export?format=zip'; toast('Mengunduh ZIP lengkap…'); };
 $('#btnExpJson').onclick = () => { location.href = '/api/export?format=json'; toast('Mengunduh scene.json…'); };
 $('#btnExpBom').onclick = () => { location.href = '/api/export?format=bom'; toast('Mengunduh BOM daftar part…'); };
+$('#btnCheckFinal').onclick = async () => {
+  toast('Vision menilai render terakhir…', 60000);
+  try {
+    const r = await fetch('/api/vision/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(x => x.json());
+    const v = r.vision;
+    if (!v) return toast('Vision tidak tersedia (model sibuk) — coba lagi', 6000);
+    toast(`Cek Final ${r.iteration}: ${v.pass ? 'LULAS' : 'GAGAL'} · rata-rata ${v.avg.toFixed(1)}/10 · ${v.scores} — ${v.critique}`, 14000);
+    const fb = document.getElementById('feedbackText'); if (fb) fb.value = `Vision ${r.iteration}: ${v.scores} (avg ${v.avg}) — ${v.critique}`;
+  } catch (e) { toast('Cek final gagal: ' + e.message, 6000); }
+};
 const _btnExpVideo = $('#btnExpVideo');
 if (_btnExpVideo) _btnExpVideo.onclick = async () => {
   try {

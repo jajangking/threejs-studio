@@ -1,7 +1,7 @@
 # Kontrak — Remote Kontrol Teardown
 
 ## Konsep
-Remote kontrol inframerah modern ditampilkan sebagai diagram exploded technis dengan 4 lapis: keypad & tombol (depan), casing faceplate transparan, membrane + kontak karbon, PCB hijau berisi komponen elektronik, serta casing belakang berisi dua baterai AA dan pegas terminal. Subjek menjadi pusat perhatian di atas panggung gelap dengan pencahayaan produk.
+Remote kontrol inframerah modern dengan **tampilan default terakit rapat** di atas panggung gelap dan pencahayaan produk. Strukturnya tetap lengkap: keypad & tombol (depan), casing faceplate transparan, membrane + kontak karbon, PCB hijau berisi MCU/kristal/IR LED, serta casing belakang berisi dua baterai AA dan pegas terminal. Mode teardown tersedia lewat panel 🔬 Bedah: preset **Rapat / Lapisan / Terbuka** dan slider exploded 0–100% untuk memisahkan 4 lapis tersebut sesuai kebutuhan. Jadi yang dinilai pada render default adalah remote utuh yang rapi — bukan diagram exploded.
 
 ## Objek wajib
 - Casing depan transparan + jendela IR merah + emblem.
