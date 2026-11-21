@@ -44,6 +44,7 @@ $('#drawerBackdrop').onclick = closeDrawers;
 window.addEventListener('resize', () => { if (!mqMobile.matches) closeDrawers(); });
 
 // ── console capture ──
+let pollFails = 0;
 const conLog = $('#consoleLog');
 function log(msg, cls = 'dim') {
   const t = new Date().toLocaleTimeString('id-ID');
@@ -54,6 +55,24 @@ function log(msg, cls = 'dim') {
   conLog.parentElement.scrollTop = conLog.parentElement.scrollHeight;
 }
 window.addEventListener('error', e => { consoleErrors++; log('ERROR: ' + e.message, 'err'); updErrBadge(); });
+// Status agent dari server (persisten di console-journal.json) — konsol tidak kosong setelah refresh
+const SEEN_STATUS = new Set();
+function renderServerStatus(lines) {
+  for (const s of lines || []) {
+    const key = String(s.at) + '|' + s.text;
+    if (SEEN_STATUS.has(key)) continue;
+    SEEN_STATUS.add(key);
+    const t = s.text || '';
+    const cls = /error|gagal|timeout/i.test(t) ? 'err'
+      : /selesai|lolos|PASS|validasi spec OK/i.test(t) ? 'ok'
+      : /berpikir|memanggil|merespons|vision|perbaikan|render/i.test(t) ? 'warn' : 'dim';
+    const div = document.createElement('div');
+    div.className = cls;
+    div.textContent = `[AGENT ${s.time || ''}] ${t}`;
+    conLog.appendChild(div);
+    conLog.parentElement.scrollTop = conLog.parentElement.scrollHeight;
+  }
+}
 window.addEventListener('unhandledrejection', e => { consoleErrors++; log('REJECTION: ' + (e.reason?.message || e.reason), 'err'); updErrBadge(); });
 function updErrBadge() { const b = $('#errBadge'); b.style.display = consoleErrors ? '' : 'none'; b.textContent = consoleErrors; }
 
@@ -975,6 +994,7 @@ async function poll(force = false) {
   }
 }
 poll();
+setTimeout(pollChat, 50);  // tunggu deklarasi chatPollTimer (hindari TDZ)
 setInterval(() => poll(), 4000);
 log('studio siap — menunggu scene dari agent…', 'ok');
 
@@ -1061,6 +1081,7 @@ async function pollChat() {
   try {
     const st = await (await fetch('/api/chat/state?t=' + Date.now())).json();
     chatStatusLines = st.status_lines || [];
+    renderServerStatus(chatStatusLines);
     chatRunning = !!st.running;
     renderChat(st.messages || []);
     updateChatStatus();

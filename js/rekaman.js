@@ -250,7 +250,9 @@ async function adPoll() {
     const st = await (await fetch('/api/chat/state?t=' + Date.now())).json();
     adLog(st.messages || []);
     agentRunning = !!st.running;
-    $('#adStatus').textContent = agentRunning ? (st.status || 'agent bekerja…') : (st.messages?.length ? 'siap' : 'belum ada percakapan');
+    const lastLine = (st.status_lines || []).slice(-1)[0];
+    $('#adStatus').textContent = agentRunning ? (lastLine ? lastLine.text : (st.status || 'agent bekerja…')) : (st.messages?.length ? 'siap' : 'belum ada percakapan');
+    if (lastLine) $('#adStatus').title = (st.status_lines || []).map(x => x.time + ' ' + x.text).join('\n');
     $('#adSend').disabled = agentRunning || !$('#adText').value.trim();
     if (agentRunning) agentPollH = setTimeout(adPoll, 3000);
     else if (agentPollH) { clearTimeout(agentPollH); agentPollH = null; toast('Agent selesai — scene akan termuat ulang bila berubah'); }

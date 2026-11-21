@@ -58,6 +58,13 @@ CHAT = {
     'last_iteration': None,
 }
 CHAT_STATUS_MAX = 80
+CONSOLE_JOURNAL = os.path.join(ROOT, 'console-journal.json')
+try:
+    _journal = json.load(open(CONSOLE_JOURNAL))
+    if isinstance(_journal, list):
+        CHAT['status_lines'] = _journal[-CHAT_STATUS_MAX:]
+except Exception:
+    pass
 
 
 # ─────────────────────────── util file ───────────────────────────
@@ -147,9 +154,16 @@ def chat_state():
 
 def status(line):
     stamp = time.strftime('%H:%M:%S')
+    entry = {'at': time.time(), 'time': stamp, 'text': line}
     with LOCK:
-        CHAT['status_lines'].append({'at': time.time(), 'time': stamp, 'text': line})
+        CHAT['status_lines'].append(entry)
         del CHAT['status_lines'][:-CHAT_STATUS_MAX]
+        snapshot = list(CHAT['status_lines'][-CHAT_STATUS_MAX:])
+    try:
+        with open(CONSOLE_JOURNAL, 'w') as f:
+            json.dump(snapshot, f, ensure_ascii=False)
+    except Exception:
+        pass
     print(f'[chat {stamp}] {line}', flush=True)
 
 
@@ -360,8 +374,9 @@ def call_opencode(model, prompt_text):
         'model': {'providerID': 'opencode', 'modelID': model},
         'resume': True,
     }, timeout=30)
-    status('opencode: session dibuat, menunggu model selesai…')
+    status('🧠 berpikir… model menyusun spec 3D (sesi aktif, bisa 1-3 menit)')
     _opencode_post(f'/api/experimental/session/{sid}/wait', {}, timeout=330)
+    status('✍️ model merespons — membaca & memvalidasi jawaban…')
     msgs = _opencode_get(f'/api/session/{sid}/message', timeout=20)
     items = msgs.get('data', msgs) if isinstance(msgs, dict) else msgs
     if isinstance(items, dict):
@@ -686,9 +701,12 @@ def ask_llm(model, user_text, repair=None, max_tokens=20000):
     messages = [{'role': 'system', 'content': SYSTEM_PROMPT},
                 {'role': 'user', 'content': prompt}]
     if backend == 'hermes':
-        status(f'memanggil hermes:{mid}…')
+        status(f'memanggil hermes:{mid} — 🧠 berpikir…')
         return call_hermes(mid, messages, max_tokens=max_tokens)
-    return call_router(mid, messages, max_tokens=max_tokens)
+    status(f'🧠 {mid} berpikir…')
+    out = call_router(mid, messages, max_tokens=max_tokens)
+    status('✍️ model merespons — membaca & memvalidasi jawaban…')
+    return out
 
 
 # ─────────────────────────── agent job ───────────────────────────
