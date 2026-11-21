@@ -598,6 +598,8 @@ FISIKA RAPIER (untuk simulasi nyata: jatuh, tumbukan, domino, bandul, roda bermo
 - emissiveIntensity WAJIB ≤ 5 (nilai 12 membuat objek blown-out putih dan merusak penilaian vision).
 - Reset fisika tersedia di viewport; render headless mensimulasikan 2 detik sebelum screenshot.
 
+REFERENSI TEKNIS: bila prompt disertai bagian '=== REFERENSI TEKNIS ===', itu fakta ukuran & daftar komponen dari sumber eksternal — ikuti, jangan karang bentuk generik. Beri id objek yang mengandung keyword yang tercantum supaya gerbang semantik bisa memverifikasi. Contoh: kabel data harus punya jacket, shield, drain, vbus, gnd, dplus, dminus, cc, strain, usb-a, usb-c, tongue, dan pin (boleh instances 24 transform). Detail teknis lebih penting daripada dekorasi.
+
 STANDAR ESTETIKA (smoke test lolos SAJA TIDAK CUKUP — hasil harus layak final, bukan seperti tutorial):
 - Komposisi 3 lapis: foreground (jalan/trotoar), midground (subjek), background (langit/bulan).
 - Detail: atap gedung punya AC unit/tangki/antena; jalan punya trotoar, crosswalk, marka; ada elemen skala manusia (mobil/orang).
@@ -635,6 +637,15 @@ def build_agent_prompt(user_text, repair=None, selection=None):
     history = history[-6:] if isinstance(history, list) else []
 
     parts = ['=== KONTRAK SCENE SAAT INI ===', contract or '(belum ada)', '']
+    cards = knowledge_for(user_text)
+    if cards:
+        parts += ['=== REFERENSI TEKNIS — WAJIB, JANGAN BUAT MODEL GENERIK ===']
+        for c in cards:
+            parts += [f"## {c.get('title')}", c.get('facts', ''), 'BAGIAN WAJIB (id objek HARUS mengandung salah satu keyword):']
+            for req in c.get('required_parts', []):
+                parts.append(f"- {req.get('label')}: keyword {req.get('keywords')}, minimal {req.get('min')}")
+        parts.append('Setiap bagian wajib harus ADA di spec dengan id yang cocok — gerbang semantik akan menolak bila hilang. Detail teknis > dekorasi.')
+        parts.append('')
     ref = read_text(os.path.join(ROOT, 'reference-analysis.md'))
     if ref:
         parts += ['=== REFERENSI FOTO USER (analisis vision — bangun scene MENDEKATI referensi ini) ===', ref, '']
@@ -759,6 +770,56 @@ def _render(iter_id, notes):
             'checks': checks, 'npass': npass, 'ntotal': len(checks),
             'errors': (rep.get('errors') if isinstance(rep, dict) else []) or []}
 
+
+# ── Knowledge card teknis + gerbang semantik ──
+KNOWLEDGE_DIR = os.path.join(ROOT, 'knowledge')
+
+def knowledge_for(text):
+    cards, low = [], (text or '').lower()
+    try:
+        names = sorted(os.listdir(KNOWLEDGE_DIR))
+    except OSError:
+        return cards
+    for fn in names:
+        if not fn.endswith('.json'):
+            continue
+        card = read_json(os.path.join(KNOWLEDGE_DIR, fn), None)
+        if isinstance(card, dict) and any(k.lower() in low for k in card.get('keywords', [])):
+            cards.append(card)
+    return cards
+
+def semantic_check(spec, text):
+    """Cek bagian WAJIB sesuai knowledge card — verifikasi makna, bukan cuma struktur."""
+    cards = knowledge_for(text)
+    if not cards:
+        return None
+    summaries = []
+    for card in cards:
+        found = {}
+        for req in card.get('required_parts', []):
+            n = 0
+            def walk(o):
+                nonlocal n
+                hay = ((o.get('id') or '') + ' ' + (o.get('name') or '')).lower()
+                if any(k.lower() in hay for k in req.get('keywords', [])):
+                    tr = (o.get('instances') or {}).get('transforms') or []
+                    n += max(1, len(tr)) if req.get('count_instances') and tr else 1
+                for c in o.get('children') or []:
+                    walk(c)
+            for o in spec.get('objects', []):
+                walk(o)
+            mn = req.get('min', 1)
+            found[req['key']] = {'label': req.get('label', req['key']), 'count': n, 'min': mn, 'ok': n >= mn}
+        missing = [f"{v['label']} ({v['count']}/{v['min']})" for v in found.values() if not v['ok']]
+        summaries.append({
+            'card': card.get('id'), 'title': card.get('title'),
+            'ok': not missing,
+            'score': round(100 * sum(v['ok'] for v in found.values()) / max(1, len(found))),
+            'found': found, 'missing': missing,
+        })
+    score = min(s['score'] for s in summaries)
+    return {'ok': all(s['ok'] for s in summaries), 'score': score, 'cards': summaries,
+            'missing': [m for s in summaries for m in s['missing']]}
 
 VISION_MODELS = ['meituan/longcat-2.5:free', 'qwen/qwen4-max:free']
 
@@ -943,6 +1004,20 @@ def run_agent_job(job_id, user_text, model):
         status(f'menulis scene.json + contract.md · {iter_id}')
         render = _render(iter_id, reply)
 
+        # Gerbang semantik: bagian teknis sesuai knowledge card (bukan model generik)
+        sem = semantic_check(result['scene'], user_text)
+        sem_summary = ''
+        if sem:
+            sem_summary = f"Semantik: {sem['score']}% {'LENGKAP ✓' if sem['ok'] else 'KURANG ✗ — ' + ', '.join(sem['missing'][:4])}"
+            status(sem_summary)
+            try:
+                with open(os.path.join(ROOT, 'iterations', iter_id, 'semantic.json'), 'w') as f:
+                    json.dump(sem, f, ensure_ascii=False, indent=2)
+            except OSError:
+                pass
+        else:
+            status('semantik: tidak ada knowledge card untuk prompt ini')
+
         # Satu ronde perbaikan jika smoke gagal.
         if not render['ok']:
             if not _job_active(job_id):
@@ -1036,7 +1111,7 @@ def run_agent_job(job_id, user_text, model):
         if not _job_active(job_id):
             return
         perubahan = f"Perubahan diterapkan: {mode0}" if mode0 else ''
-        full_reply = f"{reply}\n\n{summary}" + (f"\n{vision_summary}" if vision_summary else '') + (f"\n{perubahan}" if perubahan else '')
+        full_reply = f"{reply}\n\n{summary}" + (f"\n{sem_summary}" if sem_summary else '') + (f"\n{vision_summary}" if vision_summary else '') + (f"\n{perubahan}" if perubahan else '')
         append_chat_message({
             'role': 'agent', 'text': full_reply, 'at': time.time(),
             'iteration': iter_id, 'model': used_model,

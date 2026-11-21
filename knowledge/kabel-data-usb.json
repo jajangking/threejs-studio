@@ -1,0 +1,22 @@
+{
+  "id": "kabel-data-usb",
+  "title": "Kabel data USB-C ↔ USB-A — referensi teknis",
+  "keywords": ["kabel data", "kabel charger", "kabel usb", "usb-c", "usb c", "usbc", "type-c", "usb-a", "usb a", "type-a", "charger", "kabel"],
+  "note": "Semua ukuran dalam mm; agent mengonversi ke meter pada spec (1 mm = 0.001 m). id objek WAJIB mengandung keyword pada required_parts.",
+  "facts": "Kabel data USB modern terdiri dari: (1) jaket luar TPE/PVC diameter 4,0-4,8 mm; (2) anyangan tembaga + foil aluminium sebagai shield EMI; (3) drain wire bersama anyangan; (4) 4-5 konduktor awg 24-28 berisolasi: Vbus merah, GND hitam, D+ hijau, D- putih, CC biru (opsional pada USB-A, WAJIB pada USB-C); (5) kawat pengikat/strain relief sepanjang ~20 mm di tiap ujung; (6) konektor USB-A: cangkang logam persegi panjang 12,0 x 7,0 x 4,5 mm, 4 pin datar (Vbus, D-, D+, GND) dengan spasi 2,5 mm, insulasi hitam, tab logam; (7) konektor USB-C: cangkang logam rounded-rectangle 8,26 x 2,56 x ~6,7 mm, lidah (tongue) di tengah, 24 kontak dalam dua baris (12 atas + 12 bawah) ditambah pin CC1/CC2 di samping, bukaan oval khas; (8) ferrite bead opsional dekat konektor. Kabel agar terlihat alami: konduktor saling mengepang (helix) di dalam jaket, bukan lurus sejajar.",
+  "required_parts": [
+    {"key": "jacket", "label": "Jaket luar kabel", "keywords": ["jacket", "jaket", "sheath", "outer", "kabel-utama"], "min": 1, "types": ["cylinder", "tube", "capsule"]},
+    {"key": "shield", "label": "Anyangan/foil shield EMI", "keywords": ["shield", "braid", "foil", "anyang"], "min": 1},
+    {"key": "drain", "label": "Drain wire", "keywords": ["drain"], "min": 1},
+    {"key": "vbus", "label": "Konduktor Vbus (merah)", "keywords": ["vbus", "power", "merah", "red"], "min": 1},
+    {"key": "gnd", "label": "Konduktor GND (hitam)", "keywords": ["gnd", "ground", "hitam", "black"], "min": 1},
+    {"key": "dplus", "label": "Konduktor D+ (hijau)", "keywords": ["dplus", "d+", "hijau", "green"], "min": 1},
+    {"key": "dminus", "label": "Konduktor D- (putih)", "keywords": ["dminus", "d-", "putih", "white"], "min": 1},
+    {"key": "cc", "label": "Konduktor CC (biru, USB-C)", "keywords": ["cc", "biru", "blue"], "min": 1},
+    {"key": "strain", "label": "Strain relief di ujung kabel", "keywords": ["strain", "relief", "boot", "selongsong"], "min": 1},
+    {"key": "usb-a", "label": "Konektor USB-A (12x7x4.5mm, 4 pin)", "keywords": ["usb-a", "usba", "type-a", "connector-a"], "min": 1},
+    {"key": "usb-c", "label": "Konektor USB-C (8.26x2.56mm, rounded-rect)", "keywords": ["usb-c", "usbc", "type-c", "connector-c"], "min": 1},
+    {"key": "tongue", "label": "Lidah dalam USB-C", "keywords": ["tongue", "lidah"], "min": 1},
+    {"key": "pins", "label": "Kontak USB-C (24 pin dua baris)", "keywords": ["pin", "kontak", "contact"], "min": 12, "count_instances": true}
+  ]
+}
