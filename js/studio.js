@@ -465,6 +465,22 @@ function clearMeasure() {
   measureGroup = null; measurePts = [];
 }
 
+// Rentang slider potong: dari posisi objek SPEC (bukan bbox scene — langit/bintang radius 70rb merusaknya)
+function sectionRange(axis) {
+  const i = { x: 0, y: 1, z: 2 }[axis] ?? 0;
+  let lo = Infinity, hi = -Infinity;
+  for (const o of spec.objects || []) {
+    const m = handle.registry.get(o.id);
+    if (!m) continue;
+    m.updateWorldMatrix(true, false);
+    const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld).getComponent(i);
+    if (!Number.isFinite(p) || Math.abs(p) > 1000) continue;
+    lo = Math.min(lo, p); hi = Math.max(hi, p);
+  }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo > 200) { lo = -20; hi = 20; }
+  return [Math.floor(lo - 2), Math.ceil(hi + 2)];
+}
+
 // ── panel bedah assembly (exploded/section/xray/isolate/label) ──
 function renderBedahPanel() {
   const el = $('#vpBedah'); if (!el) return;
@@ -501,18 +517,15 @@ function renderBedahPanel() {
   const r3 = document.createElement('div'); r3.className = 'mech-row';
   const l3 = document.createElement('span'); l3.className = 'mech-label'; l3.textContent = 'Posisi potong';
   const s3 = document.createElement('input'); s3.type = 'range';
-  const box = new THREE.Box3();
-  handle.scene.traverse(o => { if (o.isMesh && !o.userData?.isSky && o.name !== '__ground') box.expandByObject(o); });
-  const axi = { x: 0, y: 1, z: 2 }[sectionOpts.axis];
-  s3.min = box.isEmpty() ? -5 : Math.floor(box.min.getComponent(axi) - 1);
-  s3.max = box.isEmpty() ? 5 : Math.ceil(box.max.getComponent(axi) + 1);
+  const [rlo, rhi] = sectionRange(sectionOpts.axis);
+  s3.min = rlo; s3.max = rhi;
   s3.step = 0.05; s3.value = sectionOpts.pos;
   const v3 = document.createElement('span'); v3.className = 'mech-val'; v3.textContent = (+sectionOpts.pos).toFixed(1);
   s3.oninput = () => { sectionOpts.pos = parseFloat(s3.value); v3.textContent = sectionOpts.pos.toFixed(1); setSection(handle, renderer, sectionOpts); };
   ax.addEventListener('change', () => {
-    const i2 = { x: 0, y: 1, z: 2 }[sectionOpts.axis];
-    s3.min = Math.floor(box.min.getComponent(i2) - 1); s3.max = Math.ceil(box.max.getComponent(i2) + 1);
-    sectionOpts.pos = (box.min.getComponent(i2) + box.max.getComponent(i2)) / 2;
+    const [nlo, nhi] = sectionRange(sectionOpts.axis);
+    s3.min = nlo; s3.max = nhi;
+    sectionOpts.pos = (nlo + nhi) / 2;
     s3.value = sectionOpts.pos; v3.textContent = sectionOpts.pos.toFixed(1);
     setSection(handle, renderer, sectionOpts);
   });

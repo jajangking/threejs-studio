@@ -456,7 +456,12 @@ export function makeComposer(handle, renderer, w, h) {
 // Frame kamera otomatis dari bounding box scene (anti objek di luar frame / kamera di dalam objek).
 export function frameCamera(camera, target, scene, controls, opts = {}) {
   const box = new THREE.Box3();
-  scene.traverse(o => { if (o.isMesh && o.visible && o.name !== '__ground' && !o.userData?.isSky) box.expandByObject(o); });
+  scene.traverse(o => {
+    if (!o.isMesh || !o.visible || o.name === '__ground' || o.userData?.isSky) return;
+    const g = o.geometry;
+    if (g) { if (!g.boundingSphere) g.computeBoundingSphere(); if ((g.boundingSphere?.radius || 0) > 1000) return; }
+    box.expandByObject(o);
+  });
   if (box.isEmpty()) return null;
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());

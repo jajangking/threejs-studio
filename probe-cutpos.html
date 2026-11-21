@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+</head><body style="margin:0">
+<pre id="out"></pre>
+<script type="module">
+import * as THREE from 'three';
+import { buildScene, makeRenderer, setSection, syncCaps } from './js/scene-builder.js';
+const out = document.getElementById('out');
+try {
+  const spec = await (await fetch('./scene.json')).json();
+  const handle = await buildScene(spec);
+  const renderer = makeRenderer(document.createElement('canvas'), 800, 450, { preserveDrawingBuffer: true });
+  renderer.setSize(800, 450, false);
+  handle.camera.position.set(8, 6, 10); handle.camera.lookAt(0, 4, 0);
+  const g = renderer.getContext();
+  const px = new Uint8Array(4 * 800 * 450);
+  const res = {};
+  for (const pos of [-3, -1, 0, 1, 3]) {
+    setSection(handle, renderer, { enabled: true, axis: 'x', pos, flip: false, caps: true });
+    syncCaps(handle);
+    renderer.render(handle.scene, handle.camera);
+    g.readPixels(0, 0, 800, 450, g.RGBA, g.UNSIGNED_BYTE, px);
+    let bright = 0, cap = 0, tot = 0;
+    for (let i = 0; i < px.length; i += 4 * 31) {
+      tot++;
+      const r = px[i], gg = px[i+1], b = px[i+2];
+      if (r + gg + b > 150) bright++;
+      if (Math.abs(r-gg) < 12 && Math.abs(gg-b) < 12 && r > 110 && r < 220) cap++;
+    }
+    res['x=' + pos] = {
+      planeConstant: renderer.clippingPlanes[0]?.constant,
+      capPosX: +handle.capSystem?.cap.position.x.toFixed(2),
+      brightPct: +(bright / tot * 100).toFixed(1),
+      capPct: +(cap / tot * 100).toFixed(1)
+    };
+  }
+  out.textContent = JSON.stringify(res);
+} catch (e) { out.textContent = JSON.stringify({error: String(e), stack: e.stack}); }
+</script></body></html>
