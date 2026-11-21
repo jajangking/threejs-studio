@@ -980,8 +980,9 @@ export function applyExplode(handle, factor) {
     const prev = m.userData.explodeOff || new THREE.Vector3();
     m.position.sub(prev);
     const next = dir.multiplyScalar(factor * r);
-    // Clamp root ke atas lantai (world y >= 0.05)
-    if (m.parent === handle.scene && base.y + next.y < 0.05) next.y = 0.05 - base.y;
+    // Clamp root ke atas lantai HANYA saat benar-benar meledak — di factor 0
+    // clamp ini menggeser objek (posisi y=0 → 0.05) setiap kali tombol Rapat ditekan.
+    if (factor > 0 && m.parent === handle.scene && base.y + next.y < 0.05) next.y = 0.05 - base.y;
     m.position.add(next);
     m.userData.explodeOff = next;
   };
