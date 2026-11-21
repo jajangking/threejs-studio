@@ -461,6 +461,23 @@ BATAS KEMAMPUAN (JUJUR — jangan klaim fitur yang tidak kamu buat):
 - Bila user minta fitur UI baru yang tidak bisa lewat spec: katakan jujur itu perlu perubahan kode studio, bukan spec.
 - Balasanmu akan diverifikasi terhadap diff yang benar-benar diterapkan — jangan menyebut perubahan yang tidak ada di diff.
 
+KAMERA SINEMATIK (cameraPath) — kamu bisa menyutradarai kamera profesional:
+Format: "cameraPath": {"shots":[...], "loop":true, "autoplay":true}
+Shot types (tiap shot punya duration detik, ease linear/in/out/inOut, caption teks narasi, target=id objek ATAU [x,y,z]):
+- orbit: {"type":"orbit","target":"head","radius":7,"height":4,"startAngle":0,"sweep":360,"duration":6}
+  radius bisa diganti framing terukur: "framing":{"object":"motor","fill":0.5} → jarak dihitung otomatis
+  dari ukuran objek & fov (fill = fraksi frame yang diisi objek; preset: closeup 0.7, medium 0.4, wide 0.18, establish 0.1)
+- dolly: {"type":"dolly","from":[x,y,z],"to":[x,y,z],"target":"motor","duration":4}
+- zoom: {"type":"zoom","target":"blade-1-s1","fromDistance":8,"toDistance":2,"duration":3}
+- crane: {"type":"crane","from":[6,1,6],"toY":9,"target":"base","duration":4}
+- path: {"type":"path","points":[[...],[...],[...]],"target":"head","duration":8} — spline Catmull-Rom mulus
+- Tiap shot bisa "explode":[0,0.6] — kamera bergerak sambil part meledak perlahan (reveal detail assembly).
+- caption: narasi per shot, mis. "Motor memutar rotor 10 rad/detik" — untuk tur "cara kerja mesin".
+Alternatif keyframes manual: {"keyframes":[{"t":0,"pos":[...],"target":[...],"fov":50,"caption":"..."},...],"duration":10}
+ATURAN: untuk "tunjukkan detail/cara kerja", buat tur 4-6 shot: establish orbit → closeup komponen kunci (framing!)
+→ exploded reveal → pull back. Jarak SELALU terukur lewat framing/fill, jangan angka asal.
+Verifikasi shot: render.py --time <detik> menghasilkan screenshot pose shot tsb.
+
 ATURAN DIFF:
 - upserts HANYA objek baru/berubah. id sama = ganti objek itu; id baru = tambah.
 - JANGAN salin objek yang tidak berubah ke upserts. Output kecil = cepat.
@@ -782,6 +799,8 @@ def apply_diff(current, diff):
         spec['lights'] = diff['lights']
     if isinstance(diff.get('joints'), list):
         spec['joints'] = diff['joints']
+    if isinstance(diff.get('cameraPath'), dict):
+        spec['cameraPath'] = diff['cameraPath']
     # Auto-prune: joint yang merujuk body terhapus/tidak ada dibuang otomatis
     # (hapus objek fisika tidak boleh meninggalkan joint yatim -> build error)
     if isinstance(spec.get('joints'), list):
@@ -1268,6 +1287,8 @@ import {{ OrbitControls }} from '{CDN}/examples/jsm/controls/OrbitControls.js';
 const SPEC = {json.dumps(spec, ensure_ascii=False)};
 const cv = document.getElementById('cv');
 const handle = await buildScene(SPEC);
+const cinePath = compileCameraPath(handle);
+let cinePlaying = !!(cinePath && cinePath.autoplay), cineT = 0;
 const renderer = makeRenderer(cv, innerWidth, innerHeight, {{ exposure: SPEC.environment?.exposure ?? 1.1 }});
 handle.camera.aspect = innerWidth / innerHeight; handle.camera.updateProjectionMatrix();
 handle.composer = makeComposer(handle, renderer, innerWidth, innerHeight);
@@ -1355,6 +1376,17 @@ const secOpts = {{ enabled: false, axis: 'x', pos: 0, flip: false }};
   cp.onclick = () => {{ secOpts.caps = !secOpts.caps; cp.textContent = (secOpts.caps ? '☑' : '☐') + ' Caps'; cp.className = secOpts.caps ? 'on' : ''; if (secOpts.enabled) setSection(handle, renderer, secOpts); }};
   r4.appendChild(cp); bedah.appendChild(r4);
 }}
+// Caption + tombol sinematik
+const cineCap = document.createElement('div');
+cineCap.style.cssText = 'position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:rgba(10,12,16,.85);border:1px solid #2e333d;color:#e8eaef;padding:7px 18px;border-radius:8px;font:13px system-ui;display:none;max-width:70%;text-align:center;z-index:9';
+document.body.appendChild(cineCap);
+if (cinePath) {{
+  const cb = document.createElement('button');
+  cb.textContent = cinePlaying ? '⏹ Stop' : '🎥 Putar';
+  cb.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(22,24,29,.92);border:1px solid #4f8cff;color:#cfd3dc;border-radius:8px;padding:6px 14px;font:12px system-ui;cursor:pointer;z-index:9';
+  cb.onclick = () => {{ cinePlaying = !cinePlaying; controls.enabled = !cinePlaying; cb.textContent = cinePlaying ? '⏹ Stop' : '🎥 Putar'; if (cinePlaying) cineT = 0; else {{ cineCap.style.display = 'none'; const sm = sampleCameraPath(handle, cinePath, cineT); if (sm) controls.target.copy(sm.target); }} }};
+  document.body.appendChild(cb);
+}}
 // Timeline scrub
 const tl = document.createElement('div');
 tl.style.cssText = 'position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(22,24,29,.9);border:1px solid #2e333d;border-radius:8px;padding:5px 12px;font:11px system-ui;color:#8b91a0';
@@ -1364,15 +1396,23 @@ tlPlay.onclick = () => {{ playing = !playing; tlPlay.textContent = playing ? '�
 const tlTime = document.createElement('span'); tlTime.textContent = '0.0s'; tlTime.style.cssText = 'font-family:monospace;width:38px;text-align:right';
 const tlSlider = document.createElement('input'); tlSlider.type = 'range'; tlSlider.min = 0; tlSlider.max = 10; tlSlider.step = 0.05; tlSlider.value = 0;
 tlSlider.style.cssText = 'width:180px;accent-color:#4f8cff';
+if (cinePath) tlSlider.max = cinePath.dur.toFixed(1);
 tlSlider.oninput = () => {{
   playing = false; tlPlay.textContent = '▶';
+  if (cinePath) {{
+    cineT = parseFloat(tlSlider.value);
+    const sm = sampleCameraPath(handle, cinePath, cineT);
+    if (sm) {{ handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target); handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix(); if (sm.explode !== null) {{ applyExplode(handle, sm.explode); lastExplodeF = sm.explode; }} cineCap.textContent = sm.caption || ''; cineCap.style.display = sm.caption ? 'block' : 'none'; }}
+    tlTime.textContent = cineT.toFixed(1) + 's';
+    return;
+  }}
   animT = parseFloat(tlSlider.value);
   if (handle.physicsWorld) {{ resetPhysics(handle); const n = Math.min(600, Math.round(animT * 60)); for (let i = 0; i < n; i++) stepPhysics(handle, 1 / 60); }}
   applyAnimations(handle, animT, powerOn);
   tlTime.textContent = animT.toFixed(1) + 's';
 }};
 tl.append(tlPlay, tlTime, tlSlider);
-if ((handle.animations || []).length || handle.physicsWorld) document.body.appendChild(tl);
+if ((handle.animations || []).length || handle.physicsWorld || cinePath) document.body.appendChild(tl);
 let physAcc = 0;
 if (handle.physicsWorld) {{
   const b = document.createElement('button');
@@ -1382,16 +1422,29 @@ if (handle.physicsWorld) {{
 }}
 renderer.setAnimationLoop(() => {{
   const dt = Math.min(clock.getDelta(), 0.1);
+  if (cinePlaying && cinePath) {{
+    controls.enabled = false;
+    cineT += dt;
+    const sm = sampleCameraPath(handle, cinePath, cineT);
+    if (sm) {{
+      handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target);
+      controls.target.copy(sm.target);
+      handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix();
+      if (sm.explode !== null) {{ applyExplode(handle, sm.explode); lastExplodeF = sm.explode; }}
+      cineCap.textContent = sm.caption || ''; cineCap.style.display = sm.caption ? 'block' : 'none';
+    }}
+    if (document.activeElement !== tlSlider) {{ tlSlider.value = (cineT % cinePath.dur).toFixed(2); tlTime.textContent = (cineT % cinePath.dur).toFixed(1) + 's'; }}
+  }}
   if (playing) {{
     animT += dt;
-    if (handle.physicsWorld && explodeF === 0) {{
+    if (handle.physicsWorld && explodeF === 0 && !cinePlaying) {{
       physAcc += dt;
       let n = 0;
       while (physAcc >= 1 / 60 && n < 4) {{ stepPhysics(handle, 1 / 60); physAcc -= 1 / 60; n++; }}
     }}
   }}
   applyAnimations(handle, animT, powerOn);
-  if (explodeF > 0 || lastExplodeF > 0) {{ applyExplode(handle, explodeF); lastExplodeF = explodeF; }}
+  if (!cinePlaying && (explodeF > 0 || lastExplodeF > 0)) {{ applyExplode(handle, explodeF); lastExplodeF = explodeF; }}
   if (handle.capSystem) syncCaps(handle);
   if (playing && document.activeElement !== tlSlider) {{ tlSlider.value = (animT % 10).toFixed(2); tlTime.textContent = (animT % 10).toFixed(1) + 's'; }}
   controls.update();

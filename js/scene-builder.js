@@ -411,7 +411,7 @@ export function frameCamera(camera, target, scene, controls, opts = {}) {
 }
 
 // Smoke test otomatis — bug kelas klasik dideteksi SEBELUM vision loop.
-export function smokeCheck(handle, renderer) {
+export function smokeCheck(handle, renderer, opts = {}) {
   const { scene, camera, registry, errors, spec } = handle;
   const report = { errors: [...errors], checks: [] };
   const add = (id, pass, detail) => report.checks.push({ id, pass, detail });
@@ -471,7 +471,11 @@ export function smokeCheck(handle, renderer) {
     const b = new THREE.Box3().setFromObject(m);
     (frustum.intersectsBox(b) ? inView : outView).push(o.id);
   }
-  add('objects_in_view', outView.length === 0, outView.length ? `di luar frame: ${outView.join(', ')}` : `${inView.length} objek dalam frame`);
+  if (opts.cinematic) {
+    add('objects_in_view', true, `pose sinematik — closeup sengaja (subject coverage ${(coverage * 100).toFixed(0)}%)`);
+  } else {
+    add('objects_in_view', outView.length === 0, outView.length ? `di luar frame: ${outView.join(', ')}` : `${inView.length} objek dalam frame`);
+  }
 
   // 6. Oklusi: objek utama tidak boleh terhalang objek lain dari sudut kamera
   const ray = new THREE.Raycaster();
@@ -614,6 +618,121 @@ export function resetPhysics(handle) {
     const m = handle.registry.get(id);
     if (m) { m.position.copy(init.p); m.quaternion.copy(init.q); }
   }
+}
+
+// ─────────────────────────── KAMERA SINEMATIK ───────────────────────────
+// Spec: cameraPath = { shots: [...], loop?, autoplay? } ATAU { keyframes: [...], duration }
+// Shot: { id?, type: orbit|dolly|zoom|crane|path, duration, target?(id objek|[x,y,z]),
+//         framing?{object,fill}|preset closeup/medium/wide, ease?, caption?, explode?[from,to], ... }
+// Framing terukur: jarak = (ukuranObjek/2) / (tan(fov/2) * fill) — objek mengisi `fill` frame.
+
+const EASE = {
+  linear: u => u,
+  in: u => u * u * u,
+  out: u => 1 - Math.pow(1 - u, 3),
+  inOut: u => u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2,
+};
+const FILL = { closeup: 0.7, medium: 0.4, wide: 0.18, establish: 0.1 };
+
+export function frameDistance(size, fovDeg, fill = 0.5) {
+  return (size / 2) / (Math.tan((fovDeg * Math.PI / 180) / 2) * fill);
+}
+
+function objWorldPos(handle, t) {
+  if (Array.isArray(t)) return new THREE.Vector3(...t);
+  const m = handle.registry.get(t);
+  if (!m) return new THREE.Vector3(0, 2, 0);
+  m.updateWorldMatrix(true, false);
+  return new THREE.Vector3().setFromMatrixPosition(m.matrixWorld);
+}
+function objSize(handle, id) {
+  const m = handle.registry.get(id);
+  if (!m) return 2;
+  const box = new THREE.Box3().setFromObject(m);
+  const s = box.getSize(new THREE.Vector3());
+  return Math.max(0.3, Math.max(s.x, s.y, s.z));
+}
+
+export function compileCameraPath(handle) {
+  const cp = handle.spec.cameraPath;
+  if (!cp) return null;
+  const fovBase = handle.spec.camera?.fov ?? 50;
+  if (Array.isArray(cp.keyframes) && cp.keyframes.length >= 2) {
+    const kfs = cp.keyframes.map(k => ({ t: k.t ?? 0, pos: new THREE.Vector3(...(k.pos || [0, 3, 8])), target: new THREE.Vector3(...(k.target || [0, 2, 0])), fov: k.fov ?? fovBase, caption: k.caption || '' }));
+    kfs.sort((a, b) => a.t - b.t);
+    const dur = cp.duration ?? kfs[kfs.length - 1].t;
+    const posCurve = kfs.length >= 3 ? new THREE.CatmullRomCurve3(kfs.map(k => k.pos)) : null;
+    return { mode: 'keyframes', kfs, dur, posCurve, loop: cp.loop !== false, autoplay: cp.autoplay !== false, shots: [] };
+  }
+  const shots = (cp.shots || []).map((s, i) => {
+    const dur = Math.max(0.5, s.duration ?? 4);
+    const fov = s.fov ?? fovBase;
+    const ease = EASE[s.ease] || EASE.inOut;
+    const fill = s.framing?.fill ?? FILL[s.preset] ?? 0.4;
+    const frameId = s.framing?.object || (typeof s.target === 'string' ? s.target : null);
+    const dist = frameId ? frameDistance(objSize(handle, frameId), fov, fill) : null;
+    return { ...s, i, dur, fov, ease, fill, dist, caption: s.caption || '' };
+  });
+  let acc = 0;
+  shots.forEach(s => { s.t0 = acc; acc += s.dur; });
+  return { mode: 'shots', shots, dur: acc, loop: cp.loop !== false, autoplay: cp.autoplay !== false };
+}
+
+// sample pada waktu t → { pos, target, fov, explode, caption, shotIndex, shotProgress }
+export function sampleCameraPath(handle, path, t) {
+  if (!path) return null;
+  const dur = path.dur || 1;
+  let tt = path.loop ? ((t % dur) + dur) % dur : Math.min(t, dur);
+  if (path.mode === 'keyframes') {
+    const kfs = path.kfs;
+    let a = kfs[0], b = kfs[kfs.length - 1];
+    for (let i = 0; i < kfs.length - 1; i++) {
+      if (tt >= kfs[i].t && tt <= kfs[i + 1].t) { a = kfs[i]; b = kfs[i + 1]; break; }
+    }
+    const span = Math.max(0.001, b.t - a.t);
+    const u = EASE.inOut(Math.min(1, Math.max(0, (tt - a.t) / span)));
+    const pos = path.posCurve && kfs.length >= 3
+      ? path.posCurve.getPoint(Math.min(1, Math.max(0, tt / dur)))
+      : a.pos.clone().lerp(b.pos, u);
+    return { pos, target: a.target.clone().lerp(b.target, u), fov: a.fov + (b.fov - a.fov) * u, explode: null, caption: u < 0.5 ? a.caption : b.caption, shotIndex: -1, shotProgress: tt / dur };
+  }
+  let s = path.shots[path.shots.length - 1];
+  for (const sh of path.shots) { if (tt >= sh.t0 && tt < sh.t0 + sh.dur) { s = sh; break; } }
+  const u = s.ease(Math.min(1, Math.max(0, (tt - s.t0) / s.dur)));
+  const target = s.target ? objWorldPos(handle, s.target) : new THREE.Vector3(0, 2, 0);
+  const fov = s.fov;
+  let pos;
+  if (s.type === 'orbit') {
+    const r = s.radius ?? s.dist ?? 6;
+    const h = s.height ?? r * 0.45;
+    const a0 = (s.startAngle ?? 0) * Math.PI / 180;
+    const sweep = (s.sweep ?? 360) * Math.PI / 180;
+    const a = a0 + sweep * u;
+    pos = target.clone().add(new THREE.Vector3(Math.cos(a) * r, h, Math.sin(a) * r));
+  } else if (s.type === 'dolly') {
+    const from = new THREE.Vector3(...(s.from || [0, 3, 10]));
+    const to = new THREE.Vector3(...(s.to || [0, 3, 5]));
+    pos = from.lerp(to, u);
+  } else if (s.type === 'zoom') {
+    const d0 = s.fromDistance ?? (s.dist ?? 6) * 2.2;
+    const d1 = s.toDistance ?? s.dist ?? 3;
+    const dir = new THREE.Vector3(...(s.direction || [0.6, 0.35, 1])).normalize();
+    pos = target.clone().add(dir.multiplyScalar(d0 + (d1 - d0) * u));
+  } else if (s.type === 'crane') {
+    const base = new THREE.Vector3(...(s.from || [6, 1, 6]));
+    const y1 = s.toY ?? 8;
+    pos = new THREE.Vector3(base.x, base.y + (y1 - base.y) * u, base.z);
+  } else if (s.type === 'path') {
+    const pts = (s.points || [[0, 3, 8], [4, 4, 4], [0, 5, -4]]).map(p => new THREE.Vector3(...p));
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
+    pos = curve.getPoint(u);
+  } else {
+    pos = target.clone().add(new THREE.Vector3(0, 2, 6));
+  }
+  let explode = null;
+  if (Array.isArray(s.explode)) explode = s.explode[0] + (s.explode[1] - s.explode[0]) * u;
+  else if (typeof s.explode === 'number') explode = s.explode;
+  return { pos, target, fov, explode, caption: s.caption, shotIndex: s.i, shotProgress: u, shot: s };
 }
 
 // ─────────────────────────── TOOLKIT BEDAH ASSEMBLY ───────────────────────────

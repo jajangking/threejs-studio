@@ -13,7 +13,7 @@
 <img id="shot" alt="">
 <pre id="report">{}</pre>
 <script type="module">
-import { buildScene, makeRenderer, makeComposer, smokeCheck, applyAnimations, stepPhysics } from './js/scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, smokeCheck, applyAnimations, stepPhysics, applyExplode, compileCameraPath, sampleCameraPath } from './js/scene-builder.js';
 
 const params = new URLSearchParams(location.search);
 const scenePath = params.get('scene') || 'scene.json';
@@ -27,13 +27,23 @@ window.addEventListener('error', e => report.errors.push(String(e.message)));
 try {
   const spec = await (await fetch(scenePath + '?t=' + Date.now())).json();
   const handle = await buildScene(spec);
+  const urlT = parseFloat(new URLSearchParams(location.search).get('t') || '');
+  const cinePath = compileCameraPath(handle);
+  if (cinePath && !isNaN(urlT)) {
+    const sm = sampleCameraPath(handle, cinePath, urlT);
+    if (sm) {
+      handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target);
+      handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix();
+      if (sm.explode !== null) applyExplode(handle, sm.explode);
+    }
+  }
   const renderer = makeRenderer(cv, W, H, { preserveDrawingBuffer: true, exposure: spec.environment?.exposure ?? 1.1 });
   handle.camera.aspect = W / H;
   handle.camera.updateProjectionMatrix();
   handle.composer = makeComposer(handle, renderer, W, H);
   applyAnimations(handle, 2.0, true);  // pose mekanika deterministik untuk screenshot
   if (handle.physicsWorld) for (let i = 0; i < 300; i++) stepPhysics(handle, 1 / 60);  // simulasi fisika 5s (domino sempat jatuh)
-  const smoke = smokeCheck(handle, renderer);
+  const smoke = smokeCheck(handle, renderer, { cinematic: cinePath && !isNaN(urlT) });
   // beberapa frame ekstra agar shadow map & material stabil
   for (let i = 0; i < 3; i++) handle.composer ? handle.composer.render() : renderer.render(handle.scene, handle.camera);
   document.getElementById('shot').src = cv.toDataURL('image/png');

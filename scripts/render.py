@@ -15,9 +15,12 @@ def main():
     ap.add_argument('--notes', default='')
     ap.add_argument('--w', type=int, default=1280)
     ap.add_argument('--h', type=int, default=720)
+    ap.add_argument('--time', type=float, default=None, help='pose kamera sinematik pada detik t (cameraPath)')
     a = ap.parse_args()
 
     url = f'http://127.0.0.1:{PORT}/render.html?scene={a.scene}&w={a.w}&h={a.h}'
+    if a.time is not None:
+        url += f'&t={a.time}'
     cmd = ['chromium', '--headless=new', '--no-sandbox', '--disable-dev-shm-usage',
            '--no-proxy-server', '--enable-unsafe-swiftshader', '--hide-scrollbars',
            f'--window-size={a.w},{a.h}', '--virtual-time-budget=15000',

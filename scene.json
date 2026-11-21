@@ -5,7 +5,7 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-06",
+    "iteration": "iter-07",
     "saved_at": 1795268561.0031118
   },
   "environment": {
@@ -20,7 +20,7 @@
       "color": "#1a1e26",
       "roughness": 0.95
     },
-    "exposure": 1.15
+    "exposure": 1.3
   },
   "camera": {
     "position": [
@@ -5183,5 +5183,123 @@
       "step": 1,
       "default": 35
     }
-  ]
+  ],
+  "cameraPath": {
+    "loop": true,
+    "autoplay": true,
+    "shots": [
+      {
+        "id": "establish",
+        "type": "orbit",
+        "target": [
+          0,
+          3.5,
+          0
+        ],
+        "radius": 10,
+        "height": 4,
+        "startAngle": 20,
+        "sweep": 160,
+        "duration": 6,
+        "fov": 50,
+        "caption": "Kipas angin standing — tur sinematik cara kerja"
+      },
+      {
+        "id": "motor",
+        "type": "zoom",
+        "target": "motor",
+        "framing": {
+          "object": "motor",
+          "fill": 0.5
+        },
+        "fromDistance": 7,
+        "duration": 4,
+        "fov": 40,
+        "caption": "Motor listrik: inti penggerak — energi listrik menjadi putaran",
+        "explode": [
+          0,
+          0.55
+        ],
+        "direction": [
+          0.25,
+          0.25,
+          -1
+        ]
+      },
+      {
+        "id": "rotor",
+        "type": "orbit",
+        "target": "rotor",
+        "framing": {
+          "object": "rotor",
+          "fill": 0.5
+        },
+        "height": 1.2,
+        "startAngle": 90,
+        "sweep": 120,
+        "duration": 5,
+        "fov": 45,
+        "caption": "Rotor & 3 bilah melengkung 120° — twist bilah mendorong udara ke depan"
+      },
+      {
+        "id": "exploded",
+        "type": "orbit",
+        "target": [
+          0,
+          6.2,
+          0
+        ],
+        "framing": {
+          "object": "head",
+          "fill": 0.22
+        },
+        "height": 3,
+        "startAngle": 0,
+        "sweep": 100,
+        "duration": 7,
+        "fov": 50,
+        "explode": [
+          0,
+          0.65
+        ],
+        "caption": "Exploded view: gril sangkar, motor, rotor — seluruh komponen kepala"
+      },
+      {
+        "id": "osilasi",
+        "type": "crane",
+        "from": [
+          5,
+          2,
+          5
+        ],
+        "toY": 8.5,
+        "target": "head",
+        "duration": 4,
+        "fov": 50,
+        "caption": "Osilasi kepala ±35° — udara terdistribusi merata ke ruangan"
+      },
+      {
+        "id": "pullback",
+        "type": "dolly",
+        "from": [
+          3,
+          5,
+          4
+        ],
+        "to": [
+          9,
+          5,
+          10
+        ],
+        "target": [
+          0,
+          3.5,
+          0
+        ],
+        "duration": 4,
+        "fov": 50,
+        "caption": "Satu rantai mekanisme: motor → rotor → bilah → osilasi"
+      }
+    ]
+  }
 }

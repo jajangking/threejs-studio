@@ -75,6 +75,13 @@ button:disabled{opacity:.4;cursor:default}
 #vpTimeline button{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:2px 9px;cursor:pointer;font-size:12px}
 #vpTimeline #tlTime{font-family:ui-monospace,monospace;color:var(--dim);width:38px;text-align:right}
 #vpTimeline input[type=range]{width:180px;accent-color:var(--accent)}
+#vpCine{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;background:rgba(22,24,29,.92);border:1px solid var(--border);border-radius:8px;padding:5px 10px;z-index:6;font-size:11px;max-width:70%;flex-wrap:wrap;justify-content:center}
+#vpCine:empty{display:none}
+#vpCine button{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 9px;cursor:pointer;font-size:11px}
+#vpCine button.on{border-color:var(--accent);color:var(--accent)}
+.cine-chip.on{border-color:#3fb96b!important;color:#7ee2a8!important}
+.cine-info{color:var(--dim);font-family:ui-monospace,monospace;font-size:10px}
+#cineCaption{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);background:rgba(10,12,16,.85);border:1px solid var(--border);color:#e8eaef;padding:7px 18px;border-radius:8px;font-size:13px;z-index:6;display:none;max-width:70%;text-align:center}
 #vpMech{position:absolute;bottom:58px;right:10px;z-index:5;background:rgba(22,24,29,.88);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:6px;max-width:260px}
 #vpMech:empty{display:none}
 .mech-row{display:flex;align-items:center;gap:8px;font-size:11px}
@@ -340,6 +347,8 @@ button:disabled{opacity:.4;cursor:default}
       <div id="vpStats"></div>
       <div id="vpBedah"></div>
       <div id="vpMech"></div>
+      <div id="vpCine"></div>
+      <div id="cineCaption"></div>
       <div id="vpTimeline"></div>
       <div id="vpControls"></div>
       <div id="vpHelp">Klik: pilih · W/E/R: gizmo · F: frame · Esc: lepas pilihan · Drag: orbit · Scroll: zoom · Klik kanan: pan</div>

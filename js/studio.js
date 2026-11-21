@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { TransformControls } from '../vendor/TransformControls.js';
 import { GLTFExporter } from '../vendor/GLTFExporter.js';
-import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels, syncCaps, resetPhysics } from './scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels, syncCaps, resetPhysics, compileCameraPath, sampleCameraPath } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
 const deg = THREE.MathUtils.degToRad, rad2deg = THREE.MathUtils.radToDeg;
@@ -19,6 +19,7 @@ let animT = 0, animPlaying = true, powerOn = true, physAcc = 0;
 let explodeFactor = 0, lastExplode = 0, xrayOn = false, isolateOn = false, labelsOn = false;
 let sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false, caps: true };
 let measureMode = false, measurePts = [], measureGroup = null;
+let cinePath = null, cinePlaying = false, cineT = 0, cineExplode = null;
 const clock = new THREE.Clock();
 
 // ── responsif: drawer mobile ──
@@ -109,15 +110,31 @@ function animate() {
     if (animPlaying) animT += dt;
     applyAnimations(handle, animT, powerOn);
   }
-  if (handle && (explodeFactor > 0 || lastExplode > 0)) {
+  if (handle && !cinePlaying && (explodeFactor > 0 || lastExplode > 0)) {
     applyExplode(handle, explodeFactor);
     lastExplode = explodeFactor;
   }
   if (handle?.capSystem) syncCaps(handle);
+  if (cinePlaying && cinePath && handle) {
+    cineT += dt;
+    const s = sampleCameraPath(handle, cinePath, cineT);
+    if (s) {
+      handle.camera.position.copy(s.pos);
+      handle.camera.lookAt(s.target);
+      if (Math.abs(handle.camera.fov - s.fov) > 0.01) { handle.camera.fov = s.fov; handle.camera.updateProjectionMatrix(); }
+      orbit.target.copy(s.target);
+      if (s.explode !== null) { cineExplode = s.explode; applyExplode(handle, s.explode); lastExplode = s.explode; }
+      const cap = $('#cineCaption');
+      if (cap) { cap.textContent = s.caption || ''; cap.style.display = s.caption ? 'block' : 'none'; }
+      const si = $('#cineShotInfo');
+      if (si && s.shot) si.textContent = `${s.shot.type} #${s.shot.i + 1}${s.shot.dist ? ' · jarak ' + s.shot.dist.toFixed(1) + 'm · fill ' + Math.round(s.shot.fill * 100) + '%' : ''}`;
+      document.querySelectorAll('.cine-chip').forEach((c, i) => c.classList.toggle('on', i === s.shotIndex));
+    }
+  }
   const tl = $('#tlSlider');
-  if (tl && document.activeElement !== tl && animPlaying) {
-    tl.value = (animT % 10).toFixed(2);
-    $('#tlTime').textContent = (animT % 10).toFixed(1) + 's';
+  if (tl && document.activeElement !== tl) {
+    if (cinePlaying && cinePath) { tl.value = (cineT % cinePath.dur).toFixed(2); $('#tlTime').textContent = (cineT % cinePath.dur).toFixed(1) + 's'; }
+    else if (animPlaying) { tl.value = (animT % 10).toFixed(2); $('#tlTime').textContent = (animT % 10).toFixed(1) + 's'; }
   }
   orbit.update();
   const cam = handle?.camera || bootCam;
@@ -149,7 +166,11 @@ async function rebuild(newSpec, announce) {
   renderer.clippingPlanes = [];
   measureMode = false; measurePts = [];
   if (measureGroup) { handle?.scene.remove(measureGroup); measureGroup = null; }
-  renderTimeline();
+  cinePath = compileCameraPath(handle);
+  cineT = 0; cineExplode = null;
+  cinePlaying = !!(cinePath && cinePath.autoplay);
+  orbit.enabled = !cinePlaying;
+  renderTimeline(); renderCinePanel();
   updateVpControls(); renderBedahPanel();
   orbit.object = handle.camera;
   orbit.target.copy(handle.target);
@@ -315,12 +336,46 @@ function renderInspector() {
   }
 }
 
+// ── panel kamera sinematik ──
+function renderCinePanel() {
+  const el = $('#vpCine'); if (!el) return;
+  el.innerHTML = '';
+  const cap = $('#cineCaption'); if (cap) { cap.textContent = ''; cap.style.display = 'none'; }
+  if (!cinePath) return;
+  const play = document.createElement('button');
+  const paint = () => { play.textContent = cinePlaying ? '⏹ Stop' : '🎥 Putar'; play.classList.toggle('on', cinePlaying); };
+  play.onclick = () => {
+    cinePlaying = !cinePlaying;
+    orbit.enabled = !cinePlaying;
+    if (cinePlaying) { cineT = 0; }
+    else { const sm = sampleCameraPath(handle, cinePath, cineT); if (sm) orbit.target.copy(sm.target); if (cineExplode !== null) { applyExplode(handle, explodeFactor); lastExplode = explodeFactor; } const c = $('#cineCaption'); if (c) c.style.display = 'none'; }
+    paint(); renderTimeline();
+  };
+  paint();
+  el.appendChild(play);
+  if (cinePath.mode === 'shots') {
+    cinePath.shots.forEach((s, i) => {
+      const c = document.createElement('button');
+      c.className = 'cine-chip';
+      c.textContent = s.id || `${s.type} ${i + 1}`;
+      c.title = `${s.type} · ${s.dur}s${s.dist ? ' · jarak ' + s.dist.toFixed(1) + 'm · fill ' + Math.round(s.fill * 100) + '%' : ''}${s.caption ? '\n' + s.caption : ''}`;
+      c.onclick = () => { cineT = s.t0 + 0.01; if (!cinePlaying) { const sm = sampleCameraPath(handle, cinePath, cineT); if (sm) { handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target); handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix(); orbit.target.copy(sm.target); if (sm.explode !== null) { applyExplode(handle, sm.explode); lastExplode = sm.explode; } } if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera); } };
+      el.appendChild(c);
+    });
+  } else {
+    const c = document.createElement('span'); c.className = 'cine-info'; c.textContent = `keyframes · ${cinePath.dur}s`;
+    el.appendChild(c);
+  }
+  const info = document.createElement('span'); info.id = 'cineShotInfo'; info.className = 'cine-info';
+  el.appendChild(info);
+}
+
 // ── timeline animasi (scrub deterministik; fisika di-resimulasi dari reset) ──
 function renderTimeline() {
   const el = $('#vpTimeline'); if (!el) return;
   el.innerHTML = '';
   if (!handle) return;
-  const hasTime = (handle.animations?.length || 0) > 0 || !!handle.physicsWorld;
+  const hasTime = (handle.animations?.length || 0) > 0 || !!handle.physicsWorld || !!cinePath;
   if (!hasTime) return;
   const play = document.createElement('button');
   const paintPlay = () => { play.textContent = animPlaying ? '⏸' : '▶'; };
@@ -328,9 +383,23 @@ function renderTimeline() {
   paintPlay();
   const t = document.createElement('span'); t.id = 'tlTime'; t.textContent = '0.0s';
   const s = document.createElement('input'); s.type = 'range'; s.id = 'tlSlider';
-  s.min = 0; s.max = 10; s.step = 0.05; s.value = 0;
+  s.min = 0; s.max = cinePath ? +cinePath.dur.toFixed(1) : 10; s.step = 0.05; s.value = 0;
   s.oninput = () => {
     animPlaying = false; paintPlay(); updateVpControls();
+    if (cinePath) {
+      cineT = parseFloat(s.value);
+      const sm = sampleCameraPath(handle, cinePath, cineT);
+      if (sm) {
+        handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target);
+        handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix();
+        orbit.target.copy(sm.target);
+        if (sm.explode !== null) { applyExplode(handle, sm.explode); lastExplode = sm.explode; }
+        const cap = $('#cineCaption'); if (cap) { cap.textContent = sm.caption || ''; cap.style.display = sm.caption ? 'block' : 'none'; }
+      }
+      if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
+      t.textContent = cineT.toFixed(1) + 's';
+      return;
+    }
     animT = parseFloat(s.value);
     if (handle.physicsWorld) {
       resetPhysics(handle);
@@ -999,6 +1068,7 @@ window.__studioDebug = {
   explode(f) { explodeFactor = f; lastExplode = f; applyExplode(handle, f); },
   measure(a, b) { addMeasurePoint(new THREE.Vector3(...a)); addMeasurePoint(new THREE.Vector3(...b)); },
   scrub(t) { const s = $('#tlSlider'); if (s) { s.value = t; s.dispatchEvent(new Event('input')); } },
+  cine(t) { cinePlaying = true; orbit.enabled = false; cineT = t; const sm = sampleCameraPath(handle, cinePath, t); if (sm) { handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target); handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix(); if (sm.explode !== null) { applyExplode(handle, sm.explode); lastExplode = sm.explode; } } if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera); return sm ? { pos: sm.pos.toArray().map(v => +v.toFixed(2)), fov: sm.fov, caption: sm.caption } : null; },
   bodyPos(id) { const b = handle?.bodyMap?.get(id); if (!b) return null; const t = b.translation(); return [t.x, t.y, t.z]; },
   setPower(v) { powerOn = v; updateVpControls(); },
 };
