@@ -5,7 +5,7 @@
     "seed": 1,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-07",
+    "iteration": "iter-08",
     "saved_at": 1795266711.0966291
   },
   "environment": {
@@ -24,13 +24,13 @@
   },
   "camera": {
     "position": [
-      0.5,
-      3,
-      8.5
+      1,
+      4,
+      11
     ],
     "target": [
       -0.5,
-      0.8,
+      1,
       0
     ],
     "fov": 50
@@ -44,7 +44,7 @@
   },
   "joints": [
     {
-      "type": "revolute",
+      "type": "fixed",
       "body1": "tiang",
       "body2": "bar",
       "anchor1": [
@@ -56,21 +56,7 @@
         0,
         0,
         0
-      ],
-      "axis1": [
-        0,
-        1,
-        0
-      ],
-      "axis2": [
-        0,
-        1,
-        0
-      ],
-      "motor": {
-        "velocity": 4,
-        "factor": 10
-      }
+      ]
     }
   ],
   "lights": [
@@ -251,7 +237,7 @@
         "roughness": 0.15,
         "metalness": 0.1,
         "emissive": "#ff2200",
-        "emissiveIntensity": 12,
+        "emissiveIntensity": 2.5,
         "opacity": 1,
         "wireframe": false,
         "flatShading": false,
@@ -361,14 +347,16 @@
       "physics": {
         "body": "dynamic",
         "restitution": 0.2,
-        "friction": 0.5,
+        "friction": 0.9,
         "density": 1.2,
-        "angvel": [
-          0,
-          0,
-          -0.5
-        ]
-      }
+        "linearDamping": 0.5,
+        "angularDamping": 0.5
+      },
+      "rotation": [
+        0,
+        0,
+        4
+      ]
     },
     {
       "id": "bar",
@@ -391,7 +379,9 @@
       },
       "physics": {
         "body": "dynamic",
-        "angularDamping": 0.01
+        "angularDamping": 0.5,
+        "friction": 0.9,
+        "linearDamping": 0.5
       }
     },
     {

@@ -320,6 +320,7 @@ export async function buildScene(spec, opts = {}) {
           if (kind === 'dynamic') { desc.setLinearDamping(ph.linearDamping ?? 0.05); desc.setAngularDamping(ph.angularDamping ?? 0.05); }
           const body = physicsWorld.createRigidBody(desc);
           physicsWorld.createCollider(colliderFor(o, mesh), body);
+          body.userData = { init: { p: mesh.position.clone(), q: mesh.quaternion.clone() }, nanCount: 0 };
           bodyMap.set(o.id, body);
         }
       }
@@ -532,6 +533,22 @@ export function stepPhysics(handle, dt = 1 / 60) {
     const m = handle.registry.get(id);
     if (!m) continue;
     const t = body.translation(), r = body.rotation();
+    // Guard NaN: solver bisa meledak (joint bermotor vs body jatuh, impuls ekstrem).
+    // Self-healing: kembalikan body ke transform awal, velocity nol — mesh tidak boleh hilang.
+    if (!Number.isFinite(t.x + t.y + t.z + r.x + r.y + r.z + r.w)) {
+      const ini = body.userData?.init;
+      if (ini) {
+        body.setTranslation({ x: ini.p.x, y: ini.p.y, z: ini.p.z }, true);
+        body.setRotation({ x: ini.q.x, y: ini.q.y, z: ini.q.z, w: ini.q.w }, true);
+        body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        body.userData.nanCount = (body.userData.nanCount || 0) + 1;
+        if (body.userData.nanCount === 1) console.warn(`[physics] NaN terdeteksi pada ${id} — body di-reset ke posisi awal (self-healing)`);
+        m.position.copy(ini.p);
+        m.quaternion.copy(ini.q);
+      }
+      continue;
+    }
     m.position.set(t.x, t.y, t.z);
     m.quaternion.set(r.x, r.y, r.z, r.w);
   }

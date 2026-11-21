@@ -11,7 +11,7 @@ try {
   out.bodies = [...handle.bodyMap.keys()];
   const snap = () => {
     const s = {};
-    for (const id of ['bola', 'domino-0', 'domino-5', 'bar']) {
+    for (const id of ['bola', 'domino-0', 'domino-5', 'bar', 'tiang']) {
       const m = handle.registry.get(id);
       if (m) s[id] = { pos: m.position.toArray().map(v => +v.toFixed(3)), rot: [m.rotation.x, m.rotation.y, m.rotation.z].map(v => +v.toFixed(3)) };
     }

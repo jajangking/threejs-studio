@@ -527,6 +527,8 @@ FISIKA RAPIER (untuk simulasi nyata: jatuh, tumbukan, domino, bandul, roda bermo
   anchor koordinat LOKAL masing-masing body; type: revolute (engsel), spherical (bola), fixed. motor = kecepatan rad/s.
 - Pola demo fisika: ramp fixed (box rotasi z ~-18°) + bola dynamic di puncak + barisan domino (box tipis 0.12x1x0.5, jarak 0.6-0.7, restitution 0.1).
 - Objek fixed = statis (ramp, tiang); dynamic = jatuh/tertumbuk. Mulai bola sedikit di atas ramp agar menggelinding.
+- MOTOR pada joint HANYA bila body1 fixed (tiang tertanam). Bila body1 dynamic (akan jatuh), JANGAN pakai motor — solver bisa meledak (NaN). Tanpa motor, joint tetap merangkai kedua body.
+- emissiveIntensity WAJIB ≤ 5 (nilai 12 membuat objek blown-out putih dan merusak penilaian vision).
 - Reset fisika tersedia di viewport; render headless mensimulasikan 2 detik sebelum screenshot.
 
 STANDAR ESTETIKA (smoke test lolos SAJA TIDAK CUKUP — hasil harus layak final, bukan seperti tutorial):
@@ -931,6 +933,8 @@ def run_agent_job(job_id, user_text, model):
             'iteration': iter_id, 'model': used_model,
             'smoke': {'pass': ok, 'passed': npass, 'total': ntotal},
         })
+        try: os.remove(os.path.join(ROOT, 'job.json'))
+        except OSError: pass
         status(f'selesai · {iter_id} · smoke ' + ('PASS' if ok else 'FAIL'))
         if not ok:
             with LOCK:
@@ -948,6 +952,8 @@ def run_agent_job(job_id, user_text, model):
         with LOCK:
             if CHAT.get('job_id') == job_id:
                 CHAT['running'] = False
+                try: os.remove(os.path.join(ROOT, 'job.json'))
+                except OSError: pass
 
 
 def start_job(text, model, selection=None):
@@ -963,6 +969,8 @@ def start_job(text, model, selection=None):
             })
         append_chat_message({'role': 'user', 'text': text, 'at': time.time(),
                              'iteration': None, 'model': model})
+        write_json(os.path.join(ROOT, 'job.json'),
+                   {'job_id': job_id, 'text': text, 'model': model, 'selection': selection, 'started_at': time.time()})
         t = threading.Thread(target=run_agent_job, args=(job_id, text, model), daemon=True)
         t.start()
 
@@ -1465,6 +1473,18 @@ class Handler(SimpleHTTPRequestHandler):
         return self._send(404, {'ok': False, 'error': 'endpoint tidak dikenal'})
 
 
+def recover_interrupted_job():
+    j = read_json(os.path.join(ROOT, 'job.json'))
+    if j:
+        append_chat_message({'role': 'agent', 'at': time.time(), 'iteration': None,
+                             'model': j.get('model'), 'error': True,
+                             'text': f"Job terputus karena server restart saat sedang berjalan. Prompt terakhir: \"{j.get('text','')[:120]}\" — kirim ulang untuk melanjutkan."})
+        try: os.remove(os.path.join(ROOT, 'job.json'))
+        except OSError: pass
+        print('[startup] job terputus terdeteksi — pesan pemulihan ditulis ke chat', flush=True)
+
+
 if __name__ == '__main__':
+    recover_interrupted_job()
     print(f'Three.js Studio serving {ROOT} on 0.0.0.0:{PORT}', flush=True)
     ThreadingHTTPServer(('0.0.0.0', PORT), Handler).serve_forever()
