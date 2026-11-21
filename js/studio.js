@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { TransformControls } from '../vendor/TransformControls.js';
 import { GLTFExporter } from '../vendor/GLTFExporter.js';
-import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations } from './scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
 const deg = THREE.MathUtils.degToRad, rad2deg = THREE.MathUtils.radToDeg;
@@ -15,7 +15,7 @@ let spec = null, handle = null, renderer, orbit, gizmo, grid;
 let selectedId = null, dirty = false, lastMtime = 0, serverState = null;
 let iterations = [], cmpSel = [], consoleErrors = 0, liveReport = null;
 let dragging = false, downPos = null;
-let animT = 0, animPlaying = true, powerOn = true;
+let animT = 0, animPlaying = true, powerOn = true, physAcc = 0;
 const clock = new THREE.Clock();
 
 // ── responsif: drawer mobile ──
@@ -97,6 +97,11 @@ let frames = 0, statT = 0;
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.1);
+  if (handle?.physicsWorld && animPlaying) {
+    physAcc += dt;
+    let n = 0;
+    while (physAcc >= 1 / 60 && n < 4) { stepPhysics(handle, 1 / 60); physAcc -= 1 / 60; n++; }
+  }
   if (handle?.animations?.length) {
     if (animPlaying) animT += dt;
     applyAnimations(handle, animT, powerOn);
@@ -125,7 +130,7 @@ async function rebuild(newSpec, announce) {
   handle.camera.aspect = wrap.clientWidth / Math.max(1, wrap.clientHeight);
   handle.camera.updateProjectionMatrix();
   handle.composer = makeComposer(handle, renderer, wrap.clientWidth, Math.max(1, wrap.clientHeight));
-  animT = 0; animPlaying = true; powerOn = spec.power?.default ?? true;
+  animT = 0; animPlaying = true; powerOn = spec.power?.default ?? true; physAcc = 0;
   updateVpControls();
   orbit.object = handle.camera;
   orbit.target.copy(handle.target);
@@ -323,6 +328,14 @@ function updateVpControls() {
     b.textContent = animPlaying ? '⏸ Jeda' : '▶ Putar';
     b.title = 'Jalankan/jeda animasi';
     b.onclick = () => { animPlaying = !animPlaying; updateVpControls(); };
+    el.appendChild(b);
+  }
+  if (handle?.physicsWorld) {
+    const b = document.createElement('button');
+    b.className = 'vp-ctl';
+    b.textContent = '↺ Reset fisika';
+    b.title = 'Kembalikan semua rigid body ke posisi awal';
+    b.onclick = () => rebuild(spec, 'Fisika di-reset ke keadaan awal');
     el.appendChild(b);
   }
 }
@@ -792,6 +805,8 @@ window.__studioDebug = {
   get animT() { return animT; },
   get playing() { return animPlaying; },
   step(dt) { animT += dt; applyAnimations(handle, animT, powerOn); if (handle?.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera); },
+  stepPhys(n = 60) { for (let i = 0; i < n; i++) stepPhysics(handle, 1 / 60); },
+  bodyPos(id) { const b = handle?.bodyMap?.get(id); if (!b) return null; const t = b.translation(); return [t.x, t.y, t.z]; },
   setPower(v) { powerOn = v; updateVpControls(); },
 };
 

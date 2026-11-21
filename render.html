@@ -13,7 +13,7 @@
 <img id="shot" alt="">
 <pre id="report">{}</pre>
 <script type="module">
-import { buildScene, makeRenderer, makeComposer, smokeCheck, applyAnimations } from './js/scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, smokeCheck, applyAnimations, stepPhysics } from './js/scene-builder.js';
 
 const params = new URLSearchParams(location.search);
 const scenePath = params.get('scene') || 'scene.json';
@@ -32,6 +32,7 @@ try {
   handle.camera.updateProjectionMatrix();
   handle.composer = makeComposer(handle, renderer, W, H);
   applyAnimations(handle, 2.0, true);  // pose mekanika deterministik untuk screenshot
+  if (handle.physicsWorld) for (let i = 0; i < 300; i++) stepPhysics(handle, 1 / 60);  // simulasi fisika 5s (domino sempat jatuh)
   const smoke = smokeCheck(handle, renderer);
   // beberapa frame ekstra agar shadow map & material stabil
   for (let i = 0; i < 3; i++) handle.composer ? handle.composer.render() : renderer.render(handle.scene, handle.camera);

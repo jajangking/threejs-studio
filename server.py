@@ -519,6 +519,16 @@ MEKANIKA & ANIMASI (untuk permintaan "bisa nyala/berputar/bergerak"):
 - Mekanika custom tersusun dari grup + animasi: roda gigi = dua group spin berlawanan, speed berbanding rasio;
   piston = group float + batang penghubung; pendulum = oscillate poros lokal. Jelaskan rasio di reply.
 
+FISIKA RAPIER (untuk simulasi nyata: jatuh, tumbukan, domino, bandul, roda bermotor):
+- spec.physics: {"gravity":[0,-9.81,0]} — mengaktifkan engine Rapier (WASM). Ground otomatis jadi collider fixed.
+- Per objek root-level: "physics":{"body":"dynamic"|"fixed"|"kinematic","restitution":0.4,"friction":0.6,"density":1,"linvel":[x,y,z],"angvel":[x,y,z]}
+  Collider otomatis dari geometri (box/sphere/cylinder/capsule). Objek physics TIDAK boleh children group dan jangan diberi animate (fisika menang).
+- spec.joints: [{"type":"revolute","body1":"tiang","body2":"lengan","anchor1":[0,1,0],"anchor2":[0,0,0],"axis1":[0,1,0],"axis2":[0,1,0],"motor":{"velocity":4,"factor":1}}]
+  anchor koordinat LOKAL masing-masing body; type: revolute (engsel), spherical (bola), fixed. motor = kecepatan rad/s.
+- Pola demo fisika: ramp fixed (box rotasi z ~-18°) + bola dynamic di puncak + barisan domino (box tipis 0.12x1x0.5, jarak 0.6-0.7, restitution 0.1).
+- Objek fixed = statis (ramp, tiang); dynamic = jatuh/tertumbuk. Mulai bola sedikit di atas ramp agar menggelinding.
+- Reset fisika tersedia di viewport; render headless mensimulasikan 2 detik sebelum screenshot.
+
 STANDAR ESTETIKA (smoke test lolos SAJA TIDAK CUKUP — hasil harus layak final, bukan seperti tutorial):
 - Komposisi 3 lapis: foreground (jalan/trotoar), midground (subjek), background (langit/bulan).
 - Detail: atap gedung punya AC unit/tangki/antena; jalan punya trotoar, crosswalk, marka; ada elemen skala manusia (mobil/orang).
@@ -1160,6 +1170,7 @@ def standalone_html(spec):
     builder = read_text(os.path.join(ROOT, 'js', 'scene-builder.js'))
     builder = re.sub(r"^import \* as THREE from 'three';\s*\n", '', builder, flags=re.M)
     builder = builder.replace("from '../vendor/GLTFLoader.js'", f"from '{CDN}/examples/jsm/loaders/GLTFLoader.js'")
+    builder = builder.replace("from '../vendor/rapier.es.js'", "from 'https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.14.0/rapier.es.js'")
     builder = re.sub(r"from '../vendor/jsm/postprocessing/([^']+)'",
                      lambda m: f"from '{CDN}/examples/jsm/postprocessing/{m.group(1)}'", builder)
     title = (spec.get('meta') or {}).get('name') or 'Three.js Scene'
@@ -1244,9 +1255,23 @@ for (const c of SPEC.controls || []) {{
   }}
   mech.appendChild(row);
 }}
+let physAcc = 0;
+if (handle.physicsWorld) {{
+  const b = document.createElement('button');
+  b.textContent = '↺ Reset fisika';
+  b.onclick = () => location.reload();
+  ctl.appendChild(b);
+}}
 renderer.setAnimationLoop(() => {{
   const dt = Math.min(clock.getDelta(), 0.1);
-  if (playing) animT += dt;
+  if (playing) {{
+    animT += dt;
+    if (handle.physicsWorld) {{
+      physAcc += dt;
+      let n = 0;
+      while (physAcc >= 1 / 60 && n < 4) {{ stepPhysics(handle, 1 / 60); physAcc -= 1 / 60; n++; }}
+    }}
+  }}
   applyAnimations(handle, animT, powerOn);
   controls.update();
   if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);

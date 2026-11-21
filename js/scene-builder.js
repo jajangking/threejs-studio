@@ -7,6 +7,7 @@ import { EffectComposer } from '../vendor/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '../vendor/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from '../vendor/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from '../vendor/jsm/postprocessing/OutputPass.js';
+import RAPIER from '../vendor/rapier.es.js';
 
 export const SPEC_VERSION = 1;
 
@@ -159,6 +160,15 @@ export async function buildScene(spec, opts = {}) {
   const scene = new THREE.Scene();
   const registry = new Map(); // id -> Object3D
 
+  // Fisika Rapier (opsional, spec.physics) — WASM init idempotent
+  let physicsWorld = null;
+  const bodyMap = new Map();
+  if (spec.physics) {
+    await RAPIER.init();
+    const g = spec.physics.gravity || [0, -9.81, 0];
+    physicsWorld = new RAPIER.World({ x: g[0], y: g[1], z: g[2] });
+  }
+
   const env = spec.environment || {};
   scene.background = new THREE.Color(env.background ?? '#0d1017');
   if (env.fog) scene.fog = new THREE.Fog(new THREE.Color(env.fog.color ?? env.background ?? '#0d1017'), env.fog.near ?? 15, env.fog.far ?? 60);
@@ -175,6 +185,10 @@ export async function buildScene(spec, opts = {}) {
     ground.name = '__ground';
     scene.add(ground);
     registry.set('__ground', ground);
+    if (physicsWorld) {
+      const gb = physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(0, (g.y ?? 0) - 0.05, 0));
+      physicsWorld.createCollider(RAPIER.ColliderDesc.cuboid((g.size ?? 60) / 2, 0.05, (g.size ?? 60) / 2).setFriction(0.8), gb);
+    }
   }
 
   const camera = new THREE.PerspectiveCamera(spec.camera?.fov ?? 50, 1, 0.1, 500);
@@ -290,9 +304,44 @@ export async function buildScene(spec, opts = {}) {
       if (o.animate) animations.push({ id: o.id, obj: mesh, anim: o.animate,
         baseRot: mesh.rotation.clone(), basePos: mesh.position.clone(),
         baseEmissive: mesh.material?.emissiveIntensity ?? 1 });
+      // rigid body (hanya objek root-level; children group tidak didukung fisika v1)
+      if (o.physics && physicsWorld) {
+        if (parent !== scene) { errors.push(`object ${o.id}: physics hanya untuk objek root (bukan children group)`); }
+        else {
+          const ph = o.physics, kind = ph.body || 'dynamic';
+          const desc = kind === 'fixed' ? RAPIER.RigidBodyDesc.fixed()
+            : kind === 'kinematic' ? RAPIER.RigidBodyDesc.kinematicPositionBased()
+            : RAPIER.RigidBodyDesc.dynamic();
+          desc.setTranslation(mesh.position.x, mesh.position.y, mesh.position.z);
+          const q = mesh.quaternion;
+          desc.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w });
+          if (ph.linvel) desc.setLinvel(ph.linvel[0], ph.linvel[1], ph.linvel[2]);
+          if (ph.angvel) desc.setAngvel(ph.angvel[0], ph.angvel[1], ph.angvel[2]);
+          if (kind === 'dynamic') { desc.setLinearDamping(ph.linearDamping ?? 0.05); desc.setAngularDamping(ph.angularDamping ?? 0.05); }
+          const body = physicsWorld.createRigidBody(desc);
+          physicsWorld.createCollider(colliderFor(o, mesh), body);
+          bodyMap.set(o.id, body);
+        }
+      }
     } catch (e) { errors.push(`object ${o.id}: ${e.message}`); }
   }
   for (const o of spec.objects || []) await buildOne(o, scene);
+
+  // Joint antar body (revolute/spherical/fixed, opsional motor)
+  for (const j of spec.joints || []) {
+    const b1 = bodyMap.get(j.body1), b2 = bodyMap.get(j.body2);
+    if (!b1 || !b2) { errors.push(`joint ${j.body1}-${j.body2}: body tidak ditemukan`); continue; }
+    const v = a => ({ x: a[0], y: a[1], z: a[2] });
+    const Iq = { x: 0, y: 0, z: 0, w: 1 };
+    let jd;
+    if (j.type === 'revolute') jd = RAPIER.JointData.revolute(v(j.anchor1 || [0,0,0]), v(j.anchor2 || [0,0,0]), v(j.axis1 || [0,1,0]), v(j.axis2 || [0,1,0]));
+    else if (j.type === 'spherical') jd = RAPIER.JointData.spherical(v(j.anchor1 || [0,0,0]), v(j.anchor2 || [0,0,0]));
+    else jd = RAPIER.JointData.fixed(v(j.anchor1 || [0,0,0]), Iq, v(j.anchor2 || [0,0,0]), Iq);
+    try {
+      const joint = physicsWorld.createImpulseJoint(jd, b1, b2, true);
+      if (j.motor && j.type === 'revolute') joint.configureMotorVelocity(j.motor.velocity ?? 2, j.motor.factor ?? 1);
+    } catch (e) { errors.push(`joint ${j.body1}-${j.body2}: ${e.message}`); }
+  }
 
   // Kontrol interaktif (slider/toggle) — nilai liveOverrides di atas spec
   const overrides = {};
@@ -302,7 +351,7 @@ export async function buildScene(spec, opts = {}) {
     if (c.type === 'toggle') overrides[c.target].enabled = c.default ?? true;
     else overrides[c.target][c.param || 'speed'] = c.default ?? c.min ?? 0;
   }
-  return { scene, camera, target, registry, errors, spec, animations, overrides };
+  return { scene, camera, target, registry, errors, spec, animations, overrides, physicsWorld, bodyMap };
 }
 
 // Renderer dengan pengaturan warna & tone mapping yang BENAR (anti warna pucat).
@@ -450,6 +499,44 @@ export function smokeCheck(handle, renderer) {
   return report;
 }
 
+// Collider otomatis dari geometri objek (skala ikut diperhitungkan)
+function colliderFor(o, mesh) {
+  const p = o.params || {};
+  const s = Array.isArray(o.scale) ? o.scale : [o.scale ?? 1, o.scale ?? 1, o.scale ?? 1];
+  const ph = o.physics || {};
+  let cd;
+  switch (o.type) {
+    case 'box': cd = RAPIER.ColliderDesc.cuboid((p.width ?? 1) / 2 * s[0], (p.height ?? 1) / 2 * s[1], (p.depth ?? 1) / 2 * s[2]); break;
+    case 'sphere': cd = RAPIER.ColliderDesc.ball((p.radius ?? 0.5) * Math.max(...s)); break;
+    case 'cylinder': case 'cone': cd = RAPIER.ColliderDesc.cylinder((p.height ?? 1) / 2 * s[1], (p.radiusTop ?? p.radius ?? 0.5) * s[0]); break;
+    case 'capsule': cd = RAPIER.ColliderDesc.capsule((p.length ?? 0.6) / 2 * s[1], (p.radius ?? 0.3) * s[0]); break;
+    default: {
+      const b = new THREE.Box3().setFromObject(mesh);
+      const sz = b.getSize(new THREE.Vector3());
+      cd = RAPIER.ColliderDesc.cuboid(Math.max(0.01, sz.x / 2), Math.max(0.01, sz.y / 2), Math.max(0.01, sz.z / 2));
+    }
+  }
+  if (ph.restitution !== undefined) cd.setRestitution(ph.restitution);
+  if (ph.friction !== undefined) cd.setFriction(ph.friction);
+  if (ph.density !== undefined) cd.setDensity(ph.density);
+  return cd;
+}
+
+// Step fisika fixed-timestep + sinkronisasi transform mesh dari rigid body
+export function stepPhysics(handle, dt = 1 / 60) {
+  const w = handle.physicsWorld;
+  if (!w) return;
+  w.timestep = dt;
+  w.step();
+  for (const [id, body] of handle.bodyMap) {
+    const m = handle.registry.get(id);
+    if (!m) continue;
+    const t = body.translation(), r = body.rotation();
+    m.position.set(t.x, t.y, t.z);
+    m.quaternion.set(r.x, r.y, r.z, r.w);
+  }
+}
+
 // Mekanika: spin/oscillate/float/blink + saklar power (spec.power.affects = id terdampak).
 // Deterministik terhadap t — render headless menangkap pose pada t tetap.
 export function applyAnimations(handle, t, powerOn = true) {
@@ -458,6 +545,7 @@ export function applyAnimations(handle, t, powerOn = true) {
   const ov = handle.overrides || {};
   const blinkIds = new Set();
   for (const a of handle.animations || []) {
+    if (handle.bodyMap?.has(a.id)) continue;  // fisika menang atas keyframe
     const o = ov[a.id] || {};
     const an = a.anim, ax = an.axis || 'z';
     const enabled = o.enabled ?? an.enabled ?? true;
