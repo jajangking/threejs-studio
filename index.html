@@ -70,6 +70,11 @@ button:disabled{opacity:.4;cursor:default}
 .bedah-toggles{gap:4px}
 .bedah-toggles button{flex:1;padding:4px 6px;font-size:10.5px}
 #vpBedah select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:2px 4px;font-size:11px}
+#vpTimeline{position:absolute;bottom:58px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(22,24,29,.9);border:1px solid var(--border);border-radius:8px;padding:5px 12px;z-index:5;font-size:11px}
+#vpTimeline:empty{display:none}
+#vpTimeline button{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:2px 9px;cursor:pointer;font-size:12px}
+#vpTimeline #tlTime{font-family:ui-monospace,monospace;color:var(--dim);width:38px;text-align:right}
+#vpTimeline input[type=range]{width:180px;accent-color:var(--accent)}
 #vpMech{position:absolute;bottom:58px;right:10px;z-index:5;background:rgba(22,24,29,.88);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:6px;max-width:260px}
 #vpMech:empty{display:none}
 .mech-row{display:flex;align-items:center;gap:8px;font-size:11px}
@@ -335,6 +340,7 @@ button:disabled{opacity:.4;cursor:default}
       <div id="vpStats"></div>
       <div id="vpBedah"></div>
       <div id="vpMech"></div>
+      <div id="vpTimeline"></div>
       <div id="vpControls"></div>
       <div id="vpHelp">Klik: pilih · W/E/R: gizmo · F: frame · Esc: lepas pilihan · Drag: orbit · Scroll: zoom · Klik kanan: pan</div>
       <div id="vpToast"></div>
@@ -425,6 +431,7 @@ button:disabled{opacity:.4;cursor:default}
   <button id="btnExpZip">🗜 ZIP lengkap — scene + kontrak + semua iterasi + HTML</button>
   <button id="btnExpJson">📄 scene.json — spec mentah</button>
   <button id="btnExpGlb">🧊 GLB — model 3D untuk Blender / three.js lain</button>
+  <button id="btnExpBom">📋 BOM — daftar part + material + dimensi (.csv)</button>
   <div class="dd-note">HTML mandiri butuh internet (Three.js dari CDN). GLB = geometri + material (tanpa langit/bintang prosedural).</div>
 </div>
 <script type="module" src="./js/studio.js"></script>

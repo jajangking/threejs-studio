@@ -1,0 +1,47 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+</head><body style="margin:0">
+<canvas id="cv" width="1280" height="720"></canvas>
+<pre id="out"></pre>
+<script type="module">
+import * as THREE from './vendor/three.module.js';
+import { buildScene, makeRenderer, setSection, syncCaps } from './js/scene-builder.js';
+const out = document.getElementById('out');
+try {
+  const spec = await (await fetch('./scene.json')).json();
+  const handle = await buildScene(spec);
+  const renderer = makeRenderer(document.getElementById('cv'), 1280, 720, { preserveDrawingBuffer: true });
+  handle.scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+  const d = new THREE.DirectionalLight(0xffffff, 2); d.position.set(5, 10, 7); handle.scene.add(d);
+  handle.camera.position.set(7, 5.5, 9); handle.camera.lookAt(0, 4, 0);
+  const g = renderer.getContext();
+  const px = new Uint8Array(4 * 1280 * 720);
+  function stats() {
+    g.readPixels(0, 0, 1280, 720, g.RGBA, g.UNSIGNED_BYTE, px);
+    let bright = 0, cap = 0, tot = 0;
+    for (let i = 0; i < px.length; i += 4 * 31) {
+      tot++;
+      const r = px[i], gg = px[i + 1], b = px[i + 2];
+      if (r + gg + b > 150) bright++;
+      if (Math.abs(r - gg) < 12 && Math.abs(gg - b) < 12 && r > 110 && r < 200) cap++;
+    }
+    return { brightPct: +(bright / tot * 100).toFixed(1), capPct: +(cap / tot * 100).toFixed(1) };
+  }
+  const res = {};
+  renderer.render(handle.scene, handle.camera);
+  res.OFF = { ...stats(), calls: renderer.info.render.calls, tris: renderer.info.render.triangles };
+  setSection(handle, renderer, { enabled: true, axis: 'x', pos: 0, caps: true });
+  syncCaps(handle);
+  renderer.render(handle.scene, handle.camera);
+  res.ON = { ...stats(), calls: renderer.info.render.calls, tris: renderer.info.render.triangles, capGroups: handle.capSystem?.groups.length };
+  setSection(handle, renderer, { enabled: true, axis: 'x', pos: 0, caps: false });
+  renderer.render(handle.scene, handle.camera);
+  res.ON_nocaps = { ...stats(), calls: renderer.info.render.calls, tris: renderer.info.render.triangles };
+  setSection(handle, renderer, { enabled: true, axis: 'x', pos: 0, caps: true });
+  syncCaps(handle);
+  renderer.render(handle.scene, handle.camera);
+  out.textContent = JSON.stringify(res);
+} catch (e) { out.textContent = JSON.stringify({ error: String(e), stack: e.stack }); }
+</script></body></html>

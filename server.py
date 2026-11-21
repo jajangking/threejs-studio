@@ -454,7 +454,9 @@ BATAS KEMAMPUAN (JUJUR — jangan klaim fitur yang tidak kamu buat):
 - Kamu HANYA mengubah SPEC scene (objek/lampu/kamera/animasi/fisika/kontrol). Kamu TIDAK bisa mengubah kode UI studio.
 - Fitur UI yang SUDAH BUILT-IN (jangan klaim "menambahkan" ini): tombol ⏸ Jeda/▶ Putar (membekukan animasi & fisika),
   ↺ Reset fisika, gizmo W/E/R, inspector, saklar power (dari spec.power), slider/toggle (dari spec.controls),
-  panel 🔬 Bedah: exploded view hierarkis (slider), section/cutaway (sumbu X/Y/Z + posisi potong), X-ray, Isolasi part, Label nama.
+  panel 🔬 Bedah: exploded view hierarkis (slider), section/cutaway (sumbu X/Y/Z + posisi potong + caps irisan solid),
+  X-ray, Isolasi part, Label nama, alat ukur jarak (klik 2 titik), timeline scrub 0-10s (fisika deterministik).
+  Export menu termasuk BOM daftar part (.csv).
 - Bila user minta fitur yang sudah built-in (mis. "jeda fisika"): jawab bahwa tombolnya sudah ada di viewport dan cara pakainya.
 - Bila user minta fitur UI baru yang tidak bisa lewat spec: katakan jujur itu perlu perubahan kode studio, bukan spec.
 - Balasanmu akan diverifikasi terhadap diff yang benar-benar diterapkan — jangan menyebut perubahan yang tidak ada di diff.
@@ -1348,8 +1350,29 @@ const secOpts = {{ enabled: false, axis: 'x', pos: 0, flip: false }};
   const r4 = document.createElement('div'); r4.className = 'row';
   const xr = document.createElement('button'); xr.textContent = '☐ X-ray';
   xr.onclick = () => {{ xrayOn = !xrayOn; xr.textContent = (xrayOn ? '☑' : '☐') + ' X-ray'; xr.className = xrayOn ? 'on' : ''; setXray(handle, xrayOn, null); }};
-  r4.appendChild(xr); bedah.appendChild(r4);
+  r4.appendChild(xr);
+  const cp = document.createElement('button'); cp.textContent = '☑ Caps'; cp.className = 'on';
+  cp.onclick = () => {{ secOpts.caps = !secOpts.caps; cp.textContent = (secOpts.caps ? '☑' : '☐') + ' Caps'; cp.className = secOpts.caps ? 'on' : ''; if (secOpts.enabled) setSection(handle, renderer, secOpts); }};
+  r4.appendChild(cp); bedah.appendChild(r4);
 }}
+// Timeline scrub
+const tl = document.createElement('div');
+tl.style.cssText = 'position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:rgba(22,24,29,.9);border:1px solid #2e333d;border-radius:8px;padding:5px 12px;font:11px system-ui;color:#8b91a0';
+const tlPlay = document.createElement('button'); tlPlay.textContent = '⏸';
+tlPlay.style.cssText = 'background:#232730;border:1px solid #2e333d;color:#cfd3dc;border-radius:5px;padding:2px 9px;cursor:pointer';
+tlPlay.onclick = () => {{ playing = !playing; tlPlay.textContent = playing ? '⏸' : '▶'; }};
+const tlTime = document.createElement('span'); tlTime.textContent = '0.0s'; tlTime.style.cssText = 'font-family:monospace;width:38px;text-align:right';
+const tlSlider = document.createElement('input'); tlSlider.type = 'range'; tlSlider.min = 0; tlSlider.max = 10; tlSlider.step = 0.05; tlSlider.value = 0;
+tlSlider.style.cssText = 'width:180px;accent-color:#4f8cff';
+tlSlider.oninput = () => {{
+  playing = false; tlPlay.textContent = '▶';
+  animT = parseFloat(tlSlider.value);
+  if (handle.physicsWorld) {{ resetPhysics(handle); const n = Math.min(600, Math.round(animT * 60)); for (let i = 0; i < n; i++) stepPhysics(handle, 1 / 60); }}
+  applyAnimations(handle, animT, powerOn);
+  tlTime.textContent = animT.toFixed(1) + 's';
+}};
+tl.append(tlPlay, tlTime, tlSlider);
+if ((handle.animations || []).length || handle.physicsWorld) document.body.appendChild(tl);
 let physAcc = 0;
 if (handle.physicsWorld) {{
   const b = document.createElement('button');
@@ -1369,6 +1392,8 @@ renderer.setAnimationLoop(() => {{
   }}
   applyAnimations(handle, animT, powerOn);
   if (explodeF > 0 || lastExplodeF > 0) {{ applyExplode(handle, explodeF); lastExplodeF = explodeF; }}
+  if (handle.capSystem) syncCaps(handle);
+  if (playing && document.activeElement !== tlSlider) {{ tlSlider.value = (animT % 10).toFixed(2); tlTime.textContent = (animT % 10).toFixed(1) + 's'; }}
   controls.update();
   if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
 }});
@@ -1432,7 +1457,27 @@ class Handler(SimpleHTTPRequestHandler):
             spec = read_json(os.path.join(ROOT, 'scene.json'), {})
             stamp = datetime.date.today().isoformat()
             base = slugify((spec.get('meta') or {}).get('name') or 'scene') + '-' + stamp
-            if fmt == 'json':
+            if fmt == 'bom':
+                import io as _io, csv as _csv
+                rows = [['id', 'nama', 'tipe', 'induk', 'dimensi', 'warna', 'roughness', 'metalness', 'emissive', 'fisika']]
+                def walk(o, parent=''):
+                    g = o.get('params') or o.get('geometry') or {}
+                    dims = 'x'.join(str(g[k]) for k in ('radius', 'width', 'height', 'depth', 'radiusTop', 'radiusBottom', 'tube', 'size', 'length') if k in g) or '-'
+                    sc = o.get('scale')
+                    if sc and any(abs(v - 1) > 1e-6 for v in sc):
+                        dims += ' @scale ' + 'x'.join(str(v) for v in sc)
+                    m = o.get('material') or {}
+                    rows.append([o.get('id', ''), o.get('name', ''), o.get('type', ''), parent, dims,
+                                 m.get('color', ''), m.get('roughness', ''), m.get('metalness', ''),
+                                 m.get('emissive', ''), (o.get('physics') or {}).get('body', '')])
+                    for c in o.get('children') or []:
+                        walk(c, o.get('id', ''))
+                for o in spec.get('objects', []):
+                    walk(o)
+                buf = _io.StringIO()
+                _csv.writer(buf).writerows(rows)
+                body, ctype, ext = buf.getvalue().encode('utf-8'), 'text/csv; charset=utf-8', 'csv'
+            elif fmt == 'json':
                 body, ctype, ext = json.dumps(spec, ensure_ascii=False, indent=2).encode(), 'application/json', 'json'
             elif fmt == 'zip':
                 body, ctype, ext = export_zip(spec), 'application/zip', 'zip'

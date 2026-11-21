@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { TransformControls } from '../vendor/TransformControls.js';
 import { GLTFExporter } from '../vendor/GLTFExporter.js';
-import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels } from './scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels, syncCaps, resetPhysics } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
 const deg = THREE.MathUtils.degToRad, rad2deg = THREE.MathUtils.radToDeg;
@@ -17,7 +17,8 @@ let iterations = [], cmpSel = [], consoleErrors = 0, liveReport = null;
 let dragging = false, downPos = null;
 let animT = 0, animPlaying = true, powerOn = true, physAcc = 0;
 let explodeFactor = 0, lastExplode = 0, xrayOn = false, isolateOn = false, labelsOn = false;
-let sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false };
+let sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false, caps: true };
+let measureMode = false, measurePts = [], measureGroup = null;
 const clock = new THREE.Clock();
 
 // ── responsif: drawer mobile ──
@@ -112,6 +113,12 @@ function animate() {
     applyExplode(handle, explodeFactor);
     lastExplode = explodeFactor;
   }
+  if (handle?.capSystem) syncCaps(handle);
+  const tl = $('#tlSlider');
+  if (tl && document.activeElement !== tl && animPlaying) {
+    tl.value = (animT % 10).toFixed(2);
+    $('#tlTime').textContent = (animT % 10).toFixed(1) + 's';
+  }
   orbit.update();
   const cam = handle?.camera || bootCam;
   const sc = handle?.scene || bootScene;
@@ -138,8 +145,11 @@ async function rebuild(newSpec, announce) {
   handle.composer = makeComposer(handle, renderer, wrap.clientWidth, Math.max(1, wrap.clientHeight));
   animT = 0; animPlaying = true; powerOn = spec.power?.default ?? true; physAcc = 0;
   explodeFactor = 0; lastExplode = 0; xrayOn = false; isolateOn = false; labelsOn = false;
-  sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false };
+  sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false, caps: true };
   renderer.clippingPlanes = [];
+  measureMode = false; measurePts = [];
+  if (measureGroup) { handle?.scene.remove(measureGroup); measureGroup = null; }
+  renderTimeline();
   updateVpControls(); renderBedahPanel();
   orbit.object = handle.camera;
   orbit.target.copy(handle.target);
@@ -305,6 +315,72 @@ function renderInspector() {
   }
 }
 
+// ── timeline animasi (scrub deterministik; fisika di-resimulasi dari reset) ──
+function renderTimeline() {
+  const el = $('#vpTimeline'); if (!el) return;
+  el.innerHTML = '';
+  if (!handle) return;
+  const hasTime = (handle.animations?.length || 0) > 0 || !!handle.physicsWorld;
+  if (!hasTime) return;
+  const play = document.createElement('button');
+  const paintPlay = () => { play.textContent = animPlaying ? '⏸' : '▶'; };
+  play.onclick = () => { animPlaying = !animPlaying; paintPlay(); updateVpControls(); };
+  paintPlay();
+  const t = document.createElement('span'); t.id = 'tlTime'; t.textContent = '0.0s';
+  const s = document.createElement('input'); s.type = 'range'; s.id = 'tlSlider';
+  s.min = 0; s.max = 10; s.step = 0.05; s.value = 0;
+  s.oninput = () => {
+    animPlaying = false; paintPlay(); updateVpControls();
+    animT = parseFloat(s.value);
+    if (handle.physicsWorld) {
+      resetPhysics(handle);
+      const n = Math.min(600, Math.round(animT * 60));
+      for (let i = 0; i < n; i++) stepPhysics(handle, 1 / 60);
+    }
+    applyAnimations(handle, animT, powerOn);
+    if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
+    t.textContent = animT.toFixed(1) + 's';
+  };
+  el.append(play, t, s);
+}
+
+// ── alat ukur: klik 2 titik permukaan → garis + label jarak ──
+function addMeasurePoint(p) {
+  if (!measureGroup) { measureGroup = new THREE.Group(); measureGroup.name = '__measure'; handle.scene.add(measureGroup); }
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8),
+    new THREE.MeshBasicMaterial({ color: 0xff9a3c, depthTest: false }));
+  dot.position.copy(p); dot.renderOrder = 998;
+  measureGroup.add(dot);
+  measurePts.push(p.clone());
+  if (measurePts.length === 2) {
+    const [a, b] = measurePts;
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a, b]),
+      new THREE.LineBasicMaterial({ color: 0xff9a3c, depthTest: false }));
+    line.renderOrder = 998;
+    measureGroup.add(line);
+    const d = a.distanceTo(b);
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = 80;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = 'rgba(20,16,10,0.88)'; ctx.beginPath(); ctx.roundRect(4, 4, 248, 72, 14); ctx.fill();
+    ctx.font = '700 40px system-ui'; ctx.fillStyle = '#ffb066'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(d.toFixed(2) + ' m', 128, 42);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false, transparent: true }));
+    sp.scale.set(0.9, 0.28, 1);
+    sp.position.copy(a).lerp(b, 0.5).add(new THREE.Vector3(0, 0.2, 0));
+    sp.renderOrder = 999;
+    measureGroup.add(sp);
+    measurePts = [];
+    toast(`Jarak: ${d.toFixed(2)} m`);
+  }
+}
+function clearMeasure() {
+  if (measureGroup) {
+    measureGroup.children.forEach(c => { c.geometry?.dispose(); c.material?.map?.dispose(); c.material?.dispose(); });
+    handle?.scene.remove(measureGroup);
+  }
+  measureGroup = null; measurePts = [];
+}
+
 // ── panel bedah assembly (exploded/section/xray/isolate/label) ──
 function renderBedahPanel() {
   const el = $('#vpBedah'); if (!el) return;
@@ -373,6 +449,13 @@ function renderBedahPanel() {
   }));
   r4.appendChild(mk('Label', () => labelsOn, v => { labelsOn = v; makeLabels(handle).visible = v; }));
   body.appendChild(r4);
+  const r5 = document.createElement('div'); r5.className = 'mech-row bedah-toggles';
+  r5.appendChild(mk('Caps', () => sectionOpts.caps, v => { sectionOpts.caps = v; if (sectionOpts.enabled) setSection(handle, renderer, sectionOpts); }));
+  r5.appendChild(mk('📏 Ukur', () => measureMode, v => { measureMode = v; toast(v ? 'Klik 2 titik permukaan untuk mengukur' : 'Mode ukur selesai'); }));
+  const clr = document.createElement('button'); clr.textContent = '✕'; clr.title = 'Hapus semua ukuran';
+  clr.onclick = clearMeasure;
+  r5.appendChild(clr);
+  body.appendChild(r5);
   el.appendChild(body);
 }
 
@@ -452,6 +535,12 @@ canvas.addEventListener('pointerup', e => {
   const r = canvas.getBoundingClientRect();
   ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ptr, handle.camera);
+  if (measureMode) {
+    const mh = ray.intersectObjects(handle.scene.children, true)
+      .filter(h => h.object.isMesh && h.object.parent?.name !== '__labels' && !h.object.userData?.isSky && h.object.renderOrder < 1);
+    if (mh.length) addMeasurePoint(mh[0].point);
+    return;
+  }
   const meshes = (spec.objects || []).map(o => handle.registry.get(o.id)).filter(m => m && m.visible !== false);
   const hits = ray.intersectObjects(meshes, true);
   if (hits.length) {
@@ -905,9 +994,11 @@ window.__studioDebug = {
   get powerOn() { return powerOn; },
   get animT() { return animT; },
   get playing() { return animPlaying; },
-  step(dt) { animT += dt; applyAnimations(handle, animT, powerOn); if (handle?.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera); },
+  step(dt) { animT += dt; applyAnimations(handle, animT, powerOn); if (handle?.capSystem) syncCaps(handle); if (handle?.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera); },
   stepPhys(n = 60) { for (let i = 0; i < n; i++) stepPhysics(handle, 1 / 60); },
   explode(f) { explodeFactor = f; lastExplode = f; applyExplode(handle, f); },
+  measure(a, b) { addMeasurePoint(new THREE.Vector3(...a)); addMeasurePoint(new THREE.Vector3(...b)); },
+  scrub(t) { const s = $('#tlSlider'); if (s) { s.value = t; s.dispatchEvent(new Event('input')); } },
   bodyPos(id) { const b = handle?.bodyMap?.get(id); if (!b) return null; const t = b.translation(); return [t.x, t.y, t.z]; },
   setPower(v) { powerOn = v; updateVpControls(); },
 };
@@ -971,6 +1062,7 @@ $('#btnProjNew').onclick = () => {
 $('#btnExpHtml').onclick = () => { location.href = '/api/export?format=html'; toast('Mengunduh HTML mandiri…'); };
 $('#btnExpZip').onclick = () => { location.href = '/api/export?format=zip'; toast('Mengunduh ZIP lengkap…'); };
 $('#btnExpJson').onclick = () => { location.href = '/api/export?format=json'; toast('Mengunduh scene.json…'); };
+$('#btnExpBom').onclick = () => { location.href = '/api/export?format=bom'; toast('Mengunduh BOM daftar part…'); };
 $('#btnExpGlb').onclick = async () => {
   if (!spec) { toast('Scene belum dimuat'); return; }
   toast('Menyiapkan GLB…');

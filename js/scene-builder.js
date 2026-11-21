@@ -359,7 +359,7 @@ export async function buildScene(spec, opts = {}) {
 // Renderer dengan pengaturan warna & tone mapping yang BENAR (anti warna pucat).
 export function makeRenderer(canvas, w, h, opts = {}) {
   const renderer = new THREE.WebGLRenderer({
-    canvas, antialias: true,
+    canvas, antialias: true, stencil: true,
     preserveDrawingBuffer: opts.preserveDrawingBuffer ?? false,
     powerPreference: 'high-performance',
   });
@@ -377,7 +377,9 @@ export function makeRenderer(canvas, w, h, opts = {}) {
 export function makeComposer(handle, renderer, w, h) {
   const post = handle.spec.post;
   if (!post || !post.bloom) return null;
-  const composer = new EffectComposer(renderer);
+  // stencilBuffer WAJIB untuk section caps (irisan solid) — RT default tidak punya stencil
+  const rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, stencilBuffer: true });
+  const composer = new EffectComposer(renderer, rt);
   composer.setSize(w, h);
   composer.addPass(new RenderPass(handle.scene, handle.camera));
   const b = post.bloom;
@@ -599,6 +601,21 @@ export function applyAnimations(handle, t, powerOn = true) {
   }
 }
 
+// Reset ringan semua rigid body ke transform awal (untuk timeline scrub & tombol reset)
+export function resetPhysics(handle) {
+  if (!handle.bodyMap) return;
+  for (const [id, body] of handle.bodyMap) {
+    const init = body.userData?.init;
+    if (!init) continue;
+    body.setTranslation({ x: init.p.x, y: init.p.y, z: init.p.z }, true);
+    body.setRotation({ x: init.q.x, y: init.q.y, z: init.q.z, w: init.q.w }, true);
+    body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    const m = handle.registry.get(id);
+    if (m) { m.position.copy(init.p); m.quaternion.copy(init.q); }
+  }
+}
+
 // ─────────────────────────── TOOLKIT BEDAH ASSEMBLY ───────────────────────────
 // Semua fitur view — tidak mengubah spec. Dipakai studio DAN export HTML.
 
@@ -606,31 +623,52 @@ export function applyAnimations(handle, t, powerOn = true) {
 // Offset aditif (kurangi offset lama, tambah baru) — aman composing dengan fisika/animasi.
 export function applyExplode(handle, factor) {
   const roots = (handle.spec.objects || []).map(o => handle.registry.get(o.id)).filter(Boolean);
-  const box = new THREE.Box3();
-  for (const m of roots) { if (m.userData?.isSky || m.name === '__ground') continue; box.expandByObject(m); }
-  if (box.isEmpty()) return;
-  const center = box.getCenter(new THREE.Vector3());
-  const radius = Math.max(0.5, box.getSize(new THREE.Vector3()).length() * 0.28);
+  const isScenery = m => m.userData?.isSky || m.name === '__ground' || /^(backdrop|ground|langit|bintang)$/i.test(m.userData?.specId || '');
+  // Pusat & radius dari posisi DASAR (bukan posisi terkini) — stabil, tidak drift tiap frame
+  const center = new THREE.Vector3();
+  let n = 0, radius = 0.5;
+  for (const m of roots) {
+    if (isScenery(m) || !m.userData.basePos) continue;
+    center.add(m.userData.basePos); n++;
+  }
+  if (!n) return;
+  center.divideScalar(n);
+  for (const m of roots) {
+    if (isScenery(m) || !m.userData.basePos) continue;
+    radius = Math.max(radius, m.userData.basePos.distanceTo(center));
+  }
+  radius *= 0.75;
   const off = (m, c, r, idx) => {
     const base = m.userData.basePos;
     if (!base) return;
     const dir = base.clone().sub(c);
     if (dir.lengthSq() < 1e-6) { const a = idx * 2.39996; dir.set(Math.cos(a), 0.35, Math.sin(a)); }
     dir.normalize();
+    // Bias vertikal: part tidak menusuk lantai — sebar horizontal/atas.
+    // Arah lurus ke bawah perlu komponen horizontal dulu (renormalisasi saja mengembalikan -1).
+    if (dir.y < -0.1) {
+      if (Math.hypot(dir.x, dir.z) < 1e-3) { const a = idx * 2.39996; dir.x = Math.cos(a); dir.z = Math.sin(a); }
+      dir.y = -0.1;
+      dir.normalize();
+    }
     const prev = m.userData.explodeOff || new THREE.Vector3();
     m.position.sub(prev);
     const next = dir.multiplyScalar(factor * r);
+    // Clamp root ke atas lantai (world y >= 0.05)
+    if (m.parent === handle.scene && base.y + next.y < 0.05) next.y = 0.05 - base.y;
     m.position.add(next);
     m.userData.explodeOff = next;
   };
   roots.forEach((m, i) => {
-    if (m.userData?.isSky || m.name === '__ground') return;
+    if (isScenery(m)) return;
     off(m, center, radius, i);
     if (m.type === 'Group' && m.children.length) {
       const lc = new THREE.Vector3();
-      m.children.forEach(ch => lc.add(ch.userData.basePos || ch.position));
-      lc.divideScalar(m.children.length);
-      const lr = Math.max(0.3, m.children.reduce((acc, ch) => Math.max(acc, (ch.userData.basePos || ch.position).distanceTo(lc)), 0)) * 1.2;
+      let cn = 0;
+      m.children.forEach(ch => { if (ch.userData.basePos) { lc.add(ch.userData.basePos); cn++; } });
+      if (!cn) return;
+      lc.divideScalar(cn);
+      const lr = Math.max(0.3, m.children.reduce((acc, ch) => Math.max(acc, (ch.userData.basePos || ch.position).distanceTo(lc)), 0)) * 1.1;
       m.children.forEach((ch, j) => off(ch, lc, lr, j));
     }
   });
@@ -638,10 +676,98 @@ export function applyExplode(handle, factor) {
 
 // Section / cutaway: clipping plane global (semua material terpotong, lihat isi dalam)
 export function setSection(handle, renderer, opts) {
+  disposeCaps(handle);
+  // pulihkan side material semula
+  handle.scene.traverse(m => {
+    if (m.isMesh && m.userData.sectionOrigSide !== undefined) {
+      m.material.side = m.userData.sectionOrigSide;
+      delete m.userData.sectionOrigSide;
+    }
+  });
   if (!opts || !opts.enabled) { renderer.clippingPlanes = []; return; }
+  renderer.localClippingEnabled = true;
   const n = { x: [-1, 0, 0], y: [0, -1, 0], z: [0, 0, -1] }[opts.axis || 'x'];
   const normal = new THREE.Vector3(...n).multiplyScalar(opts.flip ? -1 : 1);
-  renderer.clippingPlanes = [new THREE.Plane(normal, (opts.pos ?? 0) * (opts.flip ? -1 : 1))];
+  const plane = new THREE.Plane(normal, (opts.pos ?? 0) * (opts.flip ? -1 : 1));
+  renderer.clippingPlanes = [plane];
+  // DoubleSide WAJIB: dari sisi potong, dinding dalam half yang tersisa adalah backface
+  // (FrontSide = culled = solid "hilang"). DoubleSide menampilkan dinding dalam irisan.
+  handle.scene.traverse(m => {
+    if (m.isMesh && m.material && m.userData.sectionOrigSide === undefined) {
+      m.userData.sectionOrigSide = m.material.side;
+      m.material.side = THREE.DoubleSide;
+    }
+  });
+  if (opts.caps !== false) buildCaps(handle, plane);
+}
+
+// ── Section caps: irisan terlihat SOLID (teknik stencil three.js) ──
+function buildCaps(handle, plane) {
+  const groups = [];
+  const box = new THREE.Box3();
+  handle.scene.traverse(m => {
+    if (!m.isMesh || m.userData?.isSky || m.name === '__ground' || m.parent?.name === '__labels') return;
+    if (!m.geometry) return;
+    // Hanya solid TERTUTUP — geometri terbuka (plane/ring) merusak stencil → cap bocor jadi dinding raksasa
+    if (/Plane|Ring|Shape/.test(m.geometry.type)) return;
+    if (/^(backdrop|ground|jalan|trotoar|langit|bintang)/i.test(m.userData?.specId || '')) return;
+    box.setFromObject(m);
+    if (box.isEmpty()) return;
+    // hanya mesh yang benar-benar terpotong plane
+    const c = box.getCenter(new THREE.Vector3());
+    const r = box.getSize(new THREE.Vector3()).length() * 0.5;
+    if (Math.abs(plane.distanceToPoint(c)) > r) return;
+    const g = new THREE.Group();
+    const base = new THREE.MeshBasicMaterial();
+    base.depthWrite = false; base.depthTest = false; base.colorWrite = false;
+    base.stencilWrite = true; base.stencilFunc = THREE.AlwaysStencilFunc;
+    const m0 = base.clone(); m0.side = THREE.BackSide; m0.clippingPlanes = [plane];
+    m0.stencilFail = m0.stencilZFail = m0.stencilZPass = THREE.IncrementWrapStencilOp;
+    const m1 = base.clone(); m1.side = THREE.FrontSide; m1.clippingPlanes = [plane];
+    m1.stencilFail = m1.stencilZFail = m1.stencilZPass = THREE.DecrementWrapStencilOp;
+    const a = new THREE.Mesh(m.geometry, m0); a.renderOrder = 1;
+    const b = new THREE.Mesh(m.geometry, m1); b.renderOrder = 1;
+    g.add(a, b);
+    g.matrixAutoUpdate = false;
+    handle.scene.add(g);
+    groups.push({ src: m, g });
+  });
+  // satu bidang cap global menutup semua irisan
+  const capGeo = new THREE.PlaneGeometry(400, 400);
+  const capMat = new THREE.MeshBasicMaterial({
+    color: 0xd0d4dc, side: THREE.DoubleSide,
+    stencilWrite: true, stencilRef: 0, stencilFunc: THREE.NotEqualStencilFunc,
+    stencilFail: THREE.ReplaceStencilOp, stencilZFail: THREE.ReplaceStencilOp, stencilZPass: THREE.ReplaceStencilOp,
+  });
+  const cap = new THREE.Mesh(capGeo, capMat);
+  cap.renderOrder = 2;
+  cap.onAfterRender = (r) => r.clearStencil();
+  plane.coplanarPoint(cap.position);
+  cap.lookAt(cap.position.x - plane.normal.x, cap.position.y - plane.normal.y, cap.position.z - plane.normal.z);
+  handle.scene.add(cap);
+  handle.capSystem = { groups, cap, plane };
+  syncCaps(handle);
+}
+// sync transform grup stencil mengikuti mesh sumber (fisika/animasi/explore) — panggil tiap frame
+export function syncCaps(handle) {
+  const cs = handle.capSystem;
+  if (!cs) return;
+  for (const { src, g } of cs.groups) {
+    src.updateWorldMatrix(true, false);
+    g.matrix.copy(src.matrixWorld);
+    g.matrixWorldNeedsUpdate = true;
+  }
+}
+function disposeCaps(handle) {
+  const cs = handle.capSystem;
+  if (!cs) return;
+  for (const { g } of cs.groups) {
+    handle.scene.remove(g);
+    g.children.forEach(c => c.material.dispose());
+  }
+  handle.scene.remove(cs.cap);
+  cs.cap.geometry.dispose(); cs.cap.material.dispose();
+  handle.capSystem = null;
 }
 
 // X-ray: semua part transpar kecuali yang dipilih (lihat internals di sekitar part)
