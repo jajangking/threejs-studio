@@ -1,31 +1,13 @@
-# Kontrak — Remote Kontrol Teardown
-
+# Kontrak — kipas angin (update)
 ## Konsep
-Remote kontrol inframerah modern dengan **tampilan default terakit rapat** di atas panggung gelap dan pencahayaan produk. Strukturnya tetap lengkap: keypad & tombol (depan), casing faceplate transparan, membrane + kontak karbon, PCB hijau berisi MCU/kristal/IR LED, serta casing belakang berisi dua baterai AA dan pegas terminal. Mode teardown tersedia lewat panel 🔬 Bedah: preset **Rapat / Lapisan / Terbuka** dan slider exploded 0–100% untuk memisahkan 4 lapis tersebut sesuai kebutuhan. Jadi yang dinilai pada render default adalah remote utuh yang rapi — bukan diagram exploded.
-
+Standing fan studio: 3 bilah melengkung benar-benar terpisah 120° (4 segmen twist + ujung aksen + tulang), gril sangkar 3D tertutup (cincin konsentris depan/belakang, jari-jari penuh, kawat memanjang, cincin tengah). Mekanika nyala/putar/osilasi tetap.
 ## Objek wajib
-- Casing depan transparan + jendela IR merah + emblem.
-- Keypad lengkap: tombol daya (merah, onClick power), input, mute, volume, channel, guide, d-pad + OK, menu/back/home, empat tombol warna, 12 tombol angka (instances), dan tombol media.
-- Membrane silikon + 12 kontak karbon (instances).
-- PCB + MCU + 16 pin (instances) + memory IC + kristal + IR LED (blink) + indicator LED (blink) + buzzer + kapasitor/resistor/jejak tembaga (instances).
-- Casing belakang + kompartemen + 2 baterai AA + tutup kuning + 2 pegas + 4 sekrup (instances) + label.
-- Panggung silinder dengan rim emissive.
-
-## Palet hex
-- Casing depan: #2a3550/30% · Casing belakang: #2a2d35 · PCB: #1f7a4a
-- Keypad: #cdd1d8 · Daya: #c0392b · Warna: #d63a3c/#2ea655/#d8b431/#3a76cf
-- Emas (pin/kontak): #d4af37 · IR: #ff2a10 · Latar: #0a0e18 · Panggung: #151922
-
-## Kamera & pencahayaan
-- Kamera [2.6,2.4,6.4], target [0,1.9,0], fov 46 — Three-quarter hero, subjek ~50% frame.
-- Hemi #4a5a80 0.65; key directional hangat #fff0d8 2.2 (shadow); fill biru #4f7fff point 16; rim oranye #ff9a5c 0.8.
-- Bloom 0.5/0.5/0.75, fog gelap near14 far46, exposure 1.15.
-
-## Interaksi
-- Saklar daya mematikan LED IR & indikator; slider mengatur periode kedip; toggle mengaktifkan LED IR.
-- Tombol daya bisa diklik di viewport/export. Alat Bedah bawaan (exploded, potong, X-ray, isolasi, label) untuk memeriksa tiap lapis.
-
-## Acceptance criteria
-A. Smoke 8/8 lolos (terang, subjek 2-70% frame, semua objek terlihat).
-B. Dalaman terbaca jelas: PCB, MCU, IR LED, baterai dan pegas tampak dari kamera.
-C. Palet kontras, tidak ada material abu default,Emissive ≤5.
+base, base-ring, base-top, pole, pole-collar, collar-knob, panel, btn-1..3, panel-knob, led, cord, backdrop; head berisi motor, motor-face, motor-back, gril depan/belakang + jari-jari penuh, cage-wire-01..24, cage-hoop-1..3, grill-cap, osc-knob, rotor (hub + blade-1..3 segmen s1..s4 + tip + spine).
+## Palet
+#23262e badan, #2b2f38 motor, #c9ced8 kawat gril, #f0f4fb bilah, #ff6b4a aksen, #4ade80/#ffd166 tombol+LED, #1a1e26 tanah, #0e1118 langit.
+## Kamera
+[10,6.5,12] target [0,4.2,0] fov 48.
+## Lighting
+hemi 0.6, key directional 2.2 + bayangan, fill hangat, rim biru; bloom 0.35/0.4/0.82.
+## Acceptance
+A. Smoke 8/8. B. Terlihat jelas 3 bilah dan sangkar gril menyambung depan-belakang; mekanika masih berfungsi.

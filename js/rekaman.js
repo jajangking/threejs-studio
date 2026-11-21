@@ -34,6 +34,9 @@ async function boot() {
   const composer = makeComposer(handle, renderer, stage.clientWidth, stage.clientHeight);
   handle.composer = composer;
   frameCamera(handle.camera, handle.target, handle.scene, orbit);
+  // WAJIB: builder bikin kamera aspect=1 — tanpa ini gambar teregang/terpotong di viewport lebar
+  handle.camera.aspect = stage.clientWidth / stage.clientHeight;
+  handle.camera.updateProjectionMatrix();
   powerOn = spec.power?.default ?? true;
   animT = 0; physAcc = 0;
   cinePath = compileCameraPath(handle);
@@ -229,6 +232,73 @@ addEventListener('keyup', e => { keys[e.code] = false; });
 plc.addEventListener('lock', () => { walkOn = true; orbit.enabled = false; if (handle) handle.camera.position.y = 1.7; toast('WASD jalan · ESC keluar'); });
 plc.addEventListener('unlock', () => { walkOn = false; if (!cinePlaying) orbit.enabled = true; });
 
+// ── Agent AI (backend sama dengan Studio Design) ──
+let agentRunning = false, agentPollH = null, agentModelsLoaded = false;
+function adLog(messages) {
+  const el = $('#adLog');
+  if (!el) return;
+  const list = (messages || []).slice(-12);
+  el.innerHTML = list.map(m => {
+    const role = m.role === 'user' ? 'user' : 'agent';
+    const txt = String(m.text || '').slice(0, 600).replace(/[<>]/g, c => c === '<' ? '&lt;' : '&gt;');
+    return `<div class="ad-msg ${role}"><span class="ad-meta">${role === 'user' ? 'Bang' : 'Agent'}</span>${txt}</div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+async function adPoll() {
+  try {
+    const st = await (await fetch('/api/chat/state?t=' + Date.now())).json();
+    adLog(st.messages || []);
+    agentRunning = !!st.running;
+    $('#adStatus').textContent = agentRunning ? (st.status || 'agent bekerja…') : (st.messages?.length ? 'siap' : 'belum ada percakapan');
+    $('#adSend').disabled = agentRunning || !$('#adText').value.trim();
+    if (agentRunning) agentPollH = setTimeout(adPoll, 3000);
+    else if (agentPollH) { clearTimeout(agentPollH); agentPollH = null; toast('Agent selesai — scene akan termuat ulang bila berubah'); }
+  } catch (e) { $('#adStatus').textContent = 'polling gagal: ' + e.message; if (agentRunning) agentPollH = setTimeout(adPoll, 4000); }
+}
+async function adLoadModels() {
+  if (agentModelsLoaded) return;
+  agentModelsLoaded = true;
+  try {
+    const d = await (await fetch('/api/backends')).json();
+    const sel = $('#adModel');
+    sel.innerHTML = '';
+    let first = null;
+    (d.backends || []).forEach(b => {
+      const og = document.createElement('optgroup');
+      og.label = b.label + (b.available ? '' : ' — tidak tersedia');
+      (b.models || []).forEach(m => {
+        const o = document.createElement('option');
+        o.value = m.value; o.textContent = m.label + (b.available ? '' : ' 🔒');
+        if (!b.available) o.disabled = true; else if (!first) first = o.value;
+        og.appendChild(o);
+      });
+      sel.appendChild(og);
+    });
+    const prev = localStorage.getItem('studio.chatModel');
+    const usable = [...sel.options].filter(o => !o.disabled);
+    sel.value = (prev && usable.some(o => o.value === prev)) ? prev : (d.default_model || first || '');
+  } catch (e) { $('#adModel').innerHTML = '<option value="">backend gagal dimuat</option>'; }
+}
+async function adSend() {
+  const text = $('#adText').value.trim();
+  const model = $('#adModel').value;
+  if (!text || !model || agentRunning) return;
+  try {
+    const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, model }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.ok) { $('#adText').value = ''; agentRunning = true; adPoll(); }
+    else if (r.status === 409) { agentRunning = true; adPoll(); toast('Agent masih sibuk — tunggu sebentar'); }
+    else toast('Gagal: ' + (j.error || r.status));
+  } catch (e) { toast('Gagal menghubungi agent: ' + e.message); }
+}
+$('#btnAgentDrawer').onclick = async () => { document.body.classList.toggle('agent-open'); if (document.body.classList.contains('agent-open')) { await adLoadModels(); adPoll(); } };
+$('#adClose').onclick = () => document.body.classList.remove('agent-open');
+$('#adSend').onclick = adSend;
+$('#adText').addEventListener('input', () => { $('#adSend').disabled = agentRunning || !$('#adText').value.trim(); });
+$('#adText').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); adSend(); } });
+document.querySelectorAll('.ad-chip').forEach(c => c.onclick = () => { $('#adText').value = c.textContent; $('#adText').focus(); $('#adSend').disabled = !$('#adModel').value; });
+
 // ── video MP4 ──
 $('#btnVideo').onclick = async () => {
   try {
@@ -314,6 +384,11 @@ function loop(now) {
   render();
 }
 
+window.__rekamanDebug = {
+  get handle() { return handle; },
+  get camera() { return handle?.camera; },
+  get aspect() { return handle?.camera.aspect; },
+};
 boot().then(() => {
   orbit.object = handle.camera;
   plc.camera = handle.camera;

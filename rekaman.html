@@ -42,6 +42,23 @@ canvas{display:block;width:100%;height:100%}
 .shot-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid rgba(46,51,61,.5);cursor:pointer}
 .shot-row:hover{color:var(--accent)}
 .shot-row .m{color:var(--dim);font-family:ui-monospace,monospace;font-size:10px}
+#agentDrawer{position:fixed;top:44px;right:0;bottom:0;width:min(390px,94vw);z-index:30;background:rgba(18,20,25,.98);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(103%);transition:transform .22s ease;box-shadow:-12px 0 30px rgba(0,0,0,.5)}
+body.agent-open #agentDrawer{transform:none}
+.ad-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px}
+.ad-head span{flex:1;color:var(--dim);font-size:10px;line-height:1.3}
+.ad-head button{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px}
+#adLog{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:11.5px}
+.ad-msg{padding:6px 9px;border-radius:7px;background:var(--panel2);white-space:pre-wrap;word-break:break-word}
+.ad-msg.user{align-self:flex-end;background:rgba(79,140,255,.15)}
+.ad-msg.agent{align-self:flex-start}
+.ad-meta{color:var(--dim);font-size:9px;opacity:.7;margin-right:6px}
+#adStatus{padding:4px 12px;color:var(--dim);font-size:10.5px;min-height:18px}
+.ad-chips{display:flex;flex-wrap:wrap;gap:5px;padding:0 12px 8px}
+.ad-chip{background:none;border:1px solid var(--border);border-radius:12px;color:var(--dim);font-size:10px;padding:3px 8px;cursor:pointer}
+.ad-chip:hover{border-color:var(--accent);color:var(--text)}
+.ad-compose{border-top:1px solid var(--border);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.ad-compose select,.ad-compose textarea{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font:11.5px system-ui;resize:vertical}
+#adSend{background:var(--accent);border:none;color:#fff;border-radius:6px;padding:7px;cursor:pointer;font-size:11.5px}
 #videoProgress{position:fixed;top:52px;left:50%;transform:translateX(-50%);background:rgba(22,24,29,.95);border:1px solid var(--accent);color:var(--text);padding:8px 16px;border-radius:8px;z-index:99;font-size:12px;display:none}
 #videoProgress a{color:var(--accent)}
 #toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(22,24,29,.95);border:1px solid var(--border);color:var(--text);padding:7px 16px;border-radius:8px;z-index:100;font-size:12px;display:none}
@@ -83,7 +100,23 @@ canvas{display:block;width:100%;height:100%}
   <span class="spacer"></span>
   <button id="btnVideo" class="primary" title="Render tur sinematik → MP4 (ffmpeg)">🎬<span class="lbl"> Video MP4</span><span class="lbl-s"> MP4</span></button>
   <button id="btnExportHtml" title="HTML interaktif: klik aksi, shift-drag fisika, mode jalan">🌐<span class="lbl"> Export Interaktif</span></button>
+  <button id="btnAgentDrawer" title="Prompt agent AI untuk mengubah kamera/tur/scene">🤖<span class="lbl"> Agent</span></button>
   <a href="/" title="Kembali ke Studio Design">🎨<span class="lbl"> Design</span></a>
+</div>
+<div id="agentDrawer">
+  <div class="ad-head"><b>🤖 Agent AI</b><span>Agent yang sama dengan Studio Design — perubahan scene otomatis dimuat ulang di sini</span><button id="adClose">✕</button></div>
+  <div id="adLog"></div>
+  <div id="adStatus"></div>
+  <div class="ad-chips">
+    <button class="ad-chip">Buat kamera berputar lalu zoom ke motor</button>
+    <button class="ad-chip">Tambah shot exploded dengan narasi</button>
+    <button class="ad-chip">Ganti narasi tur jadi lebih singkat</button>
+  </div>
+  <div class="ad-compose">
+    <select id="adModel"></select>
+    <textarea id="adText" rows="2" placeholder="Perintah untuk agent… contoh: buat tur 5 shot, kamera mengelilingi kipas lalu reveal exploded"></textarea>
+    <button id="adSend">Kirim ➤</button>
+  </div>
 </div>
 <div id="stage">
   <canvas id="cv"></canvas>
