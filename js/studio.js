@@ -15,6 +15,9 @@ let spec = null, handle = null, renderer, orbit, gizmo, grid;
 let selectedId = null, dirty = false, lastMtime = 0, serverState = null;
 let iterations = [], cmpSel = [], consoleErrors = 0, liveReport = null;
 let dragging = false, downPos = null;
+// ── Undo/redo drag gizmo (snapshot transform sebelum & sesudah drag) ──
+const HISTORY = [];
+let histIndex = 0, dragBefore = null;
 let animT = 0, animPlaying = true, powerOn = true, physAcc = 0;
 let explodeFactor = 0, lastExplode = 0, xrayOn = false, isolateOn = false, labelsOn = false;
 let sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false, caps: true };
@@ -74,7 +77,27 @@ grid = new THREE.GridHelper(60, 60, 0x3a4152, 0x232833);
 grid.name = '__grid';
 bootScene.add(grid);
 gizmo = new TransformControls(bootCam, canvas);
-gizmo.addEventListener('dragging-changed', e => { orbit.enabled = !e.value; dragging = e.value; });
+gizmo.addEventListener('dragging-changed', e => {
+  orbit.enabled = !e.value; dragging = e.value;
+  if (e.value && selectedId) {
+    const o = spec?.objects?.find(x => x.id === selectedId);
+    if (o) dragBefore = { id: o.id, p: [...o.position], r: [...o.rotation], s: [...o.scale] };
+  } else if (!e.value && dragBefore) {
+    const o = spec?.objects?.find(x => x.id === dragBefore.id);
+    if (o) {
+      const after = { id: o.id, p: [...o.position], r: [...o.rotation], s: [...o.scale] };
+      if (JSON.stringify(after) !== JSON.stringify(dragBefore)) {
+        HISTORY.splice(histIndex);
+        HISTORY.push({ before: dragBefore, after });
+        if (HISTORY.length > 30) HISTORY.shift();
+        histIndex = HISTORY.length;
+        updateHistoryUI();
+        toast('↶ Posisi tercatat — Ctrl+Z untuk undo');
+      }
+    }
+    dragBefore = null;
+  }
+});
 gizmo.addEventListener('objectChange', () => {
   if (!gizmo.object || !selectedId) return;
   const o = spec?.objects?.find(x => x.id === selectedId);
@@ -154,6 +177,7 @@ async function rebuild(newSpec, announce) {
   cineT = 0; cineExplode = null;
   cinePlaying = false;  // tur sinematik = wilayah Studio Rekaman
   orbit.enabled = true;
+  HISTORY.length = 0; histIndex = 0; updateHistoryUI();
   updateVpControls(); renderBedahPanel();
   orbit.object = handle.camera;
   orbit.target.copy(handle.target);
@@ -351,6 +375,41 @@ function doClickAction(o) {
   return true;
 }
 
+// ── undo/redo drag komponen ──
+function applyTransform(t, id) {
+  const o = spec?.objects?.find(x => x.id === id);
+  if (!o) return;
+  o.position = [...t.p]; o.rotation = [...t.r]; o.scale = [...t.s];
+  const m = handle?.registry?.get(id);
+  if (m) {
+    m.position.fromArray(t.p);
+    m.rotation.set(t.r[0] * Math.PI / 180, t.r[1] * Math.PI / 180, t.r[2] * Math.PI / 180);
+    m.scale.fromArray(t.s);
+    if (m.userData.explodeOff) m.position.add(m.userData.explodeOff);
+  }
+  if (m && gizmo.object === m) gizmo.attach(m);
+  renderInspector(); markDirty();
+}
+function updateHistoryUI() {
+  const el = $('#vpHistory'); if (!el) return;
+  el.innerHTML = '';
+  const u = document.createElement('button');
+  u.textContent = '↶'; u.title = 'Undo drag terakhir (Ctrl+Z)'; u.disabled = histIndex <= 0;
+  u.onclick = () => { if (histIndex <= 0) return; const h = HISTORY[--histIndex]; applyTransform(h.before, h.before.id); updateHistoryUI(); toast(`↶ Undo: ${h.before.id}`); };
+  const r = document.createElement('button');
+  r.textContent = '↷'; r.title = 'Redo (Ctrl+Shift+Z)'; r.disabled = histIndex >= HISTORY.length;
+  r.onclick = () => { if (histIndex >= HISTORY.length) return; const h = HISTORY[histIndex++]; applyTransform(h.after, h.before.id); updateHistoryUI(); toast(`↷ Redo: ${h.before.id}`); };
+  el.append(u, r);
+}
+addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return;
+  if (['TEXTAREA', 'INPUT'].includes(document.activeElement?.tagName)) return;
+  e.preventDefault();
+  if (e.shiftKey) { if (histIndex < HISTORY.length) { const h = HISTORY[histIndex++]; applyTransform(h.after, h.before.id); updateHistoryUI(); toast(`↷ Redo: ${h.before.id}`); } }
+  else if (histIndex > 0) { const h = HISTORY[--histIndex]; applyTransform(h.before, h.before.id); updateHistoryUI(); toast(`↶ Undo: ${h.before.id}`); }
+});
+updateHistoryUI();
+
 // ── panel kamera sinematik ──
 function renderCinePanel() {
   const el = $('#vpCine'); if (!el) return;
@@ -471,14 +530,23 @@ function sectionRange(axis) {
   let lo = Infinity, hi = -Infinity;
   for (const o of spec.objects || []) {
     const m = handle.registry.get(o.id);
-    if (!m) continue;
-    m.updateWorldMatrix(true, false);
-    const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld).getComponent(i);
-    if (!Number.isFinite(p) || Math.abs(p) > 1000) continue;
-    lo = Math.min(lo, p); hi = Math.max(hi, p);
+    if (!m || m.userData?.isSky) continue;
+    // ⚠️ bbox per objek SPEC (bukan seluruh scene) + buang mesh langit/ground raksasa
+    const box = new THREE.Box3();
+    m.traverse(x => {
+      if (!x.isMesh || x.name === '__ground' || x.parent?.name === '__labels' || x.userData?.isSky) return;
+      const g = x.geometry;
+      if (g) { if (!g.boundingSphere) g.computeBoundingSphere(); if ((g.boundingSphere?.radius || 0) > 1000) return; }
+      box.expandByObject(x);
+    });
+    if (box.isEmpty()) continue;
+    const a = box.min.getComponent(i), b = box.max.getComponent(i);
+    if (!Number.isFinite(a) || !Number.isFinite(b) || Math.abs(a) > 1000 || Math.abs(b) > 1000) continue;
+    lo = Math.min(lo, a); hi = Math.max(hi, b);
   }
-  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo > 200) { lo = -20; hi = 20; }
-  return [Math.floor(lo - 2), Math.ceil(hi + 2)];
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo > 200) { lo = -5; hi = 5; }
+  const pad = Math.max(0.15, (hi - lo) * 0.15);
+  return [+(lo - pad).toFixed(2), +(hi + pad).toFixed(2)];
 }
 
 // ── panel bedah assembly (exploded/section/xray/isolate/label) ──
@@ -1149,6 +1217,17 @@ window.__studioDebug = {
   explode(f) { explodeFactor = f; lastExplode = f; applyExplode(handle, f); },
   measure(a, b) { addMeasurePoint(new THREE.Vector3(...a)); addMeasurePoint(new THREE.Vector3(...b)); },
   scrub(t) { const s = $('#tlSlider'); if (s) { s.value = t; s.dispatchEvent(new Event('input')); } },
+  testDrag(id, dx) {
+    const o = spec.objects.find(x => x.id === id); if (!o) return null;
+    const before = { id: o.id, p: [...o.position], r: [...o.rotation], s: [...o.scale] };
+    o.position[0] = +(o.position[0] + dx).toFixed(3);
+    const m = handle.registry.get(id); if (m) m.position.x = o.position[0];
+    const after = { id: o.id, p: [...o.position], r: [...o.rotation], s: [...o.scale] };
+    HISTORY.splice(histIndex); HISTORY.push({ before, after }); histIndex = HISTORY.length;
+    updateHistoryUI(); markDirty();
+    return { before: before.p, after: after.p, history: HISTORY.length };
+  },
+  history() { return { n: HISTORY.length, i: histIndex }; },
   cine(t) { cinePlaying = true; orbit.enabled = false; cineT = t; const sm = sampleCameraPath(handle, cinePath, t); if (sm) { handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target); handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix(); if (sm.explode !== null) { applyExplode(handle, sm.explode); lastExplode = sm.explode; } } if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera); return sm ? { pos: sm.pos.toArray().map(v => +v.toFixed(2)), fov: sm.fov, caption: sm.caption } : null; },
   bodyPos(id) { const b = handle?.bodyMap?.get(id); if (!b) return null; const t = b.translation(); return [t.x, t.y, t.z]; },
   setPower(v) { powerOn = v; updateVpControls(); },
