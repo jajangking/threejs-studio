@@ -845,12 +845,22 @@ export function frameDistance(size, fovDeg, fill = 0.5) {
   return (size / 2) / (Math.tan((fovDeg * Math.PI / 180) / 2) * fill);
 }
 
-function objWorldPos(handle, t) {
+function objWorldPos(handle, t, stable = false) {
   if (Array.isArray(t)) return new THREE.Vector3(...t);
   const m = handle.registry.get(t);
   if (!m) return new THREE.Vector3(0, 2, 0);
   m.updateWorldMatrix(true, false);
-  return new THREE.Vector3().setFromMatrixPosition(m.matrixWorld);
+  const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld);
+  // Shot dengan explode: kunci target ke posisi SEBELUM meledak — kalau tidak,
+  // kamera mengejar objek yang ikut bergeser dan subjek tengah 'lari' dari frame.
+  if (stable && m.userData.explodeOff) {
+    const off = m.userData.explodeOff.clone();
+    if (m.parent && m.parent !== handle.scene) {
+      off.applyMatrix4(new THREE.Matrix4().extractRotation(m.parent.matrixWorld));
+    }
+    p.sub(off);
+  }
+  return p;
 }
 function objSize(handle, id) {
   const m = handle.registry.get(id);
@@ -906,7 +916,7 @@ export function sampleCameraPath(handle, path, t) {
   let s = path.shots[path.shots.length - 1];
   for (const sh of path.shots) { if (tt >= sh.t0 && tt < sh.t0 + sh.dur) { s = sh; break; } }
   const u = s.ease(Math.min(1, Math.max(0, (tt - s.t0) / s.dur)));
-  const target = s.target ? objWorldPos(handle, s.target) : new THREE.Vector3(0, 2, 0);
+  const target = s.target ? objWorldPos(handle, s.target, s.explode != null) : new THREE.Vector3(0, 2, 0);
   const fov = s.fov;
   let pos;
   if (s.type === 'orbit') {
@@ -950,15 +960,24 @@ export function sampleCameraPath(handle, path, t) {
 export function applyExplode(handle, factor) {
   const roots = (handle.spec.objects || []).map(o => handle.registry.get(o.id)).filter(Boolean);
   const isScenery = m => m.userData?.isSky || m.name === '__ground' || /^(backdrop|ground|langit|bintang)$/i.test(m.userData?.specId || '');
-  // Pusat & radius dari posisi DASAR (bukan posisi terkini) — stabil, tidak drift tiap frame
-  const center = new THREE.Vector3();
-  let n = 0, radius = 0.5;
+  // Pusat & radius dari posisi DASAR (bukan posisi terkini) — stabil, tidak drift tiap frame.
+  // Pakai MEDIAN per sumbu: dua konektor di ujung kabel tidak menarik pusat menjauh
+  // dari inti kabel (mean membuat kawat tengah ikut meledak).
+  const coords = [[], [], []];
   for (const m of roots) {
     if (isScenery(m) || !m.userData.basePos) continue;
-    center.add(m.userData.basePos); n++;
+    const b = m.userData.basePos;
+    coords[0].push(b.x); coords[1].push(b.y); coords[2].push(b.z);
   }
+  const n = coords[0].length;
   if (!n) return;
-  center.divideScalar(n);
+  const center = new THREE.Vector3();
+  for (let i = 0; i < 3; i++) {
+    coords[i].sort((a, b) => a - b);
+    const mid = n >> 1;
+    center.setComponent(i, n % 2 ? coords[i][mid] : (coords[i][mid - 1] + coords[i][mid]) / 2);
+  }
+  let radius = 0.5;
   for (const m of roots) {
     if (isScenery(m) || !m.userData.basePos) continue;
     radius = Math.max(radius, m.userData.basePos.distanceTo(center));
@@ -968,7 +987,13 @@ export function applyExplode(handle, factor) {
     const base = m.userData.basePos;
     if (!base) return;
     const dir = base.clone().sub(c);
-    if (dir.lengthSq() < 1e-6) { const a = idx * 2.39996; dir.set(Math.cos(a), 0.35, Math.sin(a)); }
+    const prev = m.userData.explodeOff || new THREE.Vector3();
+    m.position.sub(prev);
+    // Anchor: objek di sekitar pusat assembly (kawat dalam, inti kabel) TIDAK boleh
+    // terbang menjauh — kalau tidak, 'titik tengah' bergeser saat exploded/shoot.
+    // Dengan inti diam & jaket menjauh, isi dalam justru terbuka dengan sendirinya.
+    const anchorR = Math.max(0.2, r * 0.3);
+    if (dir.length() < anchorR) { m.userData.explodeOff = new THREE.Vector3(); return; }
     dir.normalize();
     // Bias vertikal: part tidak menusuk lantai — sebar horizontal/atas.
     // Arah lurus ke bawah perlu komponen horizontal dulu (renormalisasi saja mengembalikan -1).
@@ -977,8 +1002,6 @@ export function applyExplode(handle, factor) {
       dir.y = -0.1;
       dir.normalize();
     }
-    const prev = m.userData.explodeOff || new THREE.Vector3();
-    m.position.sub(prev);
     const next = dir.multiplyScalar(factor * r);
     // Clamp root ke atas lantai HANYA saat benar-benar meledak — di factor 0
     // clamp ini menggeser objek (posisi y=0 → 0.05) setiap kali tombol Rapat ditekan.

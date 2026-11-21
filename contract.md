@@ -1,29 +1,24 @@
-# Kontrak — kabel data charger
+# Kontrak — kabel data charger (teardown)
 
 ## Konsep
-Kabel data/charger USB-C premium dengan anyaman braided gelap, digelung bebas di atas tikar meja studio. Fokus pada detail konektor: housing aluminium, strain relief berusuk, tip logam, dan LED aksen biru. Suasana studio gelap sinematik dengan tiga lapis komposisi.
+Kabel USB-C braided premium digelung di atas tikar studio gelap. Selain tampilan luar, kini setiap lapisan dalam tersedia sebagai objek nyata: anyaman → 4 kawat berinsulasi (VBus/GND/D−/D+) → isolasi → PCB → pin tembaga, siap dibedah.
 
 ## Objek wajib
-- desk-mat: tikar meja silindris sebagai foreground.
-- cable-braid: instances segmen silinder mengikuti spline, radius 0.06 m.
-- cable-ring-a/b: cincin logam aksen dekat konektor.
-- connector-a, connector-b: group berisi boot karet + 4 ridge + shell aluminium + seam + tip + insert + LED emissive.
+- desk-mat; cable-braid (instances anyam).
+- kawat-vbus / kawat-gnd / kawat-dminus / kawat-dplus: 4 instances kawat mengikuti spline kabel (radius 0.013 m), tertanam di dalam anyaman.
+- connector-a/b: group berisi boot, 4 ridge, shell, seam, tip, insert, LED + kawat-vbus/gnd/dminus/dplus, isolasi, pcb, pin-1..4.
+- cable-ring-a-1/2, cable-ring-b-1/2: cincin logam aksen.
 
 ## Palet hex
-- Kabel anyam: #1c2633
-- Karet boot: #161d28, ridge #26303e
-- Aluminium shell: #c4ccd6, seam #7b8794
-- Tip gunmetal: #6d7a88, insert #090c12
-- LED: emissive #37e6ff
-- Tikar: #1a2331, ground #141924, background #080b12
+Anyam #1c2633 · Karet #161d28 / ridge #26303e · Aluminium #c4ccd6 / seam #7b8794 · Tip #6d7a88 · LED emissive #37e6ff · Kawat #d9474f / #232830 / #cfd6df / #35b06f · Isolasi #3a3026 · PCB #1c6b4d · Pin #e0b64a · Tikar #1a2331 · Ground #141924 · Background #080b12
 
-## Kamera
-Posisi [7.5,9.5,11.5], target [0,0.2,0], fov 45 — pandangan atas miring, seluruh gelungan dan kedua konektor masuk frame.
+## Kamera & lighting
+Posisi [5.8,7.2,8.8], target [0,0.2,0], fov 45. Hemi #93a9cc 0.9; key #fff0da 2.4 + bayangan; fill #6f8fd0 0.8; rim #b9ccff 1.25; exposure 1.2; bloom 0.55/0.5/0.78.
 
-## Lighting
-Hemisphere #93a9cc intensity 0.9; key directional hangat #fff0da 2.4 dari [7,11,6] dengan bayangan; fill #6f8fd0 0.9; rim #b9ccff 1.1; exposure 1.25; bloom 0.55/0.5/0.75.
+## Cara bedah (panel 🔬 Bedah bawaan studio)
+Exploded slider atau preset 25/50/75% untuk memisah shell & kawat; Section (sumbu X/Y/Z + posisi potong + Caps) mis. sumbu Y posisi 0.10 membelah kabel menyingkap 4 kawat; X-ray untuk melihat kawat tembaga di dalam housing; Isolasi + Label nama untuk membaca tiap kawat.
 
 ## Acceptance criteria
-A. Smoke 8/8 lolos (terang, subjek 2-70% frame, semua objek terlihat).
-B. Konektor terbaca detail, kabel mulus tanpa jump, LED menyala dengan bloom.
-C. Gerbang estetika vision ≥6 dan verdict layak final.
+A. Smoke 8/8 lolos; kawat tersembunyi saat normal (tanpa duplikat visual).
+B. Saat Section/Explode/X-ray, 4 kawat + PCB + pin terbaca jelas dengan warna berbeda.
+C. Konektor tetap solid tertutup di tampilan default; LED menyala dengan bloom.
