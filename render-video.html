@@ -7,7 +7,7 @@
 <pre id="prog" style="color:#8b91a0;font:12px monospace;position:fixed;top:4px;left:4px"></pre>
 <script type="module">
 import * as THREE from 'three';
-import { buildScene, makeRenderer, makeComposer, applyAnimations, stepPhysics, applyExplode, compileCameraPath, sampleCameraPath } from './js/scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, applyAnimations, stepPhysics, applyExplode, compileCameraPath, sampleCameraPath, updateDOF } from './js/scene-builder.js';
 const q = new URLSearchParams(location.search);
 const job = q.get('job') || 'test';
 const fps = Math.max(6, Math.min(30, parseInt(q.get('fps') || '24')));
@@ -18,7 +18,13 @@ cv.width = W; cv.height = H;
 const blend = document.createElement('canvas');
 blend.width = W; blend.height = H;
 const bctx = blend.getContext('2d');
-function applyPose(t) {
+try {
+  const spec = await (await fetch('./scene.json?t=' + Date.now())).json();
+  const handle = await buildScene(spec);
+  const renderer = makeRenderer(cv, W, H, { preserveDrawingBuffer: true });
+  const composer = makeComposer(handle, renderer, W, H);
+  const path = compileCameraPath(handle);
+  function applyPose(t) {
   if (path) {
     const sm = sampleCameraPath(handle, path, t);
     if (sm) {
@@ -33,14 +39,10 @@ function applyPose(t) {
   }
 }
 function renderFrame() {
-  if (composer) composer.render(); else renderer.render(handle.scene, handle.camera);
+  if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
 }
-try {
-  const spec = await (await fetch('./scene.json?t=' + Date.now())).json();
-  const handle = await buildScene(spec);
-  const renderer = makeRenderer(cv, W, H, { preserveDrawingBuffer: true });
-  const composer = makeComposer(handle, renderer, W, H);
-  const path = compileCameraPath(handle);
+  handle.dof = spec.cameraPath?.dof?.enabled ? spec.cameraPath.dof : null;
+  if (handle.dof) handle.composer = makeComposer(handle, renderer, W, H);
   const dur = parseFloat(q.get('duration') || '') || (path ? path.dur : 10);
   const total = Math.ceil(dur * fps);
   let animT = 0;
@@ -48,6 +50,7 @@ try {
     const t = i / fps;
     // animasi & fisika sekuensial deterministik
     animT = t;
+    updateDOF(handle);
     applyAnimations(handle, animT, spec.power?.default ?? true);
     if (handle.physicsWorld) {
       const steps = Math.max(1, Math.round(60 / fps));

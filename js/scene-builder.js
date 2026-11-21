@@ -7,6 +7,7 @@ import { EffectComposer } from '../vendor/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '../vendor/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from '../vendor/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from '../vendor/jsm/postprocessing/OutputPass.js';
+import { BokehPass } from '../vendor/jsm/postprocessing/BokehPass.js';
 import RAPIER from '../vendor/rapier.es.js';
 
 export const SPEC_VERSION = 1;
@@ -441,13 +442,20 @@ export function makeRenderer(canvas, w, h, opts = {}) {
 // Post-processing: bloom sinematik (spec.post.bloom). OutputPass mengurus tone mapping + sRGB.
 export function makeComposer(handle, renderer, w, h) {
   const post = handle.spec.post;
-  if (!post || !post.bloom) return null;
+  if (!(post && post.bloom) && !handle.dof?.enabled) return null;
   // stencilBuffer WAJIB untuk section caps (irisan solid) — RT default tidak punya stencil
   const rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, stencilBuffer: true });
   const composer = new EffectComposer(renderer, rt);
   composer.setSize(w, h);
   composer.addPass(new RenderPass(handle.scene, handle.camera));
-  const b = post.bloom;
+  if (handle.dof?.enabled) {
+    const d = handle.dof;
+    const bp = new BokehPass(handle.scene, handle.camera, {
+      focus: d.focus ?? 5, aperture: d.aperture ?? 0.00012, maxblur: d.maxblur ?? 0.012 });
+    composer.addPass(bp);
+    handle.bokehPass = bp;
+  }
+  const b = post?.bloom || {};
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(w, h), b.strength ?? 0.5, b.radius ?? 0.5, b.threshold ?? 0.75));
   composer.addPass(new OutputPass());
   return composer;
@@ -721,7 +729,29 @@ export function resetPhysics(handle) {
   }
 }
 
-// ── Ledakan radial: impuls ke semua body dynamic dalam radius (falloff linear) ──
+// ── Depth of field / rack focus (produksi — hanya view, bukan spec design) ──
+export function setDOF(handle, renderer, w, h, opts) {
+  handle.dof = opts && opts.enabled ? opts : null;
+  if (handle.composer) { try { handle.composer.dispose(); } catch (e) { /* abaikan */ } }
+  handle.composer = makeComposer(handle, renderer, w, h);
+  handle.bokehPass = handle.dof ? handle.bokehPass : null;
+  return !!handle.dof;
+}
+export function updateDOF(handle) {
+  const bp = handle.bokehPass, d = handle.dof;
+  if (!bp || !d) return;
+  if (d.target && d.focusMode !== 'manual') {
+    const m = handle.registry.get(d.target);
+    if (m) {
+      m.updateWorldMatrix(true, false);
+      const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld);
+      bp.uniforms.focus.value = p.distanceTo(handle.camera.position);
+    }
+  } else if (d.focus != null) bp.uniforms.focus.value = d.focus;
+  if (d.aperture != null) bp.uniforms.aperture.value = d.aperture;
+}
+
+// ── Ledakan radial: impuls ke semua body dynamic (falloff linear) ──
 export function applyExplosion(handle, center, force = 8, radius = 4) {
   if (!handle.physicsWorld) return 0;
   const c = Array.isArray(center) ? new THREE.Vector3(...center) : center;

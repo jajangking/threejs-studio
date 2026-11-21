@@ -6,7 +6,7 @@ import { PointerLockControls } from '../vendor/PointerLockControls.js';
 import {
   buildScene, makeRenderer, makeComposer, frameCamera, applyAnimations, stepPhysics, resetPhysics,
   applyExplode, compileCameraPath, sampleCameraPath, syncCaps,
-  applyExplosion, startDrag, moveDrag, endDrag, makeAudio, updateAudio, audioClick,
+  applyExplosion, startDrag, moveDrag, endDrag, makeAudio, updateAudio, audioClick, setDOF, updateDOF,
 } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
@@ -31,6 +31,7 @@ async function boot() {
   handle = await buildScene(spec);
   const stage = $('#stage');
   renderer = makeRenderer(cv, stage.clientWidth, stage.clientHeight, { exposure: spec.environment?.exposure ?? 1.1 });
+  handle.dof = spec.cameraPath?.dof?.enabled ? spec.cameraPath.dof : null;
   const composer = makeComposer(handle, renderer, stage.clientWidth, stage.clientHeight);
   handle.composer = composer;
   frameCamera(handle.camera, handle.target, handle.scene, orbit);
@@ -45,7 +46,7 @@ async function boot() {
   orbit.object = handle.camera;
   orbit.enabled = !cinePlaying && !walkOn;
   if (audioOn) { const a = makeAudio(handle); if (a) a.ctx.resume(); }
-  renderCinePanel(); renderShotPanel(); renderTimeline(); renderControls();
+  renderCinePanel(); renderShotPanel(); renderTimeline(); renderControls(); skInitTargets();
   addEventListener('resize', () => {
     renderer.setSize(stage.clientWidth, stage.clientHeight, false);
     if (composer) composer.setSize(stage.clientWidth, stage.clientHeight);
@@ -410,6 +411,26 @@ $('#skTtsApply').onclick = async () => {
   renderCinePanel(); renderShotPanel(); renderTimeline();
   toast(`Durasi ${r.boundaries.length} shot disesuaikan dengan narasi ✅`);
 };
+function skCP() { if (!handle.spec.cameraPath) handle.spec.cameraPath = { shots: [], loop: true, autoplay: true }; return handle.spec.cameraPath; }
+function skInitTargets() {
+  const sel = $('#skDofTarget'); if (!sel) return;
+  const ids = (handle.spec.objects || []).map(o => o.id).slice(0, 40);
+  sel.innerHTML = ids.map(id => `<option value="${id}">${id}</option>`).join('');
+  const cur = skCP().dof?.target; if (cur && ids.includes(cur)) sel.value = cur;
+}
+$('#skDof').onclick = () => {
+  const cp = skCP(); const on = !(cp.dof?.enabled);
+  const opts = { enabled: on, target: $('#skDofTarget').value || null, aperture: parseFloat($('#skAperture').value), maxblur: 0.012 };
+  cp.dof = opts;
+  const w = document.getElementById('stage').clientWidth, h = document.getElementById('stage').clientHeight;
+  setDOF(handle, renderer, w, h, opts);
+  handle.camera.aspect = w / h; handle.camera.updateProjectionMatrix();
+  $('#skDof').textContent = on ? '🎯 Rack Focus: AKTIF' : '🎯 Rack Focus: Mati';
+  $('#skDof').classList.toggle('on', on);
+  toast(on ? 'Rack focus aktif — fokus mengikuti objek terpilih' : 'Depth of field mati');
+};
+$('#skAperture').oninput = () => { const d = skCP().dof; if (d?.enabled) { d.aperture = parseFloat($('#skAperture').value); updateDOF(handle); } };
+$('#skDofTarget').onchange = () => { const d = skCP().dof; if (d?.enabled) { d.target = $('#skDofTarget').value; updateDOF(handle); } };
 $('#skBoard').onclick = async () => {
   toast('📸 Menyusun storyboard per shot…', 9000);
   try {
@@ -511,6 +532,7 @@ function loop(now) {
     updateAudio(handle, powerOn, spd);
   }
   if (handle.capSystem) syncCaps(handle);
+  updateDOF(handle);
   if (!cinePlaying && !walkOn) orbit.update();
   render();
 }

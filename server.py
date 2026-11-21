@@ -148,6 +148,8 @@ def tts_generate(job, shots, voice):
         with VIDEO_LOCK:
             cp = read_json(os.path.join(ROOT, 'scene.json'), {}).get('cameraPath') or {}
             VIDEO['voice'] = {'job': job, 'audio': out, 'signature': tts_signature(cp)}
+        with open(os.path.join(VOICE_DIR, 'current.json'), 'w') as f:
+            json.dump(VIDEO['voice'], f)
     except Exception as e:
         with TTS_LOCK:
             TTS[job] = {'status': 'error', 'error': str(e)}
@@ -619,6 +621,8 @@ Shot types (tiap shot punya duration detik, ease linear/in/out/inOut, caption te
   {"type":"journey","duration":12,"stops":[{"target":"usb-c","fill":0.6,"offset":[0.4,0.3,1],"hold":1,"caption":"..."},
   {"target":"kawat-vbus","fill":0.5,"caption":"..."},{"target":"usb-a","fill":0.6,"caption":"..."}]}
   Cocok untuk "dari USB geser ke kabel lalu ke ujung lain" — tidak ada hard cut.
+- Efek produksi: "dof":{"enabled":true,"target":"id objek","aperture":0.00012,"maxblur":0.012} —
+  rack focus mengikuti objek (atau focusMode:"manual" + focus:<meter>).
 - Tiap shot bisa "transition":"fade|dissolve|wipe","transitionDuration":0.6 (transisi saat render MP4)
 - Tiap shot bisa "explode":[0,0.6] — kamera bergerak sambil part meledak perlahan (reveal detail assembly).
 - caption: narasi per shot, mis. "Motor memutar rotor 10 rad/detik" — untuk tur "cara kerja mesin".
@@ -1557,6 +1561,7 @@ import {{ PointerLockControls }} from '{CDN}/examples/jsm/controls/PointerLockCo
 const SPEC = {json.dumps(spec, ensure_ascii=False)};
 const cv = document.getElementById('cv');
 const handle = await buildScene(SPEC);
+if (SPEC.cameraPath?.dof?.enabled) handle.dof = SPEC.cameraPath.dof;
 const cinePath = compileCameraPath(handle);
 let cinePlaying = !!(cinePath && cinePath.autoplay), cineT = 0;
 const renderer = makeRenderer(cv, innerWidth, innerHeight, {{ exposure: SPEC.environment?.exposure ?? 1.1 }});
@@ -1997,7 +2002,7 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send(400, {'ok': False, 'error': 'cameraPath harus objek'})
             spec = read_json(os.path.join(ROOT, 'scene.json'), {})
             # hanya tulis kunci produksi — sisa spec tidak berubah
-            cp = {k: v for k, v in cp.items() if k in ('shots', 'keyframes', 'duration', 'loop', 'autoplay')}
+            cp = {k: v for k, v in cp.items() if k in ('shots', 'keyframes', 'duration', 'loop', 'autoplay', 'shake', 'dof')}
             spec['cameraPath'] = cp
             write_json(os.path.join(ROOT, 'scene.json'), spec)
             status(f'tur kamera disimpan dari Studio Rekaman ({len(cp.get("shots") or [])} shot)')
@@ -2101,6 +2106,8 @@ class Handler(SimpleHTTPRequestHandler):
                 cmd = ['ffmpeg', '-y', '-framerate', str(fps), '-i', os.path.join(ROOT, 'videos', 'frames', job, '%05d.jpg')]
                 with VIDEO_LOCK:
                     vo = VIDEO.get('voice')
+                if not vo:
+                    vo = read_json(os.path.join(VOICE_DIR, 'current.json'), None)
                 cp_now = read_json(os.path.join(ROOT, 'scene.json'), {}).get('cameraPath') or {}
                 if vo and vo.get('signature') == tts_signature(cp_now) and os.path.isfile(vo['audio']):
                     cmd += ['-i', vo['audio'], '-c:a', 'aac', '-b:a', '160k', '-shortest']
