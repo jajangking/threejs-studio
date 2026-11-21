@@ -444,6 +444,8 @@ ATURAN DIFF:
 - JANGAN salin objek yang tidak berubah ke upserts. Output kecil = cepat.
 - Objek lama yang tidak disebut TETAP DIPERTAHANKAN server (merge otomatis).
 - Untuk SCENE BARU TOTAL saja: {"reply":..., "scene":{spec penuh}, "contract":...}.
+- Bila scene saat ini KOSONG (projek baru, objects=[]), kamu WAJIB menyertakan "contract" lengkap
+  (konsep, objek wajib, palet hex, kamera, lighting, acceptance criteria) — kontrak tidak boleh tetap stub.
 - id objek lama dipertahankan persis; hapus hanya yang diminta user atau yang rusak.
 - MEMINDAH/MENGUBAH objek = upsert dengan id yang SAMA PERSIS untuk semua part-nya (mis. mobil: badan+kabin+4 roda+lampu). JANGAN membuat id baru/varian untuk objek yang sudah ada (duplikat visual!).
 
@@ -720,6 +722,8 @@ def run_agent_job(job_id, user_text, model):
         status(f'job {job_id} dimulai · model {model}')
         status('menyiapkan konteks (contract, scene, feedback, riwayat)…')
         raw, used_model = ask_llm(model, user_text)
+        if not _job_active(job_id):
+            return  # dibatalkan saat menunggu model — jangan proses respons zombie
         status(f'memanggil model {used_model}… respons diterima, mem-parsing JSON')
         result = extract_json_object(raw)
         spec0, mode0 = materialize_result(result)
@@ -867,6 +871,8 @@ def run_agent_job(job_id, user_text, model):
             with LOCK:
                 CHAT['error'] = 'smoke test gagal: ' + _fail_summary(render)[:400]
     except Exception as e:
+        if not _job_active(job_id):
+            return  # job sudah dibatalkan/diganti — zombie jangan menulis apa pun
         msg = f'Agent gagal: {e}'
         status(msg)
         append_chat_message({'role': 'agent', 'text': msg, 'at': time.time(),
@@ -875,7 +881,8 @@ def run_agent_job(job_id, user_text, model):
             CHAT['error'] = str(e)
     finally:
         with LOCK:
-            CHAT['running'] = False
+            if CHAT.get('job_id') == job_id:
+                CHAT['running'] = False
 
 
 def start_job(text, model):
