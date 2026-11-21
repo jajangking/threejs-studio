@@ -271,9 +271,43 @@ function renderInspector() {
 }
 
 // ── kontrol mekanika di viewport ──
+function renderMechControls() {
+  const el = $('#vpMech'); if (!el) return;
+  el.innerHTML = '';
+  if (!handle?.overrides) return;
+  for (const c of spec.controls || []) {
+    if (!c.target || !handle.registry.has(c.target)) continue;
+    const row = document.createElement('div'); row.className = 'mech-row';
+    if (c.type === 'toggle') {
+      const b = document.createElement('button');
+      const get = () => handle.overrides[c.target]?.enabled ?? true;
+      const paint = () => { b.textContent = (get() ? '☑ ' : '☐ ') + c.label; b.classList.toggle('on', get()); };
+      b.onclick = () => {
+        handle.overrides[c.target] = handle.overrides[c.target] || {};
+        handle.overrides[c.target].enabled = !get(); paint();
+      };
+      paint(); row.appendChild(b);
+    } else {
+      const lab = document.createElement('span'); lab.className = 'mech-label'; lab.textContent = c.label;
+      const inp = document.createElement('input');
+      inp.type = 'range'; inp.min = c.min ?? 0; inp.max = c.max ?? 100; inp.step = c.step ?? 1;
+      inp.value = handle.overrides[c.target]?.[c.param || 'speed'] ?? c.default ?? 0;
+      const val = document.createElement('span'); val.className = 'mech-val'; val.textContent = inp.value;
+      inp.oninput = () => {
+        handle.overrides[c.target] = handle.overrides[c.target] || {};
+        handle.overrides[c.target][c.param || 'speed'] = parseFloat(inp.value);
+        val.textContent = inp.value;
+      };
+      row.appendChild(lab); row.appendChild(inp); row.appendChild(val);
+    }
+    el.appendChild(row);
+  }
+}
+
 function updateVpControls() {
   const el = $('#vpControls'); if (!el) return;
   el.innerHTML = '';
+  renderMechControls();
   const hasAnim = (handle?.animations?.length || 0) > 0;
   if (spec?.power) {
     const b = document.createElement('button');

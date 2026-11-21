@@ -510,6 +510,14 @@ MEKANIKA & ANIMASI (untuk permintaan "bisa nyala/berputar/bergerak"):
   affects = id animasi/emissive yang berhenti saat power off. WAJIB ada untuk mekanika "bisa nyala".
 - Pola kipas: group "head" (oscillate y) berisi motor+gril+panel; di dalamnya group "rotor" (spin z)
   berisi hub+bilah; LED blink; power affects ["rotor","head","led"]. Posisi children = world - posisi group.
+- accel (opsional pada spin): {"accel":1.5} = ramp-up 1.5 detik dari diam (kesan motor menyala bertahap).
+- controls (UI interaktif di viewport + export, array di root spec):
+  slider: {"id":"ctl-speed","type":"slider","label":"Kecepatan","target":"rotor","param":"speed","min":0,"max":30,"step":0.5,"default":10}
+  toggle: {"id":"ctl-osc","type":"toggle","label":"Osilasi","target":"head","default":true}
+  param yang bisa diikat: speed (spin), amplitude/period (oscillate/float/blink), enabled (toggle).
+  Untuk permintaan "pengaturan kecepatan/atur sendiri" WAJIB tambah slider yang mengikat animasinya.
+- Mekanika custom tersusun dari grup + animasi: roda gigi = dua group spin berlawanan, speed berbanding rasio;
+  piston = group float + batang penghubung; pendulum = oscillate poros lokal. Jelaskan rasio di reply.
 
 STANDAR ESTETIKA (smoke test lolos SAJA TIDAK CUKUP — hasil harus layak final, bukan seperti tutorial):
 - Komposisi 3 lapis: foreground (jalan/trotoar), midground (subjek), background (langit/bulan).
@@ -1164,10 +1172,19 @@ def standalone_html(spec):
 <script type="importmap">{{"imports":{{"three":"{CDN}/build/three.module.js"}}}}</script>
 </head><body>
 <canvas id="cv"></canvas><div id="info"><b>{title}</b> · drag: orbit · scroll: zoom · export Three.js Studio</div>
+<div id="mech"></div>
 <div id="ctl"></div>
 <style>#ctl{{position:fixed;bottom:12px;right:12px;display:flex;gap:6px}}
 #ctl button{{background:rgba(30,33,40,.9);border:1px solid #2e333d;color:#cfd3dc;border-radius:6px;padding:8px 14px;font:600 13px system-ui;cursor:pointer}}
-#ctl button.on{{background:#1d3a2a;border-color:#3fb96b;color:#7ee2a8}}</style>
+#ctl button.on{{background:#1d3a2a;border-color:#3fb96b;color:#7ee2a8}}
+#mech{{position:fixed;bottom:58px;right:12px;background:rgba(22,24,29,.88);border:1px solid #2e333d;border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:6px;max-width:260px;font:11px system-ui;color:#8b91a0}}
+#mech:empty{{display:none}}
+#mech .row{{display:flex;align-items:center;gap:8px}}
+#mech .lab{{width:92px;flex:none}}
+#mech input[type=range]{{flex:1;accent-color:#4f8cff;min-width:70px}}
+#mech .val{{font-family:monospace;color:#cfd3dc;width:34px;text-align:right}}
+#mech button{{background:#232730;border:1px solid #2e333d;color:#8b91a0;border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;width:100%;text-align:left}}
+#mech button.on{{border-color:#3fb96b;color:#7ee2a8}}</style>
 <script type="module">
 import * as THREE from 'three';
 import {{ OrbitControls }} from '{CDN}/examples/jsm/controls/OrbitControls.js';
@@ -1205,6 +1222,28 @@ function drawCtl() {{
   }}
 }}
 drawCtl();
+const mech = document.getElementById('mech');
+for (const c of SPEC.controls || []) {{
+  if (!c.target || !handle.registry.has(c.target)) continue;
+  const row = document.createElement('div'); row.className = 'row';
+  handle.overrides[c.target] = handle.overrides[c.target] || {{}};
+  if (c.type === 'toggle') {{
+    const b = document.createElement('button');
+    const get = () => handle.overrides[c.target].enabled ?? true;
+    const paint = () => {{ b.textContent = (get() ? '☑ ' : '☐ ') + c.label; b.className = get() ? 'on' : ''; }};
+    b.onclick = () => {{ handle.overrides[c.target].enabled = !get(); paint(); }};
+    paint(); row.appendChild(b);
+  }} else {{
+    const lab = document.createElement('span'); lab.className = 'lab'; lab.textContent = c.label;
+    const inp = document.createElement('input');
+    inp.type = 'range'; inp.min = c.min ?? 0; inp.max = c.max ?? 100; inp.step = c.step ?? 1;
+    inp.value = handle.overrides[c.target][c.param || 'speed'] ?? c.default ?? 0;
+    const val = document.createElement('span'); val.className = 'val'; val.textContent = inp.value;
+    inp.oninput = () => {{ handle.overrides[c.target][c.param || 'speed'] = parseFloat(inp.value); val.textContent = inp.value; }};
+    row.appendChild(lab); row.appendChild(inp); row.appendChild(val);
+  }}
+  mech.appendChild(row);
+}}
 renderer.setAnimationLoop(() => {{
   const dt = Math.min(clock.getDelta(), 0.1);
   if (playing) animT += dt;

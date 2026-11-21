@@ -294,7 +294,15 @@ export async function buildScene(spec, opts = {}) {
   }
   for (const o of spec.objects || []) await buildOne(o, scene);
 
-  return { scene, camera, target, registry, errors, spec, animations };
+  // Kontrol interaktif (slider/toggle) — nilai liveOverrides di atas spec
+  const overrides = {};
+  for (const c of spec.controls || []) {
+    if (!c.target) continue;
+    overrides[c.target] = overrides[c.target] || {};
+    if (c.type === 'toggle') overrides[c.target].enabled = c.default ?? true;
+    else overrides[c.target][c.param || 'speed'] = c.default ?? c.min ?? 0;
+  }
+  return { scene, camera, target, registry, errors, spec, animations, overrides };
 }
 
 // Renderer dengan pengaturan warna & tone mapping yang BENAR (anti warna pucat).
@@ -447,19 +455,29 @@ export function smokeCheck(handle, renderer) {
 export function applyAnimations(handle, t, powerOn = true) {
   const power = handle.spec.power;
   const affects = new Set(power?.affects || []);
+  const ov = handle.overrides || {};
   const blinkIds = new Set();
   for (const a of handle.animations || []) {
-    const active = powerOn || !affects.has(a.id);
+    const o = ov[a.id] || {};
     const an = a.anim, ax = an.axis || 'z';
+    const enabled = o.enabled ?? an.enabled ?? true;
+    const active = (powerOn || !affects.has(a.id)) && enabled;
+    const ramp = an.accel ? Math.min(1, t / an.accel) : 1;  // ramp-up (mis. bilah mulai pelan saat menyala)
     if (an.type === 'spin') {
-      a.obj.rotation[ax] = a.baseRot[ax] + (active ? (an.speed ?? 5) * t : 0);
+      const speed = o.speed ?? an.speed ?? 5;
+      a.obj.rotation[ax] = a.baseRot[ax] + (active ? speed * t * ramp : 0);
     } else if (an.type === 'oscillate') {
-      a.obj.rotation[ax] = a.baseRot[ax] + (active ? deg(an.amplitude ?? 30) * Math.sin(2 * Math.PI * t / (an.period ?? 4) + (an.phase ?? 0)) : 0);
+      const amp = o.amplitude ?? an.amplitude ?? 30;
+      const period = o.period ?? an.period ?? 4;
+      a.obj.rotation[ax] = a.baseRot[ax] + (active ? deg(amp) * Math.sin(2 * Math.PI * t / period + (an.phase ?? 0)) : 0);
     } else if (an.type === 'float') {
-      a.obj.position.y = a.basePos.y + (active ? (an.amplitude ?? 0.2) * Math.sin(2 * Math.PI * t / (an.period ?? 3)) : 0);
+      const amp = o.amplitude ?? an.amplitude ?? 0.2;
+      const period = o.period ?? an.period ?? 3;
+      a.obj.position.y = a.basePos.y + (active ? amp * Math.sin(2 * Math.PI * t / period) : 0);
     } else if (an.type === 'blink' && a.obj.material) {
       blinkIds.add(a.id);
-      const hi = active && Math.sin(2 * Math.PI * t / (an.period ?? 1)) > 0;
+      const period = o.period ?? an.period ?? 1;
+      const hi = active && Math.sin(2 * Math.PI * t / period) > 0;
       a.obj.material.emissiveIntensity = hi ? (an.max ?? a.baseEmissive) : (an.min ?? 0.05);
     }
   }

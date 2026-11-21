@@ -5,8 +5,8 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-02",
-    "saved_at": 1795264358.6297941
+    "iteration": "iter-03",
+    "saved_at": 1795265463.0973694
   },
   "environment": {
     "background": "#0e1118",
@@ -511,6 +511,11 @@
         6.7,
         -0.3
       ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "animate": {
         "type": "oscillate",
         "axis": "y",
@@ -690,6 +695,146 @@
           }
         },
         {
+          "id": "grill-rear-ring-3",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.2,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-rear-ring-4",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.35,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-rear-ring-5",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.72,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-rear-ring-6",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 1.12,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-rear-ring-7",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 1.22,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
           "id": "grill-front-rim",
           "type": "torus",
           "position": [
@@ -774,6 +919,174 @@
           }
         },
         {
+          "id": "grill-front-ring-3",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.2,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-front-ring-4",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.32,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-front-ring-5",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.6,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-front-ring-6",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.7,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-front-ring-7",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 1.0,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-front-ring-8",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 1.15,
+            "tube": 0.016
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
           "id": "grill-cap",
           "type": "cylinder",
           "position": [
@@ -798,8 +1111,8 @@
           },
           "material": {
             "color": "#2b2f38",
-            "metalness": 0.2,
-            "roughness": 0.5
+            "metalness": 0.15,
+            "roughness": 0.6
           }
         },
         {
@@ -864,8 +1177,8 @@
           "id": "spoke-2",
           "type": "box",
           "position": [
-            0.4774,
-            0.7774,
+            0.4773,
+            0.7773,
             1.3
           ],
           "rotation": [
@@ -893,14 +1206,14 @@
           "id": "spoke-3",
           "type": "box",
           "position": [
-            0,
+            0.0,
             0.975,
             1.3
           ],
           "rotation": [
             0,
             0,
-            0
+            0.0
           ],
           "scale": [
             1,
@@ -922,8 +1235,8 @@
           "id": "spoke-4",
           "type": "box",
           "position": [
-            -0.4774,
-            0.7774,
+            -0.4773,
+            0.7773,
             1.3
           ],
           "rotation": [
@@ -980,8 +1293,8 @@
           "id": "spoke-6",
           "type": "box",
           "position": [
-            -0.4774,
-            -0.1774,
+            -0.4773,
+            -0.1773,
             1.3
           ],
           "rotation": [
@@ -1009,7 +1322,7 @@
           "id": "spoke-7",
           "type": "box",
           "position": [
-            0,
+            -0.0,
             -0.375,
             1.3
           ],
@@ -1038,8 +1351,8 @@
           "id": "spoke-8",
           "type": "box",
           "position": [
-            0.4774,
-            -0.1774,
+            0.4773,
+            -0.1773,
             1.3
           ],
           "rotation": [
@@ -1064,6 +1377,934 @@
           }
         },
         {
+          "id": "spoke-front-015",
+          "type": "box",
+          "position": [
+            0.652,
+            0.4747,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            -1.309
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-030",
+          "type": "box",
+          "position": [
+            0.5846,
+            0.6375,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            -1.0472
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-060",
+          "type": "box",
+          "position": [
+            0.3375,
+            0.8846,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            -0.5236
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-075",
+          "type": "box",
+          "position": [
+            0.1747,
+            0.952,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            -0.2618
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-105",
+          "type": "box",
+          "position": [
+            -0.1747,
+            0.952,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0.2618
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-120",
+          "type": "box",
+          "position": [
+            -0.3375,
+            0.8846,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0.5236
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-150",
+          "type": "box",
+          "position": [
+            -0.5846,
+            0.6375,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            1.0472
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-165",
+          "type": "box",
+          "position": [
+            -0.652,
+            0.4747,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            1.309
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-195",
+          "type": "box",
+          "position": [
+            -0.652,
+            0.1253,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            1.8326
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-210",
+          "type": "box",
+          "position": [
+            -0.5846,
+            -0.0375,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            2.0944
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-240",
+          "type": "box",
+          "position": [
+            -0.3375,
+            -0.2846,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            2.618
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-255",
+          "type": "box",
+          "position": [
+            -0.1747,
+            -0.352,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            2.8798
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-285",
+          "type": "box",
+          "position": [
+            0.1747,
+            -0.352,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            3.4034
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-300",
+          "type": "box",
+          "position": [
+            0.3375,
+            -0.2846,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            3.6652
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-330",
+          "type": "box",
+          "position": [
+            0.5846,
+            -0.0375,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            4.1888
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-front-345",
+          "type": "box",
+          "position": [
+            0.652,
+            0.1253,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            4.4506
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-000",
+          "type": "box",
+          "position": [
+            0.675,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            -1.5708
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-022",
+          "type": "box",
+          "position": [
+            0.6236,
+            0.5583,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            -1.1781
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-045",
+          "type": "box",
+          "position": [
+            0.4773,
+            0.7773,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            -0.7854
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-067",
+          "type": "box",
+          "position": [
+            0.2583,
+            0.9236,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            -0.3927
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-090",
+          "type": "box",
+          "position": [
+            0.0,
+            0.975,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0.0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-112",
+          "type": "box",
+          "position": [
+            -0.2583,
+            0.9236,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0.3927
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-135",
+          "type": "box",
+          "position": [
+            -0.4773,
+            0.7773,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0.7854
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-157",
+          "type": "box",
+          "position": [
+            -0.6236,
+            0.5583,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            1.1781
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-180",
+          "type": "box",
+          "position": [
+            -0.675,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            1.5708
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-202",
+          "type": "box",
+          "position": [
+            -0.6236,
+            0.0417,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            1.9635
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-225",
+          "type": "box",
+          "position": [
+            -0.4773,
+            -0.1773,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            2.3562
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-247",
+          "type": "box",
+          "position": [
+            -0.2583,
+            -0.3236,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            2.7489
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-270",
+          "type": "box",
+          "position": [
+            -0.0,
+            -0.375,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            3.1416
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-292",
+          "type": "box",
+          "position": [
+            0.2583,
+            -0.3236,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            3.5343
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-315",
+          "type": "box",
+          "position": [
+            0.4773,
+            -0.1773,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            3.927
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-rear-337",
+          "type": "box",
+          "position": [
+            0.6236,
+            0.0417,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            4.3197
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.028,
+            "height": 1.28,
+            "depth": 0.026
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
           "id": "rotor",
           "name": "Rotor (bilah berputar)",
           "type": "group",
@@ -1072,10 +2313,16 @@
             0.3,
             0.75
           ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
           "animate": {
             "type": "spin",
             "axis": "z",
-            "speed": 10
+            "speed": 10,
+            "accel": 1.5
           },
           "children": [
             {
@@ -1084,7 +2331,7 @@
               "position": [
                 0,
                 0,
-                0.0
+                0
               ],
               "rotation": [
                 1.5708,
@@ -1109,93 +2356,522 @@
             },
             {
               "id": "blade-1",
-              "type": "box",
+              "name": "Bilah melengkung blade-1",
+              "type": "group",
               "position": [
                 0,
-                0.825,
-                0.0
+                0,
+                0
               ],
               "rotation": [
                 0,
-                0.45,
-                0
+                0,
+                0.0
               ],
               "scale": [
                 1,
                 1,
                 1
               ],
-              "params": {
-                "width": 0.95,
-                "height": 0.5,
-                "depth": 0.05
-              },
-              "material": {
-                "color": "#e6e9f0",
-                "metalness": 0.1,
-                "roughness": 0.35,
-                "opacity": 0.92
-              }
+              "children": [
+                {
+                  "id": "blade-1-s1",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.44,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.52,
+                    0.0
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.34,
+                    "height": 0.27,
+                    "depth": 0.05
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-1-s2",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.68,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.41,
+                    -0.06
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.42,
+                    "height": 0.27,
+                    "depth": 0.05
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-1-s3",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.92,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.29,
+                    -0.13
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.44,
+                    "height": 0.26,
+                    "depth": 0.048
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-1-s4",
+                  "type": "box",
+                  "position": [
+                    0,
+                    1.13,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.18,
+                    -0.22
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.37,
+                    "height": 0.24,
+                    "depth": 0.046
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-1-tip",
+                  "type": "box",
+                  "position": [
+                    0,
+                    1.21,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.16,
+                    -0.24
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.3,
+                    "height": 0.1,
+                    "depth": 0.045
+                  },
+                  "material": {
+                    "color": "#ff6b4a",
+                    "metalness": 0.2,
+                    "roughness": 0.4,
+                    "emissive": "#ff6b4a",
+                    "emissiveIntensity": 0.18
+                  }
+                }
+              ]
             },
             {
               "id": "blade-2",
-              "type": "box",
+              "name": "Bilah melengkung blade-2",
+              "type": "group",
               "position": [
-                0.714,
-                -0.4125,
-                0.0
+                0,
+                0,
+                0
               ],
               "rotation": [
                 0,
-                0.45,
-                -2.094
+                0,
+                -2.0944
               ],
               "scale": [
                 1,
                 1,
                 1
               ],
-              "params": {
-                "width": 0.95,
-                "height": 0.5,
-                "depth": 0.05
-              },
-              "material": {
-                "color": "#e6e9f0",
-                "metalness": 0.1,
-                "roughness": 0.35,
-                "opacity": 0.92
-              }
+              "children": [
+                {
+                  "id": "blade-2-s1",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.44,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.52,
+                    0.0
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.34,
+                    "height": 0.27,
+                    "depth": 0.05
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-2-s2",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.68,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.41,
+                    -0.06
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.42,
+                    "height": 0.27,
+                    "depth": 0.05
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-2-s3",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.92,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.29,
+                    -0.13
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.44,
+                    "height": 0.26,
+                    "depth": 0.048
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-2-s4",
+                  "type": "box",
+                  "position": [
+                    0,
+                    1.13,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.18,
+                    -0.22
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.37,
+                    "height": 0.24,
+                    "depth": 0.046
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-2-tip",
+                  "type": "box",
+                  "position": [
+                    0,
+                    1.21,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.16,
+                    -0.24
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.3,
+                    "height": 0.1,
+                    "depth": 0.045
+                  },
+                  "material": {
+                    "color": "#ff6b4a",
+                    "metalness": 0.2,
+                    "roughness": 0.4,
+                    "emissive": "#ff6b4a",
+                    "emissiveIntensity": 0.18
+                  }
+                }
+              ]
             },
             {
               "id": "blade-3",
-              "type": "box",
+              "name": "Bilah melengkung blade-3",
+              "type": "group",
               "position": [
-                -0.714,
-                -0.4125,
-                0.0
+                0,
+                0,
+                0
               ],
               "rotation": [
                 0,
-                0.45,
-                -4.189
+                0,
+                -4.1888
               ],
               "scale": [
                 1,
                 1,
                 1
               ],
-              "params": {
-                "width": 0.95,
-                "height": 0.5,
-                "depth": 0.05
-              },
-              "material": {
-                "color": "#e6e9f0",
-                "metalness": 0.1,
-                "roughness": 0.35,
-                "opacity": 0.92
-              }
+              "children": [
+                {
+                  "id": "blade-3-s1",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.44,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.52,
+                    0.0
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.34,
+                    "height": 0.27,
+                    "depth": 0.05
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-3-s2",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.68,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.41,
+                    -0.06
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.42,
+                    "height": 0.27,
+                    "depth": 0.05
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-3-s3",
+                  "type": "box",
+                  "position": [
+                    0,
+                    0.92,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.29,
+                    -0.13
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.44,
+                    "height": 0.26,
+                    "depth": 0.048
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-3-s4",
+                  "type": "box",
+                  "position": [
+                    0,
+                    1.13,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.18,
+                    -0.22
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.37,
+                    "height": 0.24,
+                    "depth": 0.046
+                  },
+                  "material": {
+                    "color": "#e6e9f0",
+                    "metalness": 0.1,
+                    "roughness": 0.35,
+                    "opacity": 0.92
+                  }
+                },
+                {
+                  "id": "blade-3-tip",
+                  "type": "box",
+                  "position": [
+                    0,
+                    1.21,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0.16,
+                    -0.24
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "params": {
+                    "width": 0.3,
+                    "height": 0.1,
+                    "depth": 0.045
+                  },
+                  "material": {
+                    "color": "#ff6b4a",
+                    "metalness": 0.2,
+                    "roughness": 0.4,
+                    "emissive": "#ff6b4a",
+                    "emissiveIntensity": 0.18
+                  }
+                }
+              ]
             }
           ]
         }
@@ -1210,5 +2886,36 @@
       "head",
       "led"
     ]
-  }
+  },
+  "controls": [
+    {
+      "id": "ctl-speed",
+      "type": "slider",
+      "label": "Kecepatan bilah",
+      "target": "rotor",
+      "param": "speed",
+      "min": 0,
+      "max": 30,
+      "step": 0.5,
+      "default": 10
+    },
+    {
+      "id": "ctl-osc",
+      "type": "toggle",
+      "label": "Osilasi kepala",
+      "target": "head",
+      "default": true
+    },
+    {
+      "id": "ctl-amp",
+      "type": "slider",
+      "label": "Sudut osilasi",
+      "target": "head",
+      "param": "amplitude",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "default": 35
+    }
+  ]
 }
