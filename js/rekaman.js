@@ -342,11 +342,23 @@ const SKILL_PRESETS = {
     { id: 'whip', type: 'path', points: [c.clone().add(new THREE.Vector3(-r * 2.5, r * 0.5, r)).toArray(), c.clone().add(new THREE.Vector3(0, r * 0.3, r * 1.2)).toArray(), c.clone().add(new THREE.Vector3(r * 2.5, r * 0.5, r)).toArray()], target: c.toArray(), duration: 2.5, fov: 55, caption: 'Sapuan cepat — transisi dinamis' }] }, '💨 Whip Pan'); },
   'dolly-zoom': () => { const { c, r, id } = skSubject(); return skApply({ loop: false, autoplay: true, shots: [
     { id: 'dolly-zoom', type: 'zoom', target: id || c.toArray(), fromDistance: r * 2.4, toDistance: r * 0.85, direction: [0.6, 0.3, 1], duration: 5, fov: 45, caption: 'Dolly zoom — kedalaman terasa berubah' }] }, '🎯 Dolly Zoom'); },
+  journey: () => {
+    const objs = (handle.spec.objects || []).filter(o => !/desk|ground|backdrop|sky/i.test(o.id || ''));
+    const prio = ['usb-c', 'usbc', 'kawat-vbus', 'vbus', 'kawat-dplus', 'usb-a', 'connector'];
+    const picks = prio.map(k => objs.find(o => (o.id || '').toLowerCase().includes(k))).filter(Boolean).slice(0, 4);
+    const selected = (picks.length >= 2 ? picks : objs.slice(0, 3)).map(o => o.id);
+    if (selected.length < 2) return toast('Butuh minimal 2 objek untuk journey');
+    const stops = selected.map((id, i) => ({ target: id, fill: 0.55, offset: [0.4 + i * 0.1, 0.3, 1], hold: 0.9,
+      caption: i === 0 ? `Mulai dari ${id}` : i === selected.length - 1 ? `Berakhir di ${id}` : `Menelusuri ${id}` }));
+    return skApply({ loop: false, autoplay: true, shots: [{ id: 'seamless', type: 'journey', duration: Math.max(10, selected.length * 3.5), fov: 48, stops,
+      caption: 'Satu pengambilan: meluncur dari komponen ke komponen tanpa potongan' }] }, '🎢 Seamless Journey');
+  },
   loop: () => { const { c, r } = skSubject(); return skApply({ loop: true, autoplay: true, shots: [
     { id: 'loop', type: 'orbit', target: c.toArray(), radius: r * 1.3, height: r * 0.35, sweep: 360, duration: 15, fov: 50, caption: 'Hero loop — putaran tanpa henti' }] }, '🔁 Hero Loop'); },
   clear: () => { handle.spec.cameraPath = null; cinePath = null; cinePlaying = false; orbit.enabled = true;
     renderCinePanel(); renderShotPanel(); renderTimeline(); $('#cineCaption').style.display = 'none'; toast('Tur dihapus — kamera kembali bebas'); },
 };
+$('#btnSafe').onclick = () => { document.body.classList.toggle('safe-on'); $('#btnSafe').classList.toggle('on', document.body.classList.contains('safe-on')); };
 $('#btnSkills').onclick = () => document.body.classList.toggle('skills-open');
 $('#skClose').onclick = () => document.body.classList.remove('skills-open');
 document.querySelectorAll('[data-skill]').forEach(b => b.onclick = () => SKILL_PRESETS[b.dataset.skill]?.());
@@ -369,6 +381,51 @@ $('#skSave').onclick = async () => {
     const r = await fetch('/api/camerapath', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cameraPath: handle.spec.cameraPath }) }).then(x => x.json());
     toast(r.ok ? `Tur tersimpan (${r.shots} shot) — Studio Design melihat versi yang sama` : 'Gagal menyimpan tur');
   } catch (e) { toast('Gagal: ' + e.message); }
+};
+let ttsJob = null;
+$('#skTts').onclick = async () => {
+  toast('🗣️ Menyusun narasi per shot (edge-tts)…', 9000);
+  try {
+    const r = await fetch('/api/tts/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voice: $('#skVoice')?.value || 'en-US-BrianMultilingualNeural' }) }).then(x => x.json());
+    if (!r.ok) return toast('Gagal: ' + (r.error || '?'));
+    ttsJob = r.job;
+    const poll = setInterval(async () => {
+      const s = await (await fetch('/api/tts/state?job=' + ttsJob)).json();
+      if (s.status === 'generating') return;
+      clearInterval(poll);
+      if (s.status === 'error') return toast('Narasi gagal: ' + s.error, 6000);
+      $('#skTtsInfo').textContent = `${s.shots} shot · total ${s.total}s · ${s.voice}`;
+      const a = $('#skAudio'); a.src = '/api/tts/audio?job=' + ttsJob; a.style.display = 'block';
+      toast('🗣️ Narasi siap — putarkan untuk cek, lalu sesuaikan durasi shot', 6000);
+    }, 3000);
+  } catch (e) { toast('Narasi gagal: ' + e.message, 6000); }
+};
+$('#skTtsApply').onclick = async () => {
+  if (!ttsJob) return toast('Buat narasi dulu');
+  const r = await fetch('/api/tts/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job: ttsJob }) }).then(x => x.json());
+  if (!r.ok) return toast('Gagal: ' + r.error);
+  const cp = await (await fetch('/api/camerapath')).json();
+  handle.spec.cameraPath = cp.cameraPath || handle.spec.cameraPath;
+  cinePath = compileCameraPath(handle); cineT = 0; cinePlaying = true;
+  renderCinePanel(); renderShotPanel(); renderTimeline();
+  toast(`Durasi ${r.boundaries.length} shot disesuaikan dengan narasi ✅`);
+};
+$('#skBoard').onclick = async () => {
+  toast('📸 Menyusun storyboard per shot…', 9000);
+  try {
+    const r = await fetch('/api/storyboard/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(x => x.json());
+    if (!r.ok) return toast('Gagal: ' + (r.error || '?'));
+    const poll = setInterval(async () => {
+      try {
+        const s = await (await fetch('/api/storyboard/state?job=' + r.job)).json();
+        if (s.status === 'generating') return;
+        clearInterval(poll);
+        if (s.status === 'error') return toast('Storyboard gagal: ' + s.error, 6000);
+        window.open(s.sheet, '_blank');
+        toast(`📸 Storyboard ${s.shots} shot siap — shot list: ${s.csv}`, 8000);
+      } catch (e) { /* retry */ }
+    }, 3000);
+  } catch (e) { toast('Gagal: ' + e.message, 6000); }
 };
 $('#skVideo').onclick = () => $('#btnVideo').click();
 $('#skHtml').onclick = () => $('#btnExportHtml').click();

@@ -1,0 +1,56 @@
+{
+  "job": "voice-190823",
+  "voice": "id-ID-GadisNeural",
+  "total": 71.41,
+  "boundaries": [
+    {
+      "index": 0,
+      "id": "exp-establish",
+      "start": 0.0,
+      "end": 10.608,
+      "voiceDuration": 10.61,
+      "suggestedShotDuration": 11.21
+    },
+    {
+      "index": 1,
+      "id": "exp-reveal",
+      "start": 10.958,
+      "end": 21.974,
+      "voiceDuration": 11.02,
+      "suggestedShotDuration": 11.62
+    },
+    {
+      "index": 2,
+      "id": "exp-power",
+      "start": 22.324,
+      "end": 33.412,
+      "voiceDuration": 11.09,
+      "suggestedShotDuration": 11.69
+    },
+    {
+      "index": 3,
+      "id": "exp-data",
+      "start": 33.762,
+      "end": 44.202,
+      "voiceDuration": 10.44,
+      "suggestedShotDuration": 11.04
+    },
+    {
+      "index": 4,
+      "id": "exp-pinmap",
+      "start": 44.552,
+      "end": 57.2,
+      "voiceDuration": 12.65,
+      "suggestedShotDuration": 13.25
+    },
+    {
+      "index": 5,
+      "id": "exp-reassemble",
+      "start": 57.55,
+      "end": 71.062,
+      "voiceDuration": 13.51,
+      "suggestedShotDuration": 14.11
+    }
+  ],
+  "audio": "/data/workspace/threejs-studio/voice/voice-190823/narration.mp3"
+}

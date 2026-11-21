@@ -1,0 +1,6 @@
+file '/data/workspace/threejs-studio/storyboards/board-191343/shot-00.png'
+file '/data/workspace/threejs-studio/storyboards/board-191343/shot-01.png'
+file '/data/workspace/threejs-studio/storyboards/board-191343/shot-02.png'
+file '/data/workspace/threejs-studio/storyboards/board-191343/shot-03.png'
+file '/data/workspace/threejs-studio/storyboards/board-191343/shot-04.png'
+file '/data/workspace/threejs-studio/storyboards/board-191343/shot-05.png'

@@ -5,8 +5,8 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-08",
-    "saved_at": 1795287404.7284503
+    "iteration": "iter-11",
+    "saved_at": 1795287953.7977676
   },
   "environment": {
     "background": "#080b12",
@@ -6652,61 +6652,134 @@
     }
   },
   "cameraPath": {
-    "loop": false,
+    "loop": true,
     "autoplay": true,
     "shots": [
       {
-        "id": "utuh",
+        "id": "exp-establish",
         "type": "orbit",
-        "target": [
-          0.005223632035851189,
-          0.08000000000000002,
-          0.5526418205221304
-        ],
-        "radius": 9.474337662234591,
-        "height": 2.7069536177813123,
-        "sweep": 60,
-        "duration": 4,
-        "caption": "Uji narasi produksi"
-      },
-      {
-        "id": "bedah",
-        "type": "orbit",
-        "target": [
-          0.005223632035851189,
-          0.08000000000000002,
-          0.5526418205221304
-        ],
-        "radius": 10.15107606667992,
-        "height": 3.38369202222664,
-        "sweep": 110,
-        "duration": 6,
+        "target": "cable-braid",
+        "framing": {
+          "object": "cable-braid",
+          "fill": 0.32
+        },
+        "height": 5.5,
+        "startAngle": 40,
+        "sweep": 85,
+        "duration": 5,
+        "ease": "inOut",
         "explode": [
           0,
-          0.75
+          0.18
         ],
-        "caption": "Lapisan dalam terbuka saat komponen luar menjauh"
+        "caption": "Tur bedah kabel USB-C: dari luar anyaman nilon melindungi empat kawat di dalam gelungan. Kita buka lapisannya perlahan."
       },
       {
-        "id": "tutup",
+        "id": "exp-reveal",
         "type": "dolly",
         "from": [
-          6.772607676489131,
-          2.7869536177813123,
-          7.320025864975411
+          5.5,
+          3.8,
+          7.5
         ],
         "to": [
-          12.186514912051756,
-          5.493907235562625,
-          12.733933100538033
+          -1.6,
+          1.3,
+          4.4
         ],
-        "target": [
-          0.005223632035851189,
-          0.08000000000000002,
-          0.5526418205221304
+        "target": "connector-a",
+        "duration": 6,
+        "ease": "inOut",
+        "explode": [
+          0.18,
+          1
         ],
+        "caption": "Dolly mendekat ke konektor: boot karet, cangkang aluminium, isolasi, PCB hijau, dan pin tembaga terpisah satu per satu."
+      },
+      {
+        "id": "exp-power",
+        "type": "zoom",
+        "target": "connector-a-kawat-vbus",
+        "fromDistance": 3.2,
+        "toDistance": 1.1,
         "duration": 4,
-        "caption": "Rangkuman konstruksi"
+        "ease": "in",
+        "explode": [
+          1,
+          1
+        ],
+        "caption": "Jalur daya: kawat merah VBus membawa +5V, kawat hitam GND jadi jalur balik arus — keduanya berpasangan di dalam anyaman."
+      },
+      {
+        "id": "exp-data",
+        "type": "path",
+        "points": [
+          [
+            -2.6,
+            1,
+            3.4
+          ],
+          [
+            -2,
+            0.85,
+            4
+          ],
+          [
+            -1.4,
+            0.8,
+            3.4
+          ],
+          [
+            -2,
+            0.75,
+            2.8
+          ]
+        ],
+        "target": "connector-a-kawat-dplus",
+        "duration": 6,
+        "ease": "inOut",
+        "explode": [
+          1,
+          1
+        ],
+        "caption": "Jalur data: kawat hijau D+ dan putih D− adalah pasangan diferensial; sinyalnya dibaca berlawanan sehingga gangguan luar tertolak."
+      },
+      {
+        "id": "exp-pinmap",
+        "type": "crane",
+        "from": [
+          -1.8,
+          0.5,
+          4
+        ],
+        "toY": 3.6,
+        "target": "connector-a-pcb",
+        "duration": 5,
+        "ease": "inOut",
+        "explode": [
+          1,
+          1
+        ],
+        "caption": "Di ujung konektor tiap kawat disolder ke pin tembaga di atas PCB: VBus, D−, D+, GND — urutan ini menentukan orientasi colokan."
+      },
+      {
+        "id": "exp-reassemble",
+        "type": "orbit",
+        "target": "cable-braid",
+        "framing": {
+          "object": "cable-braid",
+          "fill": 0.3
+        },
+        "height": 6,
+        "startAngle": 70,
+        "sweep": 95,
+        "duration": 6,
+        "ease": "inOut",
+        "explode": [
+          1,
+          0
+        ],
+        "caption": "Semua lapisan menyatu lagi: daya lewat VBus/GND, data lewat D+/D−, dilindungi anyaman sepanjang kabel. Satu jalur, dua fungsi."
       }
     ]
   }

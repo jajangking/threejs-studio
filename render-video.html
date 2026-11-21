@@ -15,6 +15,26 @@ const W = parseInt(q.get('w') || '960'), H = parseInt(q.get('h') || '540');
 const prog = document.getElementById('prog');
 const cv = document.getElementById('cv');
 cv.width = W; cv.height = H;
+const blend = document.createElement('canvas');
+blend.width = W; blend.height = H;
+const bctx = blend.getContext('2d');
+function applyPose(t) {
+  if (path) {
+    const sm = sampleCameraPath(handle, path, t);
+    if (sm) {
+      handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target);
+      handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix();
+      if (sm.explode !== null) applyExplode(handle, sm.explode);
+    }
+  } else {
+    const a = t * 0.3;
+    handle.camera.position.set(Math.cos(a) * 10, 5, Math.sin(a) * 10);
+    handle.camera.lookAt(0, 2.5, 0);
+  }
+}
+function renderFrame() {
+  if (composer) composer.render(); else renderer.render(handle.scene, handle.camera);
+}
 try {
   const spec = await (await fetch('./scene.json?t=' + Date.now())).json();
   const handle = await buildScene(spec);
@@ -26,19 +46,6 @@ try {
   let animT = 0;
   for (let i = 0; i < total; i++) {
     const t = i / fps;
-    // kamera: path sinematik atau orbit fallback
-    if (path) {
-      const sm = sampleCameraPath(handle, path, t);
-      if (sm) {
-        handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target);
-        handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix();
-        if (sm.explode !== null) applyExplode(handle, sm.explode);
-      }
-    } else {
-      const a = t * 0.3;
-      handle.camera.position.set(Math.cos(a) * 10, 5, Math.sin(a) * 10);
-      handle.camera.lookAt(0, 2.5, 0);
-    }
     // animasi & fisika sekuensial deterministik
     animT = t;
     applyAnimations(handle, animT, spec.power?.default ?? true);
@@ -46,8 +53,31 @@ try {
       const steps = Math.max(1, Math.round(60 / fps));
       for (let s = 0; s < steps; s++) stepPhysics(handle, 1 / 60);
     }
-    if (composer) composer.render(); else renderer.render(handle.scene, handle.camera);
-    const data = cv.toDataURL('image/jpeg', 0.85);
+    // Transisi di awal shot: fade (dari hitam), dissolve, wipe
+    let tr = null;
+    const shots = path?.shots || [];
+    const sh = shots.find(s => t >= s.t0 && t < s.t0 + s.dur);
+    if (sh?.transition && t < sh.t0 + (sh.transitionDuration || 0.6)) {
+      const u = Math.min(1, Math.max(0, (t - sh.t0) / (sh.transitionDuration || 0.6)));
+      tr = { type: sh.transition, u, i: sh.i, t0: sh.t0 };
+    }
+    if (tr) {
+      // frame A = ujung shot sebelumnya
+      applyPose(Math.max(0, tr.t0 - 0.03)); renderFrame();
+      bctx.globalAlpha = 1; bctx.clearRect(0, 0, W, H); bctx.drawImage(cv, 0, 0, W, H);
+      // frame B = pose saat ini
+      applyPose(t); renderFrame();
+      bctx.globalAlpha = tr.type === 'wipe' ? 1 : tr.u;
+      if (tr.type === 'wipe') bctx.save(), bctx.beginPath(), bctx.rect(0, 0, W * tr.u, H), bctx.clip();
+      if (tr.type !== 'fade') bctx.drawImage(cv, 0, 0, W, H);
+      if (tr.type === 'wipe') bctx.restore();
+      if (tr.type === 'fade') { bctx.fillStyle = '#000'; bctx.globalAlpha = 1 - tr.u; bctx.fillRect(0, 0, W, H); }
+      bctx.globalAlpha = 1;
+      var data = blend.toDataURL('image/jpeg', 0.85);
+    } else {
+      applyPose(t); renderFrame();
+      var data = cv.toDataURL('image/jpeg', 0.85);
+    }
     await fetch('/api/video/frame', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job, i, data }) });
     if (i % 10 === 0) prog.textContent = `frame ${i}/${total}`;
   }

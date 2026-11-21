@@ -1,0 +1,7 @@
+no,id,type,detik,target,framing_fill,jarak_m,explode,transisi,narasi
+1,exp-establish,orbit,5,cable-braid,0.32,,"[0, 0.18]",,Tur bedah kabel USB-C: dari luar anyaman nilon melindungi empat kawat di dalam gelungan. Kita buka lapisannya perlahan.
+2,exp-reveal,dolly,6,connector-a,,,"[0.18, 1]",,"Dolly mendekat ke konektor: boot karet, cangkang aluminium, isolasi, PCB hijau, dan pin tembaga terpisah satu per satu."
+3,exp-power,zoom,4,connector-a-kawat-vbus,,,"[1, 1]",,"Jalur daya: kawat merah VBus membawa +5V, kawat hitam GND jadi jalur balik arus — keduanya berpasangan di dalam anyaman."
+4,exp-data,path,6,connector-a-kawat-dplus,,,"[1, 1]",,Jalur data: kawat hijau D+ dan putih D− adalah pasangan diferensial; sinyalnya dibaca berlawanan sehingga gangguan luar tertolak.
+5,exp-pinmap,crane,5,connector-a-pcb,,,"[1, 1]",,"Di ujung konektor tiap kawat disolder ke pin tembaga di atas PCB: VBus, D−, D+, GND — urutan ini menentukan orientasi colokan."
+6,exp-reassemble,orbit,6,cable-braid,0.3,,"[1, 0]",,"Semua lapisan menyatu lagi: daya lewat VBus/GND, data lewat D+/D−, dilindungi anyaman sepanjang kabel. Satu jalur, dua fungsi."

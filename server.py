@@ -6,6 +6,7 @@ Agent menulis scene.json + iterations/; user melihat via studio & menyimpan edit
 Semua dependensi = python stdlib. Tidak ada paket baru.
 """
 import base64
+import hashlib
 import json
 import os
 import re
@@ -44,6 +45,114 @@ KNOWN_OBJECT_TYPES = {
     'capsule', 'icosahedron', 'ring', 'gltf', 'sky', 'stars', 'instances', 'group', 'rope', 'trigger',
 }
 KNOWN_LIGHT_TYPES = {'ambient', 'hemisphere', 'directional', 'point', 'spot'}
+
+# ── Storyboard: satu keyframe per shot + shot list CSV ──
+STORY = {}
+STORY_LOCK = __import__('threading').Lock()
+STORY_DIR = os.path.join(ROOT, 'storyboards')
+
+def story_generate(job, shots):
+    try:
+        d = os.path.join(STORY_DIR, job)
+        os.makedirs(d, exist_ok=True)
+        files = []
+        acc = 0.0
+        for i, sh in enumerate(shots):
+            sh = dict(sh)
+            sh['t0'] = acc
+            acc += float(sh.get('duration', 4))
+            mid = sh['t0'] + float(sh.get('duration', 4)) / 2
+            out = os.path.join(d, f'shot-{i:02d}.png')
+            url = f'http://127.0.0.1:8091/render.html?scene=scene.json&w=960&h=540&t={mid:.2f}'
+            cmd = ['chromium', '--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--no-proxy-server',
+                   '--enable-unsafe-swiftshader', '--virtual-time-budget=60000', '--window-size=960,540',
+                   f'--screenshot={out}', url]
+            r = subprocess.run(cmd, capture_output=True, timeout=120)
+            if r.returncode != 0 or not os.path.isfile(out):
+                raise RuntimeError(f'keyframe shot {i + 1} gagal')
+            files.append(out)
+        lst = os.path.join(d, 'list.txt')
+        with open(lst, 'w') as f:
+            for fp in files:
+                f.write(f"file '{fp}'\n")
+        sheet = os.path.join(d, 'sheet.png')
+        cols = 2
+        rows = max(1, (len(files) + cols - 1) // cols)
+        r = subprocess.run(['ffmpeg', '-y', '-f', 'concat', '-safe', '0', '-i', lst,
+                            '-vf', f'scale=320:180,tile={cols}x{rows}', '-frames:v', '1', sheet],
+                           capture_output=True, timeout=90)
+        if r.returncode != 0:
+            raise RuntimeError('tile storyboard gagal: ' + r.stderr.decode()[-200:])
+        csvp = os.path.join(d, 'shot-list.csv')
+        import csv as _csv
+        with open(csvp, 'w', newline='') as f:
+            w = _csv.writer(f)
+            w.writerow(['no', 'id', 'type', 'detik', 'target', 'framing_fill', 'jarak_m', 'explode', 'transisi', 'narasi'])
+            for i, sh in enumerate(shots):
+                fr = sh.get('framing') or {}
+                w.writerow([i + 1, sh.get('id', ''), sh.get('type', ''), sh.get('duration', ''),
+                            str(sh.get('target', ''))[:60], fr.get('fill', ''), sh.get('radius', ''),
+                            str(sh.get('explode', '')), sh.get('transition', ''), (sh.get('caption') or '')[:200]])
+        with STORY_LOCK:
+            STORY[job] = {'status': 'done', 'sheet': f'/storyboards/{job}/sheet.png',
+                          'csv': f'/storyboards/{job}/shot-list.csv', 'shots': len(shots)}
+    except Exception as e:
+        with STORY_LOCK:
+            STORY[job] = {'status': 'error', 'error': str(e)}
+
+# ── Narasi TTS per shot (satu MP3 per shot → timeline kontrak) ──
+TTS = {}
+VOICE_DIR = os.path.join(ROOT, 'voice')
+
+def tts_signature(cp):
+    return hashlib.sha1(json.dumps([(s.get('id'), s.get('caption', '')) for s in (cp or {}).get('shots', [])], ensure_ascii=False).encode()).hexdigest()[:12]
+
+def tts_generate(job, shots, voice):
+    try:
+        os.makedirs(os.path.join(VOICE_DIR, job), exist_ok=True)
+        boundaries, total = [], 0.0
+        files = []
+        for i, sh in enumerate(shots):
+            text = (sh.get('caption') or '').strip()
+            mp3 = os.path.join(VOICE_DIR, job, f'shot-{i:02d}.mp3')
+            if text:
+                cmd = ['edge-tts', '--voice', voice, '--text', text, '--write-media', mp3]
+                r = subprocess.run(cmd, capture_output=True, timeout=90)
+                if r.returncode != 0 or not os.path.isfile(mp3):
+                    raise RuntimeError(f'TTS shot {i + 1} gagal: ' + r.stderr.decode()[-200:])
+                dur = float(subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', mp3]).decode().strip())
+            else:
+                open(mp3, 'wb').close(); dur = 0.0
+            files.append(mp3)
+            boundaries.append({'index': i, 'id': sh.get('id'), 'start': round(total, 3), 'end': round(total + dur, 3),
+                               'voiceDuration': round(dur, 2), 'suggestedShotDuration': round(max(float(sh.get('duration') or 4), dur + 0.6), 2)})
+            total += dur + 0.35
+        # jeda 0,35s antar shot
+        concat = os.path.join(VOICE_DIR, job, 'list.txt')
+        with open(concat, 'w') as f:
+            for i, mp3 in enumerate(files):
+                f.write(f"file '{mp3}'\n")
+                if i < len(files) - 1:
+                    gap = os.path.join(VOICE_DIR, job, f'gap-{i:02d}.mp3')
+                    subprocess.run(['ffmpeg', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', '0.35', '-q:a', '9', gap], capture_output=True, timeout=30)
+                    f.write(f"file '{gap}'\n")
+        out = os.path.join(VOICE_DIR, job, 'narration.mp3')
+        r = subprocess.run(['ffmpeg', '-y', '-f', 'concat', '-safe', '0', '-i', concat, '-c:a', 'libmp3lame', '-q:a', '4', out], capture_output=True, timeout=90)
+        if r.returncode != 0:
+            raise RuntimeError('gagal gabung narasi: ' + r.stderr.decode()[-250:])
+        tl = {'job': job, 'voice': voice, 'total': round(total, 2), 'boundaries': boundaries, 'audio': out}
+        with open(os.path.join(VOICE_DIR, job, 'timeline.json'), 'w') as f:
+            json.dump(tl, f, ensure_ascii=False, indent=2)
+        with TTS_LOCK:
+            TTS[job] = {**tl, 'status': 'done'}
+        with VIDEO_LOCK:
+            cp = read_json(os.path.join(ROOT, 'scene.json'), {}).get('cameraPath') or {}
+            VIDEO['voice'] = {'job': job, 'audio': out, 'signature': tts_signature(cp)}
+    except Exception as e:
+        with TTS_LOCK:
+            TTS[job] = {'status': 'error', 'error': str(e)}
+
+TTS_LOCK = __import__('threading').Lock()
 
 VIDEO = {}  # job -> {status, frames, total, fps, path, error}
 VIDEO_LOCK = __import__('threading').Lock()
@@ -506,6 +615,11 @@ Shot types (tiap shot punya duration detik, ease linear/in/out/inOut, caption te
 - zoom: {"type":"zoom","target":"blade-1-s1","fromDistance":8,"toDistance":2,"duration":3}
 - crane: {"type":"crane","from":[6,1,6],"toY":9,"target":"base","duration":4}
 - path: {"type":"path","points":[[...],[...],[...]],"target":"head","duration":8} — spline Catmull-Rom mulus
+- journey: SATU shot tanpa potong — kamera meluncur menyusuri banyak titik:
+  {"type":"journey","duration":12,"stops":[{"target":"usb-c","fill":0.6,"offset":[0.4,0.3,1],"hold":1,"caption":"..."},
+  {"target":"kawat-vbus","fill":0.5,"caption":"..."},{"target":"usb-a","fill":0.6,"caption":"..."}]}
+  Cocok untuk "dari USB geser ke kabel lalu ke ujung lain" — tidak ada hard cut.
+- Tiap shot bisa "transition":"fade|dissolve|wipe","transitionDuration":0.6 (transisi saat render MP4)
 - Tiap shot bisa "explode":[0,0.6] — kamera bergerak sambil part meledak perlahan (reveal detail assembly).
 - caption: narasi per shot, mis. "Motor memutar rotor 10 rad/detik" — untuk tur "cara kerja mesin".
 Alternatif keyframes manual: {"keyframes":[{"t":0,"pos":[...],"target":[...],"fov":50,"caption":"..."},...],"duration":10}
@@ -1738,6 +1852,29 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split('?')[0]
+        if path == '/api/storyboard/state':
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            job = (qs.get('job') or [''])[0]
+            with STORY_LOCK:
+                return self._send(200, STORY.get(job, {'status': 'unknown'}))
+        if path == '/api/tts/state':
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            job = (qs.get('job') or [''])[0]
+            with TTS_LOCK:
+                return self._send(200, TTS.get(job, {'status': 'unknown'}))
+        if path == '/api/tts/audio':
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            job = re.sub(r'[^a-zA-Z0-9-]', '', (qs.get('job') or [''])[0])
+            fp = os.path.join(VOICE_DIR, job, 'narration.mp3')
+            if not os.path.isfile(fp):
+                return self._send(404, {'error': 'narasi belum ada'})
+            data = open(fp, 'rb').read()
+            self.send_response(200)
+            self.send_header('Content-Type', 'audio/mpeg')
+            self.send_header('Content-Length', str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if path == '/api/state':
             return self._send(200, state())
         if path == '/api/health':
@@ -1817,6 +1954,43 @@ class Handler(SimpleHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length) or b'{}')
         except Exception as e:
             return self._send(400, {'ok': False, 'error': str(e)})
+        if path == '/api/storyboard/generate':
+            cp = read_json(os.path.join(ROOT, 'scene.json'), {}).get('cameraPath') or {}
+            shots = cp.get('shots') or []
+            if not shots:
+                return self._send(400, {'ok': False, 'error': 'tur belum ada — pilih preset dulu'})
+            job = 'board-' + datetime.datetime.now().strftime('%H%M%S')
+            with STORY_LOCK:
+                STORY[job] = {'status': 'generating', 'shots': len(shots)}
+            __import__('threading').Thread(target=story_generate, args=(job, shots), daemon=True).start()
+            return self._send(200, {'ok': True, 'job': job, 'shots': len(shots)})
+        if path == '/api/tts/generate':
+            spec = read_json(os.path.join(ROOT, 'scene.json'), {})
+            cp = spec.get('cameraPath') or {}
+            shots = payload.get('shots') if isinstance(payload.get('shots'), list) else (cp.get('shots') or [])
+            if not shots:
+                return self._send(400, {'ok': False, 'error': 'tidak ada shot untuk dinarasikan'})
+            job = 'voice-' + datetime.datetime.now().strftime('%H%M%S')
+            with TTS_LOCK:
+                TTS[job] = {'status': 'generating', 'shots': len(shots)}
+            __import__('threading').Thread(target=tts_generate, args=(job, shots, payload.get('voice') or 'en-US-BrianMultilingualNeural'), daemon=True).start()
+            return self._send(200, {'ok': True, 'job': job, 'shots': len(shots)})
+        if path == '/api/tts/apply':
+            job = re.sub(r'[^a-zA-Z0-9-]', '', payload.get('job', ''))
+            fp = os.path.join(VOICE_DIR, job, 'timeline.json')
+            if not os.path.isfile(fp):
+                return self._send(400, {'ok': False, 'error': 'timeline narasi tidak ada'})
+            tl = read_json(fp, {})
+            spec = read_json(os.path.join(ROOT, 'scene.json'), {})
+            cp = spec.get('cameraPath') or {}
+            for b in tl.get('boundaries', []):
+                i = b['index']
+                if i < len(cp.get('shots', [])):
+                    cp['shots'][i]['duration'] = b['suggestedShotDuration']
+            spec['cameraPath'] = cp
+            write_json(os.path.join(ROOT, 'scene.json'), spec)
+            status(f'durasi shot disesuaikan ke narasi ({job}) — {len(tl.get("boundaries", []))} shot')
+            return self._send(200, {'ok': True, 'boundaries': tl.get('boundaries', [])})
         if path == '/api/camerapath':
             cp = payload.get('cameraPath')
             if not isinstance(cp, dict):
@@ -1924,8 +2098,14 @@ class Handler(SimpleHTTPRequestHandler):
                 VIDEO[job] = {**VIDEO.get(job, {}), 'status': 'encoding', 'frames': frames, 'fps': fps}
             def encode():
                 out = os.path.join(ROOT, 'videos', job + '.mp4')
-                cmd = ['ffmpeg', '-y', '-framerate', str(fps), '-i', os.path.join(ROOT, 'videos', 'frames', job, '%05d.jpg'),
-                       '-c:v', 'libx264', '-preset', 'fast', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]
+                cmd = ['ffmpeg', '-y', '-framerate', str(fps), '-i', os.path.join(ROOT, 'videos', 'frames', job, '%05d.jpg')]
+                with VIDEO_LOCK:
+                    vo = VIDEO.get('voice')
+                cp_now = read_json(os.path.join(ROOT, 'scene.json'), {}).get('cameraPath') or {}
+                if vo and vo.get('signature') == tts_signature(cp_now) and os.path.isfile(vo['audio']):
+                    cmd += ['-i', vo['audio'], '-c:a', 'aac', '-b:a', '160k', '-shortest']
+                    status('narasi TTS disertakan dalam MP4')
+                cmd += ['-c:v', 'libx264', '-preset', 'fast', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]
                 try:
                     r = subprocess.run(cmd, capture_output=True, timeout=600)
                     with VIDEO_LOCK:

@@ -915,8 +915,10 @@ export function sampleCameraPath(handle, path, t) {
   }
   let s = path.shots[path.shots.length - 1];
   for (const sh of path.shots) { if (tt >= sh.t0 && tt < sh.t0 + sh.dur) { s = sh; break; } }
-  const u = s.ease(Math.min(1, Math.max(0, (tt - s.t0) / s.dur)));
-  const target = s.target ? objWorldPos(handle, s.target, s.explode != null) : new THREE.Vector3(0, 2, 0);
+  const rawU = Math.min(1, Math.max(0, (tt - s.t0) / s.dur));
+  const u = s.type === 'journey' ? rawU : s.ease(rawU);  // journey meluncur konstan, tanpa akselerasi global
+  let sampleCaption = s.caption || '';
+  let target = s.target ? objWorldPos(handle, s.target, s.explode != null) : new THREE.Vector3(0, 2, 0);
   const fov = s.fov;
   let pos;
   if (s.type === 'orbit') {
@@ -943,13 +945,46 @@ export function sampleCameraPath(handle, path, t) {
     const pts = (s.points || [[0, 3, 8], [4, 4, 4], [0, 5, -4]]).map(p => new THREE.Vector3(...p));
     const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
     pos = curve.getPoint(u);
+  } else if (s.type === 'journey') {
+    // Satu shot MENYAMBUNG: kamera meluncur dari stop ke stop tanpa cut.
+    // stop = {target:id|[x,y,z], fill, distance, offset, hold, caption}
+    const stops = s.stops || [];
+    const poses = stops.map(st => {
+      const tg = st.target ? objWorldPos(handle, st.target) : new THREE.Vector3(...(st.at || [0, 1.5, 0]));
+      const id = typeof st.target === 'string' ? st.target : null;
+      const size = id ? objSize(handle, id) : 2;
+      const dist = st.distance ?? frameDistance(size, fov, st.fill ?? 0.5);
+      const dir = new THREE.Vector3(...(st.offset || [0.5, 0.3, 1])).normalize();
+      return { tg, p: tg.clone().add(dir.multiplyScalar(dist)), hold: st.hold ?? 0.6, caption: st.caption || '' };
+    });
+    if (poses.length) {
+      let x = u, cur = poses[0];
+      if (poses.length > 1) {
+        const travelW = 2;
+        const total = poses.reduce((a, p) => a + p.hold, 0) + (poses.length - 1) * travelW;
+        x = u * total;
+        let i = 0;
+        while (i < poses.length - 1 && x > poses[i].hold + travelW) { x -= poses[i].hold + travelW; i++; }
+        if (x <= poses[i].hold) cur = poses[i];
+        else {
+          const seg = Math.min(1, Math.max(0, (x - poses[i].hold) / travelW));
+          const e = seg * seg * (3 - 2 * seg); // smoothstep — meluncur, bukan memotong
+          cur = { tg: poses[i].tg.clone().lerp(poses[i + 1].tg, e),
+                  p: poses[i].p.clone().lerp(poses[i + 1].p, e),
+                  caption: e < 0.5 ? poses[i].caption : poses[i + 1].caption };
+        }
+      }
+      pos = cur.p;
+      target = cur.tg;
+      if (cur.caption) sampleCaption = cur.caption;
+    } else pos = target.clone().add(new THREE.Vector3(0, 2, 6));
   } else {
     pos = target.clone().add(new THREE.Vector3(0, 2, 6));
   }
   let explode = null;
   if (Array.isArray(s.explode)) explode = s.explode[0] + (s.explode[1] - s.explode[0]) * u;
   else if (typeof s.explode === 'number') explode = s.explode;
-  return { pos, target, fov, explode, caption: s.caption, shotIndex: s.i, shotProgress: u, shot: s };
+  return { pos, target, fov, explode, caption: sampleCaption || s.caption, shotIndex: s.i, shotProgress: u, shot: s };
 }
 
 // ─────────────────────────── TOOLKIT BEDAH ASSEMBLY ───────────────────────────

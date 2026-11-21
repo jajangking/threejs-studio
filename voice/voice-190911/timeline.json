@@ -1,0 +1,56 @@
+{
+  "job": "voice-190911",
+  "voice": "en-US-BrianMultilingualNeural",
+  "total": 63.4,
+  "boundaries": [
+    {
+      "index": 0,
+      "id": "exp-establish",
+      "start": 0.0,
+      "end": 9.0,
+      "voiceDuration": 9.0,
+      "suggestedShotDuration": 9.6
+    },
+    {
+      "index": 1,
+      "id": "exp-reveal",
+      "start": 9.35,
+      "end": 19.382,
+      "voiceDuration": 10.03,
+      "suggestedShotDuration": 10.63
+    },
+    {
+      "index": 2,
+      "id": "exp-power",
+      "start": 19.732,
+      "end": 29.548,
+      "voiceDuration": 9.82,
+      "suggestedShotDuration": 10.42
+    },
+    {
+      "index": 3,
+      "id": "exp-data",
+      "start": 29.898,
+      "end": 39.186,
+      "voiceDuration": 9.29,
+      "suggestedShotDuration": 9.89
+    },
+    {
+      "index": 4,
+      "id": "exp-pinmap",
+      "start": 39.536,
+      "end": 50.96,
+      "voiceDuration": 11.42,
+      "suggestedShotDuration": 12.02
+    },
+    {
+      "index": 5,
+      "id": "exp-reassemble",
+      "start": 51.31,
+      "end": 63.046,
+      "voiceDuration": 11.74,
+      "suggestedShotDuration": 12.34
+    }
+  ],
+  "audio": "/data/workspace/threejs-studio/voice/voice-190911/narration.mp3"
+}
