@@ -5,8 +5,8 @@
     "seed": 1,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-08",
-    "saved_at": 1795266711.0966291
+    "iteration": "iter-09",
+    "saved_at": 1795267240.4707015
   },
   "environment": {
     "background": "#0d1322",
@@ -148,14 +148,23 @@
         0
       ],
       "material": {
-        "color": "#e5534b",
-        "roughness": 0.28,
-        "metalness": 0.35
+        "color": "#ffffff",
+        "roughness": 0.3,
+        "metalness": 0.35,
+        "emissive": "#ff0000",
+        "emissiveIntensity": 2.5
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.3,
         "friction": 0.5
+      },
+      "animate": {
+        "type": "colorCycle",
+        "period": 3,
+        "saturation": 0.9,
+        "lightness": 0.55,
+        "tintBody": true
       }
     },
     {
@@ -462,9 +471,9 @@
   ],
   "post": {
     "bloom": {
-      "strength": 0.9,
-      "radius": 0.7,
-      "threshold": 0.4
+      "strength": 0.6,
+      "radius": 0.5,
+      "threshold": 0.55
     }
   }
 }

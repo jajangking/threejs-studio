@@ -449,6 +449,14 @@ MODE DIFF (DEFAULT — cepat, output kecil, jangan tulis ulang scene penuh):
  },
  "contract":"markdown kontrak baru (opsional, string)",
  "resolved_feedback":[0,2]}
+BATAS KEMAMPUAN (JUJUR — jangan klaim fitur yang tidak kamu buat):
+- Kamu HANYA mengubah SPEC scene (objek/lampu/kamera/animasi/fisika/kontrol). Kamu TIDAK bisa mengubah kode UI studio.
+- Fitur UI yang SUDAH BUILT-IN (jangan klaim "menambahkan" ini): tombol ⏸ Jeda/▶ Putar (membekukan animasi & fisika),
+  ↺ Reset fisika, gizmo W/E/R, inspector, saklar power (dari spec.power), slider/toggle (dari spec.controls).
+- Bila user minta fitur yang sudah built-in (mis. "jeda fisika"): jawab bahwa tombolnya sudah ada di viewport dan cara pakainya.
+- Bila user minta fitur UI baru yang tidak bisa lewat spec: katakan jujur itu perlu perubahan kode studio, bukan spec.
+- Balasanmu akan diverifikasi terhadap diff yang benar-benar diterapkan — jangan menyebut perubahan yang tidak ada di diff.
+
 ATURAN DIFF:
 - upserts HANYA objek baru/berubah. id sama = ganti objek itu; id baru = tambah.
 - JANGAN salin objek yang tidak berubah ke upserts. Output kecil = cepat.
@@ -506,6 +514,7 @@ MEKANIKA & ANIMASI (untuk permintaan "bisa nyala/berputar/bergerak"):
   oscillate: {"type":"oscillate","axis":"y","amplitude":35,"period":6} — derajat, goyang kiri-kanan
   float: {"type":"float","amplitude":0.2,"period":3} — naik-turun
   blink: {"type":"blink","period":1,"min":0.05,"max":3} — emissiveIntensity berkedip
+  colorCycle: {"type":"colorCycle","period":3,"saturation":0.9,"lightness":0.55,"tintBody":true} — warna emissive berputar pelangi (objek bersinar warna-warni); boleh pada body fisika (material, bukan transform)
 - power (saklar Nyala/Mati muncul di viewport): {"label":"Nyala","default":true,"affects":["rotor","head","led"]}
   affects = id animasi/emissive yang berhenti saat power off. WAJIB ada untuk mekanika "bisa nyala".
 - Pola kipas: group "head" (oscillate y) berisi motor+gril+panel; di dalamnya group "rotor" (spin z)
@@ -927,7 +936,8 @@ def run_agent_job(job_id, user_text, model):
                    if ntotal else f"Render selesai · iterasi {iter_id} (tanpa checklist)")
         if not _job_active(job_id):
             return
-        full_reply = f"{reply}\n\n{summary}" + (f"\n{vision_summary}" if vision_summary else '')
+        perubahan = f"Perubahan diterapkan: {mode0}" if mode0 else ''
+        full_reply = f"{reply}\n\n{summary}" + (f"\n{vision_summary}" if vision_summary else '') + (f"\n{perubahan}" if perubahan else '')
         append_chat_message({
             'role': 'agent', 'text': full_reply, 'at': time.time(),
             'iteration': iter_id, 'model': used_model,
@@ -1257,7 +1267,7 @@ function drawCtl() {{
     b.onclick = () => {{ powerOn = !powerOn; drawCtl(); }};
     ctl.appendChild(b);
   }}
-  if ((handle.animations || []).length) {{
+  if ((handle.animations || []).length || handle.physicsWorld) {{
     const b = document.createElement('button');
     b.textContent = playing ? '⏸ Jeda' : '▶ Putar';
     b.onclick = () => {{ playing = !playing; drawCtl(); }};

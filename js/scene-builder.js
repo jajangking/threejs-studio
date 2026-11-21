@@ -562,7 +562,7 @@ export function applyAnimations(handle, t, powerOn = true) {
   const ov = handle.overrides || {};
   const blinkIds = new Set();
   for (const a of handle.animations || []) {
-    if (handle.bodyMap?.has(a.id)) continue;  // fisika menang atas keyframe
+    if (handle.bodyMap?.has(a.id) && ['spin', 'oscillate', 'float'].includes(a.anim.type)) continue;  // fisika menang atas keyframe transform; animasi material tetap boleh
     const o = ov[a.id] || {};
     const an = a.anim, ax = an.axis || 'z';
     const enabled = o.enabled ?? an.enabled ?? true;
@@ -584,6 +584,11 @@ export function applyAnimations(handle, t, powerOn = true) {
       const period = o.period ?? an.period ?? 1;
       const hi = active && Math.sin(2 * Math.PI * t / period) > 0;
       a.obj.material.emissiveIntensity = hi ? (an.max ?? a.baseEmissive) : (an.min ?? 0.05);
+    } else if (an.type === 'colorCycle' && a.obj.material) {
+      const period = o.period ?? an.period ?? 4;
+      const hue = active ? ((t / period) + (an.phase ?? 0)) % 1 : (an.phase ?? 0);
+      a.obj.material.emissive.setHSL(hue, an.saturation ?? 0.9, an.lightness ?? 0.55);
+      if (an.tintBody) a.obj.material.color.setHSL(hue, (an.saturation ?? 0.9) * 0.7, 0.5);
     }
   }
   if (power) for (const id of affects) {
