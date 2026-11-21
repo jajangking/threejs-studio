@@ -42,6 +42,17 @@ canvas{display:block;width:100%;height:100%}
 .shot-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid rgba(46,51,61,.5);cursor:pointer}
 .shot-row:hover{color:var(--accent)}
 .shot-row .m{color:var(--dim);font-family:ui-monospace,monospace;font-size:10px}
+#skillsDrawer{position:fixed;top:44px;right:0;bottom:0;width:min(380px,94vw);z-index:31;background:rgba(18,20,25,.98);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(103%);transition:transform .22s ease;box-shadow:-12px 0 30px rgba(0,0,0,.5)}
+body.skills-open #skillsDrawer{transform:none}
+.sk-body{overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.sk-body h4{font-size:10px;color:var(--dim);letter-spacing:.7px;margin-top:6px}
+.sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sk-grid button,.sk-caption button,.sk-save{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px;font-size:11px;cursor:pointer;text-align:left}
+.sk-grid button:hover,.sk-save:hover{border-color:var(--accent)}
+.sk-caption{display:flex;flex-direction:column;gap:5px;font-size:10.5px;color:var(--dim)}
+.sk-caption input{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px;font:11px system-ui}
+.sk-note{font-size:10px;color:var(--dim);line-height:1.4;border:1px dashed var(--border);border-radius:6px;padding:7px}
+.sk-save{text-align:center;background:rgba(79,140,255,.15);border-color:var(--accent);color:var(--accent)}
 #agentDrawer{position:fixed;top:44px;right:0;bottom:0;width:min(390px,94vw);z-index:30;background:rgba(18,20,25,.98);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(103%);transition:transform .22s ease;box-shadow:-12px 0 30px rgba(0,0,0,.5)}
 body.agent-open #agentDrawer{transform:none}
 .ad-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px}
@@ -100,11 +111,43 @@ body.agent-open #agentDrawer{transform:none}
   <span class="spacer"></span>
   <button id="btnVideo" class="primary" title="Render tur sinematik → MP4 (ffmpeg)">🎬<span class="lbl"> Video MP4</span><span class="lbl-s"> MP4</span></button>
   <button id="btnExportHtml" title="HTML interaktif: klik aksi, shift-drag fisika, mode jalan">🌐<span class="lbl"> Export Interaktif</span></button>
-  <button id="btnAgentDrawer" title="Prompt agent AI untuk mengubah kamera/tur/scene">🤖<span class="lbl"> Agent</span></button>
+  <button id="btnAgentDrawer" title="Prompt agent AI MODE PRODUKSI (kamera/tur/audio saja)">🤖<span class="lbl"> Agent</span></button>
+  <button id="btnSkills" title="Efek & preset sinematik — produksi konten">✨<span class="lbl"> Skills</span></button>
   <a href="/" title="Kembali ke Studio Design">🎨<span class="lbl"> Design</span></a>
 </div>
+<div id="skillsDrawer">
+  <div class="ad-head"><b>✨ Skills — Production Presets</b><span>Hanya mengubah kamera/tur. Geometri & desain milik Studio Design.</span><button id="skClose">✕</button></div>
+  <div class="sk-body">
+    <h4>KAMERA SHOT</h4>
+    <div class="sk-grid">
+      <button data-skill="orbit">🔄 Orbit Hero 360°</button>
+      <button data-skill="reveal">🎬 Product Reveal</button>
+      <button data-skill="teardown">🔬 Teardown Tour</button>
+      <button data-skill="cara-kerja">⚙️ Cara Kerja</button>
+      <button data-skill="whip">💨 Whip Pan</button>
+      <button data-skill="dolly-zoom">🎯 Dolly Zoom</button>
+    </div>
+    <h4>TUR &amp; NARASI</h4>
+    <div class="sk-grid">
+      <button data-skill="loop">🔁 Hero Loop</button>
+      <button data-skill="clear">🗑️ Hapus Tur</button>
+    </div>
+    <div class="sk-caption">
+      <label>Narasi shot aktif</label>
+      <input id="skCaption" placeholder="Tulis narasi untuk shot yang sedang berjalan…">
+      <button id="skCaptionSet">Terapkan</button>
+    </div>
+    <h4>OUTPUT</h4>
+    <div class="sk-grid">
+      <button id="skVideo">🎬 Render Video MP4</button>
+      <button id="skHtml">🌐 Export Interaktif</button>
+    </div>
+    <div class="sk-note">Mode produksi: agent AI di panel 🤖 juga dibatasi hanya pada cameraPath &amp; audio — perubahan desain oleh server otomatis dibuang.</div>
+    <button id="skSave" class="sk-save">💾 Simpan Tur ke Scene</button>
+  </div>
+</div>
 <div id="agentDrawer">
-  <div class="ad-head"><b>🤖 Agent AI</b><span>Agent yang sama dengan Studio Design — perubahan scene otomatis dimuat ulang di sini</span><button id="adClose">✕</button></div>
+  <div class="ad-head"><b>🤖 Agent AI — Produksi</b><span>Mode produksi: hanya kamera/tur/audio. Desain terkunci di Studio Design. Scene otomatis dimuat ulang.</span><button id="adClose">✕</button></div>
   <div id="adLog"></div>
   <div id="adStatus"></div>
   <div class="ad-chips">

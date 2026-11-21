@@ -287,7 +287,7 @@ async function adSend() {
   const model = $('#adModel').value;
   if (!text || !model || agentRunning) return;
   try {
-    const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, model }) });
+    const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, model, scope: 'production' }) });
     const j = await r.json().catch(() => ({}));
     if (r.ok && j.ok) { $('#adText').value = ''; agentRunning = true; adPoll(); }
     else if (r.status === 409) { agentRunning = true; adPoll(); toast('Agent masih sibuk — tunggu sebentar'); }
@@ -300,6 +300,78 @@ $('#adSend').onclick = adSend;
 $('#adText').addEventListener('input', () => { $('#adSend').disabled = agentRunning || !$('#adText').value.trim(); });
 $('#adText').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); adSend(); } });
 document.querySelectorAll('.ad-chip').forEach(c => c.onclick = () => { $('#adText').value = c.textContent; $('#adText').focus(); $('#adSend').disabled = !$('#adModel').value; });
+
+// ── Skills: preset produksi ala After Effects (HANYA cameraPath) ──
+function skSubject() {
+  const objs = (handle.spec.objects || []).filter(o =>
+    !['sky', 'stars', '__ground'].includes(o.type) && !/backdrop|ground|desk-mat/i.test(o.id || ''));
+  const box = new THREE.Box3();
+  for (const o of objs.slice(0, 40)) {
+    const m = handle.registry.get(o.id);
+    if (!m) continue;
+    m.updateWorldMatrix(true, false);
+    box.expandByObject(m);
+  }
+  const c = box.isEmpty() ? new THREE.Vector3(0, 1.5, 0) : box.getCenter(new THREE.Vector3());
+  const s = box.isEmpty() ? new THREE.Vector3(2, 2, 2) : box.getSize(new THREE.Vector3());
+  return { id: objs[0]?.id || null, c, r: Math.max(2, Math.max(s.x, s.y, s.z) * 0.7) };
+}
+function skApply(cp, label) {
+  handle.spec.cameraPath = cp;
+  cinePath = compileCameraPath(handle);
+  cineT = 0; cinePlaying = true; orbit.enabled = false;
+  renderCinePanel(); renderShotPanel(); renderTimeline();
+  toast(`${label} aktif — ${(cp?.shots || []).length} shot`);
+}
+const SKILL_PRESETS = {
+  orbit: () => { const { c, r } = skSubject(); return skApply({ loop: true, autoplay: true, shots: [
+    { id: 'hero', type: 'orbit', target: c.toArray(), radius: r * 1.4, height: r * 0.45, sweep: 360, duration: 12, fov: 50, caption: 'Tampilan menyeluruh — subjek berputar 360°' }] }, '🔄 Orbit Hero'); },
+  reveal: () => { const { c, r, id } = skSubject(); return skApply({ loop: false, autoplay: true, shots: [
+    { id: 'establish', type: 'orbit', target: c.toArray(), radius: r * 1.5, height: r * 0.4, sweep: 70, duration: 5, caption: 'Perkenalan subjek dalam lingkungan' },
+    { id: 'detail', type: 'zoom', target: id || c.toArray(), framing: id ? { object: id, fill: 0.6 } : null, fromDistance: r * 2, duration: 4, fov: 40, caption: 'Detail pada komponen utama' },
+    { id: 'pullback', type: 'dolly', from: c.clone().add(new THREE.Vector3(r, r * 0.4, r)).toArray(), to: c.clone().add(new THREE.Vector3(r * 2, r, r * 2)).toArray(), target: c.toArray(), duration: 4, caption: 'Menjauh — konteks keseluruhan' }] }, '🎬 Product Reveal'); },
+  teardown: () => { const { c, r } = skSubject(); return skApply({ loop: false, autoplay: true, shots: [
+    { id: 'utuh', type: 'orbit', target: c.toArray(), radius: r * 1.4, height: r * 0.4, sweep: 60, duration: 4, caption: 'Keadaan terakit utuh' },
+    { id: 'bedah', type: 'orbit', target: c.toArray(), radius: r * 1.5, height: r * 0.5, sweep: 110, duration: 6, explode: [0, 0.75], caption: 'Lapisan dalam terbuka saat komponen luar menjauh' },
+    { id: 'tutup', type: 'dolly', from: c.clone().add(new THREE.Vector3(r, r * 0.4, r)).toArray(), to: c.clone().add(new THREE.Vector3(r * 1.8, r * 0.8, r * 1.8)).toArray(), target: c.toArray(), duration: 4, caption: 'Rangkuman konstruksi' }] }, '🔬 Teardown Tour'); },
+  'cara-kerja': () => { const { c, r } = skSubject(); const moving = (handle.animations || []).slice(0, 4);
+    const shots = (moving.length ? moving.map((a, i) => ({ id: `bagian-${i + 1}`, type: 'orbit', target: a.id, framing: { object: a.id, fill: 0.5 }, height: r * 0.2, sweep: 90, duration: 4, caption: `${a.id} — mekanisme aktif dalam sistem` })) : [
+      { id: 'utama', type: 'orbit', target: c.toArray(), radius: r * 1.4, height: r * 0.4, sweep: 120, duration: 6, caption: 'Bagian utama bekerja' }]);
+    return skApply({ loop: true, autoplay: true, shots }, '⚙️ Cara Kerja'); },
+  whip: () => { const { c, r } = skSubject(); return skApply({ loop: false, autoplay: true, shots: [
+    { id: 'whip', type: 'path', points: [c.clone().add(new THREE.Vector3(-r * 2.5, r * 0.5, r)).toArray(), c.clone().add(new THREE.Vector3(0, r * 0.3, r * 1.2)).toArray(), c.clone().add(new THREE.Vector3(r * 2.5, r * 0.5, r)).toArray()], target: c.toArray(), duration: 2.5, fov: 55, caption: 'Sapuan cepat — transisi dinamis' }] }, '💨 Whip Pan'); },
+  'dolly-zoom': () => { const { c, r, id } = skSubject(); return skApply({ loop: false, autoplay: true, shots: [
+    { id: 'dolly-zoom', type: 'zoom', target: id || c.toArray(), fromDistance: r * 2.4, toDistance: r * 0.85, direction: [0.6, 0.3, 1], duration: 5, fov: 45, caption: 'Dolly zoom — kedalaman terasa berubah' }] }, '🎯 Dolly Zoom'); },
+  loop: () => { const { c, r } = skSubject(); return skApply({ loop: true, autoplay: true, shots: [
+    { id: 'loop', type: 'orbit', target: c.toArray(), radius: r * 1.3, height: r * 0.35, sweep: 360, duration: 15, fov: 50, caption: 'Hero loop — putaran tanpa henti' }] }, '🔁 Hero Loop'); },
+  clear: () => { handle.spec.cameraPath = null; cinePath = null; cinePlaying = false; orbit.enabled = true;
+    renderCinePanel(); renderShotPanel(); renderTimeline(); $('#cineCaption').style.display = 'none'; toast('Tur dihapus — kamera kembali bebas'); },
+};
+$('#btnSkills').onclick = () => document.body.classList.toggle('skills-open');
+$('#skClose').onclick = () => document.body.classList.remove('skills-open');
+document.querySelectorAll('[data-skill]').forEach(b => b.onclick = () => SKILL_PRESETS[b.dataset.skill]?.());
+$('#skCaptionSet').onclick = () => {
+  const txt = $('#skCaption').value.trim(); if (!txt || !cinePath?.shots?.length) return toast('Pilih preset tur dulu');
+  let s = cinePath.shots[0];
+  if (cinePath.mode === 'shots') {
+    const idx = cinePath.shots.findIndex(x => cineT >= x.t0 && cineT < x.t0 + x.dur);
+    if (idx >= 0) s = cinePath.shots[idx];
+  }
+  s.caption = txt;
+  if (handle.spec.cameraPath?.shots) {
+    const t = handle.spec.cameraPath.shots[s.i ?? cinePath.shots.indexOf(s)];
+    if (t) t.caption = txt;
+  }
+  toast('Narasi diterapkan pada shot aktif');
+};
+$('#skSave').onclick = async () => {
+  try {
+    const r = await fetch('/api/camerapath', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cameraPath: handle.spec.cameraPath }) }).then(x => x.json());
+    toast(r.ok ? `Tur tersimpan (${r.shots} shot) — Studio Design melihat versi yang sama` : 'Gagal menyimpan tur');
+  } catch (e) { toast('Gagal: ' + e.message); }
+};
+$('#skVideo').onclick = () => $('#btnVideo').click();
+$('#skHtml').onclick = () => $('#btnExportHtml').click();
 
 // ── video MP4 ──
 $('#btnVideo').onclick = async () => {

@@ -637,6 +637,12 @@ def build_agent_prompt(user_text, repair=None, selection=None):
     history = history[-6:] if isinstance(history, list) else []
 
     parts = ['=== KONTRAK SCENE SAAT INI ===', contract or '(belum ada)', '']
+    if CHAT.get('scope') == 'production':
+        parts += ['=== MODE PRODUKSI (STUDIO REKAMAN) — BATASAN KERAS ===',
+                  'Kamu HANYA boleh mengubah cameraPath (shot kamera, keyframe, caption, explode) dan audio.',
+                  'DILARANG mengubah objects, lights, camera statis, environment, post, controls, atau contract — ',
+                  'itu wilayah Studio Design. Server akan membuang bagian diff di luar cameraPath/audio.',
+                  'Fokus: sutradarai konten — shot profesional, narasi tiap shot, transisi, dan urutan tur.', '']
     cards = knowledge_for(user_text)
     if cards:
         parts += ['=== REFERENSI TEKNIS — WAJIB, JANGAN BUAT MODEL GENERIK ===']
@@ -904,6 +910,14 @@ def _job_active(job_id):
 
 def apply_diff(current, diff):
     """Gabungkan diff kecil ke scene penuh: upsert by id, remove_ids, ganti lights/camera/env/post opsional."""
+    if CHAT.get('scope') == 'production':
+        # Studio Rekaman HANYA boleh mengubah produksi — geometri/lighting/camera
+        # statis milik Studio Design dan tidak boleh tersentuh dari sini.
+        allowed = {'cameraPath', 'audio'}
+        filtered = {k: v for k, v in diff.items() if k in allowed}
+        if len(filtered) != len(diff):
+            status('mode produksi: perubahan design pada diff dibuang (objects/lights/camera dll.)')
+        diff = filtered
     spec = json.loads(json.dumps(current))
     objs = spec.get('objects') or []
     removes = set(diff.get('remove_ids') or [])
@@ -1140,7 +1154,7 @@ def run_agent_job(job_id, user_text, model):
                 except OSError: pass
 
 
-def start_job(text, model, selection=None):
+def start_job(text, model, selection=None, scope=None):
     with CHAT_LOCK:
         with LOCK:
             if CHAT['running']:
@@ -1803,6 +1817,17 @@ class Handler(SimpleHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length) or b'{}')
         except Exception as e:
             return self._send(400, {'ok': False, 'error': str(e)})
+        if path == '/api/camerapath':
+            cp = payload.get('cameraPath')
+            if not isinstance(cp, dict):
+                return self._send(400, {'ok': False, 'error': 'cameraPath harus objek'})
+            spec = read_json(os.path.join(ROOT, 'scene.json'), {})
+            # hanya tulis kunci produksi — sisa spec tidak berubah
+            cp = {k: v for k, v in cp.items() if k in ('shots', 'keyframes', 'duration', 'loop', 'autoplay')}
+            spec['cameraPath'] = cp
+            write_json(os.path.join(ROOT, 'scene.json'), spec)
+            status(f'tur kamera disimpan dari Studio Rekaman ({len(cp.get("shots") or [])} shot)')
+            return self._send(200, {'ok': True, 'shots': len(cp.get('shots') or [])})
         if path == '/api/vision/check':
             it = payload.get('iter') or ''
             if not it:
@@ -1989,7 +2014,8 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send(400, {'ok': False, 'error': 'teks permintaan kosong'})
             if len(text) > 4000:
                 return self._send(400, {'ok': False, 'error': 'teks terlalu panjang (maks 4000)'})
-            job_id = start_job(text, model, selection)
+            CHAT['scope'] = payload.get('scope') or 'design'
+            job_id = start_job(text, model, selection, CHAT['scope'])
             if job_id is None:
                 return self._send(409, {'ok': False, 'error': 'masih ada job agent berjalan'})
             return self._send(200, {'ok': True, 'job_id': job_id, 'model': model})
