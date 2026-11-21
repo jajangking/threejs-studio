@@ -1,0 +1,4209 @@
+{
+  "meta": {
+    "name": "Kota Malam Mini",
+    "concept": "Diorama kota malam sinematik: jendela hangat bloom, lampu jalan, bulan, kabut biru, layout terverifikasi oklusi.",
+    "seed": 42,
+    "spec_version": 1,
+    "iteration": "iter-17"
+  },
+  "environment": {
+    "background": "#0d1424",
+    "fog": {
+      "color": "#0d1424",
+      "near": 24,
+      "far": 85
+    },
+    "ground": {
+      "size": 60,
+      "color": "#12151e",
+      "roughness": 0.95,
+      "texture": "asphalt",
+      "textureRepeat": [
+        24,
+        24
+      ]
+    },
+    "exposure": 1.15
+  },
+  "camera": {
+    "position": [
+      12.5,
+      8.5,
+      14
+    ],
+    "target": [
+      0,
+      3.4,
+      0
+    ],
+    "fov": 49
+  },
+  "post": {
+    "bloom": {
+      "strength": 0.55,
+      "radius": 0.5,
+      "threshold": 0.72
+    }
+  },
+  "lights": [
+    {
+      "id": "hemi",
+      "type": "hemisphere",
+      "color": "#3a4a6e",
+      "groundColor": "#141824",
+      "intensity": 0.6
+    },
+    {
+      "id": "moonlight",
+      "type": "directional",
+      "color": "#a8c0e8",
+      "intensity": 1.2,
+      "position": [
+        -14,
+        18,
+        -8
+      ],
+      "castShadow": true,
+      "shadowExtent": 26
+    },
+    {
+      "id": "warm-fill",
+      "type": "directional",
+      "color": "#ff9a4d",
+      "intensity": 0.3,
+      "position": [
+        10,
+        4,
+        12
+      ],
+      "castShadow": false
+    },
+    {
+      "id": "street-1",
+      "type": "point",
+      "color": "#ffc46b",
+      "intensity": 18,
+      "distance": 11,
+      "decay": 2,
+      "position": [
+        -8,
+        3.28,
+        1.95
+      ]
+    },
+    {
+      "id": "street-2",
+      "type": "point",
+      "color": "#ffc46b",
+      "intensity": 18,
+      "distance": 11,
+      "decay": 2,
+      "position": [
+        -3.2,
+        3.28,
+        -1.95
+      ]
+    },
+    {
+      "id": "street-3",
+      "type": "point",
+      "color": "#ffc46b",
+      "intensity": 18,
+      "distance": 11,
+      "decay": 2,
+      "position": [
+        3.2,
+        3.28,
+        1.95
+      ]
+    },
+    {
+      "id": "street-4",
+      "type": "point",
+      "color": "#ffc46b",
+      "intensity": 18,
+      "distance": 11,
+      "decay": 2,
+      "position": [
+        8,
+        3.28,
+        -1.95
+      ]
+    },
+    {
+      "id": "street-5",
+      "type": "point",
+      "color": "#ffc46b",
+      "intensity": 18,
+      "distance": 11,
+      "decay": 2,
+      "position": [
+        1.95,
+        3.28,
+        -3.2
+      ]
+    },
+    {
+      "id": "street-6",
+      "type": "point",
+      "color": "#ffc46b",
+      "intensity": 18,
+      "distance": 11,
+      "decay": 2,
+      "position": [
+        -1.95,
+        3.28,
+        7
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "gedung-1",
+      "name": "Gedung 1",
+      "type": "box",
+      "params": {
+        "width": 2.6,
+        "height": 2.1,
+        "depth": 2.22
+      },
+      "position": [
+        4.63,
+        1.05,
+        4.94
+      ],
+      "rotation": [
+        0,
+        1.1,
+        0
+      ],
+      "material": {
+        "color": "#33405e",
+        "roughness": 0.88,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-1-ac1",
+      "name": "AC 1.1",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        4.8,
+        2.29,
+        4.25
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-2",
+      "name": "Gedung 2",
+      "type": "box",
+      "params": {
+        "width": 2.76,
+        "height": 3.95,
+        "depth": 2.54
+      },
+      "position": [
+        4.58,
+        1.97,
+        -4.43
+      ],
+      "rotation": [
+        0,
+        1.6,
+        0
+      ],
+      "material": {
+        "color": "#3a3547",
+        "roughness": 0.73,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-2-ac1",
+      "name": "AC 2.1",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        4.28,
+        4.14,
+        -5.01
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-2-ac2",
+      "name": "AC 2.2",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        5.42,
+        4.14,
+        -4.71
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-3",
+      "name": "Gedung 3",
+      "type": "box",
+      "params": {
+        "width": 2.26,
+        "height": 3.6,
+        "depth": 2.39
+      },
+      "position": [
+        -5.02,
+        1.8,
+        4.94
+      ],
+      "rotation": [
+        0,
+        -0.8,
+        0
+      ],
+      "material": {
+        "color": "#2f3a52",
+        "roughness": 0.77,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-3-ac1",
+      "name": "AC 3.1",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        -4.77,
+        3.79,
+        5.26
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-4",
+      "name": "Gedung 4",
+      "type": "box",
+      "params": {
+        "width": 2.24,
+        "height": 7.61,
+        "depth": 2.86
+      },
+      "position": [
+        -4.9,
+        3.81,
+        -5.23
+      ],
+      "rotation": [
+        0,
+        2.5,
+        0
+      ],
+      "material": {
+        "color": "#40384a",
+        "roughness": 0.81,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-4-top",
+      "name": "Gedung 4 setback",
+      "type": "box",
+      "params": {
+        "width": 1.39,
+        "height": 1.77,
+        "depth": 1.77
+      },
+      "position": [
+        -4.9,
+        8.5,
+        -5.23
+      ],
+      "material": {
+        "color": "#40384a",
+        "roughness": 0.8,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-4-ac1",
+      "name": "AC 4.1",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        -4.67,
+        7.8,
+        -5.43
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-4-tank",
+      "name": "Tangki 4",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.42,
+        "radiusBottom": 0.42,
+        "height": 0.85
+      },
+      "position": [
+        -5.46,
+        8.16,
+        -4.52
+      ],
+      "material": {
+        "color": "#3d4456",
+        "roughness": 0.6,
+        "metalness": 0.3
+      }
+    },
+    {
+      "id": "gedung-4-solar",
+      "name": "Panel surya",
+      "type": "box",
+      "params": {
+        "width": 1.23,
+        "height": 0.06,
+        "depth": 0.9
+      },
+      "position": [
+        -4.9,
+        7.86,
+        -5.23
+      ],
+      "rotation": [
+        -18,
+        0,
+        0
+      ],
+      "material": {
+        "color": "#1a2a4a",
+        "roughness": 0.2,
+        "metalness": 0.8
+      }
+    },
+    {
+      "id": "gedung-5",
+      "name": "Gedung 5",
+      "type": "box",
+      "params": {
+        "width": 2.41,
+        "height": 5.36,
+        "depth": 2.6
+      },
+      "position": [
+        -8.09,
+        2.68,
+        -4.43
+      ],
+      "rotation": [
+        0,
+        -1.2,
+        0
+      ],
+      "material": {
+        "color": "#354560",
+        "roughness": 0.83,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-5-ac1",
+      "name": "AC 5.1",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        -8.65,
+        5.55,
+        -3.97
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-5-solar",
+      "name": "Panel surya",
+      "type": "box",
+      "params": {
+        "width": 1.33,
+        "height": 0.06,
+        "depth": 0.9
+      },
+      "position": [
+        -8.09,
+        5.61,
+        -4.43
+      ],
+      "rotation": [
+        -18,
+        0,
+        0
+      ],
+      "material": {
+        "color": "#1a2a4a",
+        "roughness": 0.2,
+        "metalness": 0.8
+      }
+    },
+    {
+      "id": "gedung-6",
+      "name": "Gedung 6",
+      "type": "box",
+      "params": {
+        "width": 2.63,
+        "height": 5.4,
+        "depth": 2.78
+      },
+      "position": [
+        -4.99,
+        2.7,
+        -8.0
+      ],
+      "rotation": [
+        0,
+        0.9,
+        0
+      ],
+      "material": {
+        "color": "#2c3345",
+        "roughness": 0.79,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-6-ac1",
+      "name": "AC 6.1",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        -5.65,
+        5.59,
+        -8.52
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-6-ac2",
+      "name": "AC 6.2",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        -5.27,
+        5.59,
+        -7.84
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-7",
+      "name": "Gedung 7",
+      "type": "box",
+      "params": {
+        "width": 2.35,
+        "height": 7.05,
+        "depth": 2.56
+      },
+      "position": [
+        -8.72,
+        3.53,
+        -8.75
+      ],
+      "rotation": [
+        0,
+        2.5,
+        0
+      ],
+      "material": {
+        "color": "#3d4257",
+        "roughness": 0.79,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-7-top",
+      "name": "Gedung 7 setback",
+      "type": "box",
+      "params": {
+        "width": 1.46,
+        "height": 1.89,
+        "depth": 1.59
+      },
+      "position": [
+        -8.72,
+        8.0,
+        -8.75
+      ],
+      "material": {
+        "color": "#3d4257",
+        "roughness": 0.8,
+        "metalness": 0.08,
+        "texture": "concrete"
+      }
+    },
+    {
+      "id": "gedung-7-ac1",
+      "name": "AC 7.1",
+      "type": "box",
+      "params": {
+        "width": 0.55,
+        "height": 0.38,
+        "depth": 0.55
+      },
+      "position": [
+        -9.43,
+        7.24,
+        -7.9
+      ],
+      "material": {
+        "color": "#4a5266",
+        "roughness": 0.5,
+        "metalness": 0.55
+      }
+    },
+    {
+      "id": "gedung-7-tank",
+      "name": "Tangki 7",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.42,
+        "radiusBottom": 0.42,
+        "height": 0.85
+      },
+      "position": [
+        -9.31,
+        7.6,
+        -8.11
+      ],
+      "material": {
+        "color": "#3d4456",
+        "roughness": 0.6,
+        "metalness": 0.3
+      }
+    },
+    {
+      "id": "gedung-7-solar",
+      "name": "Panel surya",
+      "type": "box",
+      "params": {
+        "width": 1.29,
+        "height": 0.06,
+        "depth": 0.9
+      },
+      "position": [
+        -8.72,
+        7.3,
+        -8.75
+      ],
+      "rotation": [
+        -18,
+        0,
+        0
+      ],
+      "material": {
+        "color": "#1a2a4a",
+        "roughness": 0.2,
+        "metalness": 0.8
+      }
+    },
+    {
+      "id": "antena",
+      "name": "Antena",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.025,
+        "radiusBottom": 0.04,
+        "height": 1.7
+      },
+      "position": [
+        -4.9,
+        10.46,
+        -5.23
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.4,
+        "metalness": 0.7
+      }
+    },
+    {
+      "id": "antena-lampu",
+      "name": "Lampu antena",
+      "type": "sphere",
+      "params": {
+        "radius": 0.07
+      },
+      "position": [
+        -4.9,
+        11.36,
+        -5.23
+      ],
+      "material": {
+        "color": "#ff3b30",
+        "emissive": "#ff3b30",
+        "emissiveIntensity": 3.5
+      },
+      "castShadow": false
+    },
+    {
+      "id": "jalan-x",
+      "name": "Jalan arah X",
+      "type": "plane",
+      "params": {
+        "width": 60,
+        "height": 2.6
+      },
+      "position": [
+        0,
+        0.012,
+        0
+      ],
+      "rotation": [
+        -90,
+        0,
+        0
+      ],
+      "material": {
+        "color": "#1c202b",
+        "roughness": 0.95,
+        "texture": "asphalt",
+        "textureRepeat": [
+          24,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "jalan-z",
+      "name": "Jalan arah Z",
+      "type": "plane",
+      "params": {
+        "width": 2.6,
+        "height": 60
+      },
+      "position": [
+        0,
+        0.014,
+        0
+      ],
+      "rotation": [
+        -90,
+        0,
+        0
+      ],
+      "material": {
+        "color": "#1c202b",
+        "roughness": 0.95,
+        "texture": "asphalt",
+        "textureRepeat": [
+          24,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "trotoar-x-1-1",
+      "name": "Trotoar",
+      "type": "box",
+      "params": {
+        "width": 27.8,
+        "height": 0.14,
+        "depth": 0.9
+      },
+      "position": [
+        -16.1,
+        0.07,
+        -1.75
+      ],
+      "material": {
+        "color": "#262b36",
+        "roughness": 0.9,
+        "texture": "concrete",
+        "textureRepeat": [
+          12,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "trotoar-z-1-1",
+      "name": "Trotoar",
+      "type": "box",
+      "params": {
+        "width": 0.9,
+        "height": 0.14,
+        "depth": 27.8
+      },
+      "position": [
+        -1.75,
+        0.071,
+        -16.1
+      ],
+      "material": {
+        "color": "#262b36",
+        "roughness": 0.9,
+        "texture": "concrete",
+        "textureRepeat": [
+          12,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "trotoar-x-11",
+      "name": "Trotoar",
+      "type": "box",
+      "params": {
+        "width": 27.8,
+        "height": 0.14,
+        "depth": 0.9
+      },
+      "position": [
+        16.1,
+        0.07,
+        -1.75
+      ],
+      "material": {
+        "color": "#262b36",
+        "roughness": 0.9,
+        "texture": "concrete",
+        "textureRepeat": [
+          12,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "trotoar-z-11",
+      "name": "Trotoar",
+      "type": "box",
+      "params": {
+        "width": 0.9,
+        "height": 0.14,
+        "depth": 27.8
+      },
+      "position": [
+        -1.75,
+        0.071,
+        16.1
+      ],
+      "material": {
+        "color": "#262b36",
+        "roughness": 0.9,
+        "texture": "concrete",
+        "textureRepeat": [
+          12,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "trotoar-x1-1",
+      "name": "Trotoar",
+      "type": "box",
+      "params": {
+        "width": 27.8,
+        "height": 0.14,
+        "depth": 0.9
+      },
+      "position": [
+        -16.1,
+        0.07,
+        1.75
+      ],
+      "material": {
+        "color": "#262b36",
+        "roughness": 0.9,
+        "texture": "concrete",
+        "textureRepeat": [
+          12,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "trotoar-z1-1",
+      "name": "Trotoar",
+      "type": "box",
+      "params": {
+        "width": 0.9,
+        "height": 0.14,
+        "depth": 27.8
+      },
+      "position": [
+        1.75,
+        0.071,
+        -16.1
+      ],
+      "material": {
+        "color": "#262b36",
+        "roughness": 0.9,
+        "texture": "concrete",
+        "textureRepeat": [
+          12,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "trotoar-x11",
+      "name": "Trotoar",
+      "type": "box",
+      "params": {
+        "width": 27.8,
+        "height": 0.14,
+        "depth": 0.9
+      },
+      "position": [
+        16.1,
+        0.07,
+        1.75
+      ],
+      "material": {
+        "color": "#262b36",
+        "roughness": 0.9,
+        "texture": "concrete",
+        "textureRepeat": [
+          12,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "trotoar-z11",
+      "name": "Trotoar",
+      "type": "box",
+      "params": {
+        "width": 0.9,
+        "height": 0.14,
+        "depth": 27.8
+      },
+      "position": [
+        1.75,
+        0.071,
+        16.1
+      ],
+      "material": {
+        "color": "#262b36",
+        "roughness": 0.9,
+        "texture": "concrete",
+        "textureRepeat": [
+          12,
+          1
+        ]
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw-1-0",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        -1.46,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw-1-1",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        -2.08,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw-1-2",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        -2.7,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw-1-3",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        -3.32,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw-1-4",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        -3.94,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw1-0",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        1.46,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw1-1",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        2.08,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw1-2",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        2.7,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw1-3",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        3.32,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "cw1-4",
+      "name": "Crosswalk",
+      "type": "box",
+      "params": {
+        "width": 0.32,
+        "height": 0.025,
+        "depth": 2.3
+      },
+      "position": [
+        3.94,
+        0.028,
+        0
+      ],
+      "material": {
+        "color": "#8a92a6",
+        "roughness": 0.8
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-x-4",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 1.1,
+        "height": 0.03,
+        "depth": 0.14
+      },
+      "position": [
+        -9.6,
+        0.03,
+        0
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-z-4",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 0.14,
+        "height": 0.03,
+        "depth": 1.1
+      },
+      "position": [
+        0,
+        0.032,
+        -9.6
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-x-3",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 1.1,
+        "height": 0.03,
+        "depth": 0.14
+      },
+      "position": [
+        -7.2,
+        0.03,
+        0
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-z-3",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 0.14,
+        "height": 0.03,
+        "depth": 1.1
+      },
+      "position": [
+        0,
+        0.032,
+        -7.2
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-x-2",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 1.1,
+        "height": 0.03,
+        "depth": 0.14
+      },
+      "position": [
+        -4.8,
+        0.03,
+        0
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-z-2",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 0.14,
+        "height": 0.03,
+        "depth": 1.1
+      },
+      "position": [
+        0,
+        0.032,
+        -4.8
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-x2",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 1.1,
+        "height": 0.03,
+        "depth": 0.14
+      },
+      "position": [
+        4.8,
+        0.03,
+        0
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-z2",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 0.14,
+        "height": 0.03,
+        "depth": 1.1
+      },
+      "position": [
+        0,
+        0.032,
+        4.8
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-x3",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 1.1,
+        "height": 0.03,
+        "depth": 0.14
+      },
+      "position": [
+        7.2,
+        0.03,
+        0
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-z3",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 0.14,
+        "height": 0.03,
+        "depth": 1.1
+      },
+      "position": [
+        0,
+        0.032,
+        7.2
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-x4",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 1.1,
+        "height": 0.03,
+        "depth": 0.14
+      },
+      "position": [
+        9.6,
+        0.03,
+        0
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "marka-z4",
+      "name": "Marka",
+      "type": "box",
+      "params": {
+        "width": 0.14,
+        "height": 0.03,
+        "depth": 1.1
+      },
+      "position": [
+        0,
+        0.032,
+        9.6
+      ],
+      "material": {
+        "color": "#5a627a",
+        "roughness": 0.7
+      },
+      "castShadow": false
+    },
+    {
+      "id": "tiang-1",
+      "name": "Tiang 1",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.05,
+        "radiusBottom": 0.08,
+        "height": 3.2
+      },
+      "position": [
+        -8,
+        1.6,
+        1.95
+      ],
+      "material": {
+        "color": "#3a4152",
+        "roughness": 0.45,
+        "metalness": 0.6
+      }
+    },
+    {
+      "id": "bulb-1",
+      "name": "Lampu jalan 1",
+      "type": "sphere",
+      "params": {
+        "radius": 0.15
+      },
+      "position": [
+        -8,
+        3.28,
+        1.95
+      ],
+      "material": {
+        "color": "#ffc46b",
+        "emissive": "#ffc46b",
+        "emissiveIntensity": 4.5
+      },
+      "castShadow": false
+    },
+    {
+      "id": "tiang-2",
+      "name": "Tiang 2",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.05,
+        "radiusBottom": 0.08,
+        "height": 3.2
+      },
+      "position": [
+        -3.2,
+        1.6,
+        -1.95
+      ],
+      "material": {
+        "color": "#3a4152",
+        "roughness": 0.45,
+        "metalness": 0.6
+      }
+    },
+    {
+      "id": "bulb-2",
+      "name": "Lampu jalan 2",
+      "type": "sphere",
+      "params": {
+        "radius": 0.15
+      },
+      "position": [
+        -3.2,
+        3.28,
+        -1.95
+      ],
+      "material": {
+        "color": "#ffc46b",
+        "emissive": "#ffc46b",
+        "emissiveIntensity": 4.5
+      },
+      "castShadow": false
+    },
+    {
+      "id": "tiang-3",
+      "name": "Tiang 3",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.05,
+        "radiusBottom": 0.08,
+        "height": 3.2
+      },
+      "position": [
+        3.2,
+        1.6,
+        1.95
+      ],
+      "material": {
+        "color": "#3a4152",
+        "roughness": 0.45,
+        "metalness": 0.6
+      }
+    },
+    {
+      "id": "bulb-3",
+      "name": "Lampu jalan 3",
+      "type": "sphere",
+      "params": {
+        "radius": 0.15
+      },
+      "position": [
+        3.2,
+        3.28,
+        1.95
+      ],
+      "material": {
+        "color": "#ffc46b",
+        "emissive": "#ffc46b",
+        "emissiveIntensity": 4.5
+      },
+      "castShadow": false
+    },
+    {
+      "id": "tiang-4",
+      "name": "Tiang 4",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.05,
+        "radiusBottom": 0.08,
+        "height": 3.2
+      },
+      "position": [
+        8,
+        1.6,
+        -1.95
+      ],
+      "material": {
+        "color": "#3a4152",
+        "roughness": 0.45,
+        "metalness": 0.6
+      }
+    },
+    {
+      "id": "bulb-4",
+      "name": "Lampu jalan 4",
+      "type": "sphere",
+      "params": {
+        "radius": 0.15
+      },
+      "position": [
+        8,
+        3.28,
+        -1.95
+      ],
+      "material": {
+        "color": "#ffc46b",
+        "emissive": "#ffc46b",
+        "emissiveIntensity": 4.5
+      },
+      "castShadow": false
+    },
+    {
+      "id": "tiang-5",
+      "name": "Tiang 5",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.05,
+        "radiusBottom": 0.08,
+        "height": 3.2
+      },
+      "position": [
+        1.95,
+        1.6,
+        -3.2
+      ],
+      "material": {
+        "color": "#3a4152",
+        "roughness": 0.45,
+        "metalness": 0.6
+      }
+    },
+    {
+      "id": "bulb-5",
+      "name": "Lampu jalan 5",
+      "type": "sphere",
+      "params": {
+        "radius": 0.15
+      },
+      "position": [
+        1.95,
+        3.28,
+        -3.2
+      ],
+      "material": {
+        "color": "#ffc46b",
+        "emissive": "#ffc46b",
+        "emissiveIntensity": 4.5
+      },
+      "castShadow": false
+    },
+    {
+      "id": "tiang-6",
+      "name": "Tiang 6",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.05,
+        "radiusBottom": 0.08,
+        "height": 3.2
+      },
+      "position": [
+        -1.95,
+        1.6,
+        7
+      ],
+      "material": {
+        "color": "#3a4152",
+        "roughness": 0.45,
+        "metalness": 0.6
+      }
+    },
+    {
+      "id": "bulb-6",
+      "name": "Lampu jalan 6",
+      "type": "sphere",
+      "params": {
+        "radius": 0.15
+      },
+      "position": [
+        -1.95,
+        3.28,
+        7
+      ],
+      "material": {
+        "color": "#ffc46b",
+        "emissive": "#ffc46b",
+        "emissiveIntensity": 4.5
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-1",
+      "name": "Mobil 1",
+      "type": "box",
+      "params": {
+        "width": 1.75,
+        "height": 0.42,
+        "depth": 0.85
+      },
+      "position": [
+        -1.9,
+        0.36,
+        0.72
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#c0392b",
+        "roughness": 0.3,
+        "metalness": 0.45
+      }
+    },
+    {
+      "id": "mobil-1-kabin",
+      "name": "Kabin 1",
+      "type": "box",
+      "params": {
+        "width": 0.95,
+        "height": 0.34,
+        "depth": 0.75
+      },
+      "position": [
+        -2.0,
+        0.75,
+        0.72
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#1a2230",
+        "roughness": 0.2,
+        "metalness": 0.5
+      }
+    },
+    {
+      "id": "mobil-1-roda-0.55-0.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        -2.64,
+        0.17,
+        0.15
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-1-roda-0.550.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        -2.64,
+        0.17,
+        1.29
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-1-roda0.55-0.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        -1.16,
+        0.17,
+        0.15
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-1-roda0.550.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        -1.16,
+        0.17,
+        1.29
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-2",
+      "name": "Mobil 2",
+      "type": "box",
+      "params": {
+        "width": 1.75,
+        "height": 0.42,
+        "depth": 0.85
+      },
+      "position": [
+        1.7,
+        0.36,
+        0.72
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#2980b9",
+        "roughness": 0.3,
+        "metalness": 0.45
+      }
+    },
+    {
+      "id": "mobil-2-kabin",
+      "name": "Kabin 2",
+      "type": "box",
+      "params": {
+        "width": 0.95,
+        "height": 0.34,
+        "depth": 0.75
+      },
+      "position": [
+        1.6,
+        0.75,
+        0.72
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#1a2230",
+        "roughness": 0.2,
+        "metalness": 0.5
+      }
+    },
+    {
+      "id": "mobil-2-roda-0.55-0.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        0.96,
+        0.17,
+        0.15
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-2-roda-0.550.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        0.96,
+        0.17,
+        1.29
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-2-roda0.55-0.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        2.44,
+        0.17,
+        0.15
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-2-roda0.550.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        2.44,
+        0.17,
+        1.29
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-3",
+      "name": "Mobil 3",
+      "type": "box",
+      "params": {
+        "width": 1.75,
+        "height": 0.42,
+        "depth": 0.85
+      },
+      "position": [
+        4.6,
+        0.36,
+        -0.72
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#f1c40f",
+        "roughness": 0.3,
+        "metalness": 0.45
+      }
+    },
+    {
+      "id": "mobil-3-kabin",
+      "name": "Kabin 3",
+      "type": "box",
+      "params": {
+        "width": 0.95,
+        "height": 0.34,
+        "depth": 0.75
+      },
+      "position": [
+        4.5,
+        0.75,
+        -0.72
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#1a2230",
+        "roughness": 0.2,
+        "metalness": 0.5
+      }
+    },
+    {
+      "id": "mobil-3-roda-0.55-0.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        3.86,
+        0.17,
+        -1.29
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-3-roda-0.550.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        3.86,
+        0.17,
+        -0.15
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-3-roda0.55-0.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        5.34,
+        0.17,
+        -1.29
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "mobil-3-roda0.550.42",
+      "name": "Roda",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.17,
+        "radiusBottom": 0.17,
+        "height": 0.1
+      },
+      "position": [
+        5.34,
+        0.17,
+        -0.15
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": 1.35,
+      "material": {
+        "color": "#0d0f14",
+        "roughness": 0.9
+      },
+      "castShadow": false
+    },
+    {
+      "id": "orang-1-badan",
+      "name": "Orang 1",
+      "type": "capsule",
+      "params": {
+        "radius": 0.14,
+        "length": 0.55
+      },
+      "position": [
+        2.7,
+        0.72,
+        0.4
+      ],
+      "scale": 1.25,
+      "material": {
+        "color": "#e74c3c",
+        "roughness": 0.8
+      }
+    },
+    {
+      "id": "orang-1-kepala",
+      "name": "Kepala 1",
+      "type": "sphere",
+      "params": {
+        "radius": 0.11
+      },
+      "position": [
+        2.7,
+        1.42,
+        0.4
+      ],
+      "scale": 1.25,
+      "material": {
+        "color": "#c8967a",
+        "roughness": 0.7
+      }
+    },
+    {
+      "id": "orang-2-badan",
+      "name": "Orang 2",
+      "type": "capsule",
+      "params": {
+        "radius": 0.14,
+        "length": 0.55
+      },
+      "position": [
+        -2.7,
+        0.72,
+        -0.4
+      ],
+      "scale": 1.25,
+      "material": {
+        "color": "#f39c12",
+        "roughness": 0.8
+      }
+    },
+    {
+      "id": "orang-2-kepala",
+      "name": "Kepala 2",
+      "type": "sphere",
+      "params": {
+        "radius": 0.11
+      },
+      "position": [
+        -2.7,
+        1.42,
+        -0.4
+      ],
+      "scale": 1.25,
+      "material": {
+        "color": "#c8967a",
+        "roughness": 0.7
+      }
+    },
+    {
+      "id": "pohon-1-batang",
+      "name": "Pohon 1",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.1,
+        "height": 1.54
+      },
+      "position": [
+        -6.5,
+        0.91,
+        2.6
+      ],
+      "material": {
+        "color": "#4a3a28",
+        "roughness": 0.9
+      }
+    },
+    {
+      "id": "pohon-1-daun",
+      "name": "Daun 1",
+      "type": "icosahedron",
+      "params": {
+        "radius": 0.62,
+        "detail": 1
+      },
+      "position": [
+        -6.5,
+        2.09,
+        2.6
+      ],
+      "scale": [
+        1,
+        1.25,
+        1
+      ],
+      "material": {
+        "color": "#2a4a28",
+        "roughness": 0.85,
+        "flatShading": true
+      }
+    },
+    {
+      "id": "pohon-2-batang",
+      "name": "Pohon 2",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.1,
+        "height": 1.47
+      },
+      "position": [
+        -2.5,
+        0.88,
+        2.6
+      ],
+      "material": {
+        "color": "#4a3a28",
+        "roughness": 0.9
+      }
+    },
+    {
+      "id": "pohon-2-daun",
+      "name": "Daun 2",
+      "type": "icosahedron",
+      "params": {
+        "radius": 0.62,
+        "detail": 1
+      },
+      "position": [
+        -2.5,
+        2.02,
+        2.6
+      ],
+      "scale": [
+        1,
+        1.25,
+        1
+      ],
+      "material": {
+        "color": "#2a4a28",
+        "roughness": 0.85,
+        "flatShading": true
+      }
+    },
+    {
+      "id": "pohon-3-batang",
+      "name": "Pohon 3",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.1,
+        "height": 1.93
+      },
+      "position": [
+        7.0,
+        1.11,
+        -2.6
+      ],
+      "material": {
+        "color": "#4a3a28",
+        "roughness": 0.9
+      }
+    },
+    {
+      "id": "pohon-3-daun",
+      "name": "Daun 3",
+      "type": "icosahedron",
+      "params": {
+        "radius": 0.62,
+        "detail": 1
+      },
+      "position": [
+        7.0,
+        2.48,
+        -2.6
+      ],
+      "scale": [
+        1,
+        1.25,
+        1
+      ],
+      "material": {
+        "color": "#2a4a28",
+        "roughness": 0.85,
+        "flatShading": true
+      }
+    },
+    {
+      "id": "pohon-4-batang",
+      "name": "Pohon 4",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.1,
+        "height": 1.55
+      },
+      "position": [
+        8.5,
+        0.91,
+        -2.6
+      ],
+      "material": {
+        "color": "#4a3a28",
+        "roughness": 0.9
+      }
+    },
+    {
+      "id": "pohon-4-daun",
+      "name": "Daun 4",
+      "type": "icosahedron",
+      "params": {
+        "radius": 0.62,
+        "detail": 1
+      },
+      "position": [
+        8.5,
+        2.1,
+        -2.6
+      ],
+      "scale": [
+        1,
+        1.25,
+        1
+      ],
+      "material": {
+        "color": "#2a4a28",
+        "roughness": 0.85,
+        "flatShading": true
+      }
+    },
+    {
+      "id": "pohon-5-batang",
+      "name": "Pohon 5",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.1,
+        "height": 1.76
+      },
+      "position": [
+        2.6,
+        1.02,
+        -6.5
+      ],
+      "material": {
+        "color": "#4a3a28",
+        "roughness": 0.9
+      }
+    },
+    {
+      "id": "pohon-5-daun",
+      "name": "Daun 5",
+      "type": "icosahedron",
+      "params": {
+        "radius": 0.62,
+        "detail": 1
+      },
+      "position": [
+        2.6,
+        2.31,
+        -6.5
+      ],
+      "scale": [
+        1,
+        1.25,
+        1
+      ],
+      "material": {
+        "color": "#2a4a28",
+        "roughness": 0.85,
+        "flatShading": true
+      }
+    },
+    {
+      "id": "pohon-6-batang",
+      "name": "Pohon 6",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.1,
+        "height": 1.77
+      },
+      "position": [
+        -2.6,
+        1.03,
+        6.5
+      ],
+      "material": {
+        "color": "#4a3a28",
+        "roughness": 0.9
+      }
+    },
+    {
+      "id": "pohon-6-daun",
+      "name": "Daun 6",
+      "type": "icosahedron",
+      "params": {
+        "radius": 0.62,
+        "detail": 1
+      },
+      "position": [
+        -2.6,
+        2.32,
+        6.5
+      ],
+      "scale": [
+        1,
+        1.25,
+        1
+      ],
+      "material": {
+        "color": "#2a4a28",
+        "roughness": 0.85,
+        "flatShading": true
+      }
+    },
+    {
+      "id": "langit",
+      "name": "Langit",
+      "type": "sky",
+      "params": {
+        "top": "#04060e",
+        "horizon": "#1c2a4a",
+        "radius": 220
+      }
+    },
+    {
+      "id": "bulan",
+      "name": "Bulan",
+      "type": "sphere",
+      "params": {
+        "radius": 2.4
+      },
+      "position": [
+        -42.71,
+        10.77,
+        -9.39
+      ],
+      "material": {
+        "color": "#e8efff",
+        "emissive": "#e8efff",
+        "emissiveIntensity": 2.2,
+        "fog": false
+      },
+      "castShadow": false
+    },
+    {
+      "id": "hidran",
+      "name": "Hidran",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.12,
+        "radiusBottom": 0.14,
+        "height": 0.5
+      },
+      "position": [
+        6.8,
+        0.39,
+        2.3
+      ],
+      "material": {
+        "color": "#c0392b",
+        "roughness": 0.5,
+        "metalness": 0.3
+      }
+    },
+    {
+      "id": "hidran-top",
+      "name": "Hidran atas",
+      "type": "sphere",
+      "params": {
+        "radius": 0.13
+      },
+      "position": [
+        6.8,
+        0.68,
+        2.3
+      ],
+      "material": {
+        "color": "#c0392b",
+        "roughness": 0.5,
+        "metalness": 0.3
+      }
+    },
+    {
+      "id": "manhole",
+      "name": "Manhole",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.3,
+        "radiusBottom": 0.3,
+        "height": 0.02
+      },
+      "position": [
+        5.5,
+        0.025,
+        0.9
+      ],
+      "material": {
+        "color": "#2a2e36",
+        "roughness": 0.7,
+        "metalness": 0.4
+      },
+      "castShadow": false
+    },
+    {
+      "id": "tong-sampah",
+      "name": "Tong sampah",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.18,
+        "radiusBottom": 0.16,
+        "height": 0.5
+      },
+      "position": [
+        8.2,
+        0.39,
+        2.3
+      ],
+      "material": {
+        "color": "#2e5a3a",
+        "roughness": 0.6,
+        "metalness": 0.2
+      }
+    },
+    {
+      "id": "bangku-dudukan",
+      "name": "Bangku",
+      "type": "box",
+      "params": {
+        "width": 1.2,
+        "height": 0.07,
+        "depth": 0.4
+      },
+      "position": [
+        -3.8,
+        0.48,
+        2.35
+      ],
+      "material": {
+        "color": "#6a4a2a",
+        "roughness": 0.8
+      }
+    },
+    {
+      "id": "bangku-kaki1",
+      "name": "Kaki bangku",
+      "type": "box",
+      "params": {
+        "width": 0.08,
+        "height": 0.44,
+        "depth": 0.35
+      },
+      "position": [
+        -4.3,
+        0.22,
+        2.35
+      ],
+      "material": {
+        "color": "#3a4152",
+        "roughness": 0.5,
+        "metalness": 0.5
+      }
+    },
+    {
+      "id": "bangku-kaki2",
+      "name": "Kaki bangku",
+      "type": "box",
+      "params": {
+        "width": 0.08,
+        "height": 0.44,
+        "depth": 0.35
+      },
+      "position": [
+        -3.3,
+        0.22,
+        2.35
+      ],
+      "material": {
+        "color": "#3a4152",
+        "roughness": 0.5,
+        "metalness": 0.5
+      }
+    },
+    {
+      "id": "bintang",
+      "name": "Bintang",
+      "type": "stars",
+      "params": {
+        "count": 700,
+        "radius": 200,
+        "size": 0.8,
+        "color": "#a8bcff",
+        "opacity": 0.8,
+        "seed": 7
+      }
+    },
+    {
+      "id": "jendela-nyala",
+      "name": "Jendela menyala (instanced)",
+      "type": "instances",
+      "geometry": {
+        "type": "box",
+        "params": {
+          "width": 0.34,
+          "height": 0.48,
+          "depth": 0.05
+        }
+      },
+      "material": {
+        "color": "#3a2c14",
+        "emissive": "#ffb45e",
+        "emissiveIntensity": 2.4,
+        "roughness": 0.4
+      },
+      "transforms": [
+        {
+          "p": [
+            6.02,
+            0.95,
+            4.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            6.02,
+            0.95,
+            4.93
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            4.95,
+            0.95,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            3.65,
+            1.8,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            4.3,
+            1.8,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            1.8,
+            -5.25
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            1.8,
+            -4.6
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            1.8,
+            -3.95
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            3.65,
+            2.65,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            4.3,
+            2.65,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            -5.7,
+            0.95,
+            6.15
+          ]
+        },
+        {
+          "p": [
+            -3.86,
+            0.95,
+            4.19
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.7,
+            2.65,
+            6.15
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            0.95,
+            -4.91
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -4.92,
+            1.8,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -5.57,
+            2.65,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -4.92,
+            2.65,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -5.57,
+            3.5,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            4.35,
+            -5.56
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -4.92,
+            5.2,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            0.95,
+            -5.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.19,
+            1.8,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            1.8,
+            -5.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            1.8,
+            -4.63
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.19,
+            2.65,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            2.65,
+            -5.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.19,
+            3.5,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -8.84,
+            4.35,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            4.35,
+            -5.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            0.95,
+            -8.95
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            0.95,
+            -7.65
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.2,
+            2.65,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            2.65,
+            -8.3
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            3.5,
+            -8.3
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            0.95,
+            -8.93
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -9.45,
+            2.65,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            2.65,
+            -9.58
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -9.45,
+            3.5,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -8.8,
+            3.5,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -8.8,
+            4.35,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            4.35,
+            -8.93
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.8,
+            5.2,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            5.2,
+            -9.58
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            5.2,
+            -8.93
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            6.05,
+            -8.93
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            3.65,
+            0.95,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            4.3,
+            0.95,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            -5.05,
+            0.95,
+            6.15
+          ]
+        },
+        {
+          "p": [
+            -5.7,
+            1.8,
+            6.15
+          ]
+        },
+        {
+          "p": [
+            -5.05,
+            1.8,
+            6.15
+          ]
+        },
+        {
+          "p": [
+            -3.86,
+            1.8,
+            4.19
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            0.95,
+            -6.21
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            0.95,
+            -5.56
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            1.8,
+            -4.91
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            3.5,
+            -6.21
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            5.2,
+            -5.56
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.19,
+            4.35,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            4.35,
+            -4.63
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.85,
+            0.95,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -5.2,
+            0.95,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -4.55,
+            0.95,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            1.8,
+            -8.3
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            1.8,
+            -7.65
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -4.55,
+            2.65,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -4.55,
+            4.35,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -8.8,
+            2.65,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            2.65,
+            -8.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.8,
+            6.05,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            3.73,
+            0.95,
+            6.08
+          ]
+        },
+        {
+          "p": [
+            4.95,
+            1.8,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            2.65,
+            -5.25
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            1.8,
+            -5.56
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            2.65,
+            -6.21
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.57,
+            6.05,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -4.92,
+            6.05,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            6.05,
+            -6.21
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.84,
+            2.65,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            2.65,
+            -4.63
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            2.65,
+            -3.98
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.84,
+            3.5,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            3.5,
+            -3.98
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.2,
+            1.8,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            2.65,
+            -7.65
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.2,
+            3.5,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            3.5,
+            -8.95
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            0.95,
+            -8.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -9.45,
+            1.8,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -8.8,
+            1.8,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            1.8,
+            -9.58
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            3.5,
+            -8.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            5.2,
+            -8.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            6.05,
+            -9.58
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jendela-gelap",
+      "name": "Jendela gelap (instanced)",
+      "type": "instances",
+      "geometry": {
+        "type": "box",
+        "params": {
+          "width": 0.34,
+          "height": 0.48,
+          "depth": 0.05
+        }
+      },
+      "material": {
+        "color": "#151b29",
+        "roughness": 0.25,
+        "metalness": 0.5
+      },
+      "transforms": [
+        {
+          "p": [
+            5.03,
+            0.95,
+            6.08
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            0.95,
+            -5.25
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            0.95,
+            -4.6
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            0.95,
+            -3.95
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            4.95,
+            2.65,
+            -3.14
+          ]
+        },
+        {
+          "p": [
+            -3.86,
+            0.95,
+            4.84
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.86,
+            1.8,
+            4.84
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.86,
+            2.65,
+            4.84
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.57,
+            0.95,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            1.8,
+            -6.21
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -4.92,
+            3.5,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -5.57,
+            4.35,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -4.92,
+            4.35,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            4.35,
+            -6.21
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.57,
+            5.2,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            5.2,
+            -6.21
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            5.2,
+            -4.91
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            6.05,
+            -5.56
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            6.05,
+            -4.91
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.84,
+            0.95,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -8.19,
+            0.95,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            3.5,
+            -5.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.85,
+            1.8,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            1.8,
+            -8.95
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.85,
+            2.65,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            2.65,
+            -8.95
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            3.5,
+            -7.65
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.85,
+            4.35,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            4.35,
+            -8.3
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -9.45,
+            0.95,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -8.8,
+            0.95,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            0.95,
+            -9.58
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            3.5,
+            -9.58
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            3.5,
+            -8.93
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            4.35,
+            -9.58
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            4.35,
+            -8.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -9.45,
+            6.05,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            6.05,
+            -8.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            4.38,
+            0.95,
+            6.08
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            2.65,
+            -3.95
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.05,
+            2.65,
+            6.15
+          ]
+        },
+        {
+          "p": [
+            -3.86,
+            2.65,
+            4.19
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            2.65,
+            -4.91
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            3.5,
+            -4.91
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            4.35,
+            -4.91
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            0.95,
+            -3.98
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            1.8,
+            -3.98
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            4.35,
+            -3.98
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            0.95,
+            -8.3
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -4.55,
+            1.8,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -4.55,
+            3.5,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -5.2,
+            4.35,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            1.8,
+            -8.93
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            1.8,
+            -8.28
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -7.52,
+            2.65,
+            -8.93
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -9.45,
+            5.2,
+            -7.44
+          ]
+        },
+        {
+          "p": [
+            5.98,
+            2.65,
+            -4.6
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -4.92,
+            0.95,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -5.57,
+            1.8,
+            -3.78
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            2.65,
+            -5.56
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.75,
+            3.5,
+            -5.56
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            0.95,
+            -4.63
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -8.84,
+            1.8,
+            -3.1
+          ]
+        },
+        {
+          "p": [
+            -6.86,
+            3.5,
+            -4.63
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -5.85,
+            3.5,
+            -6.59
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            4.35,
+            -8.95
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -3.65,
+            4.35,
+            -7.65
+          ],
+          "r": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "p": [
+            -9.45,
+            4.35,
+            -7.44
+          ]
+        }
+      ]
+    }
+  ]
+}

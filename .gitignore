@@ -1,0 +1,22 @@
+# Runtime / data pengguna (jangan commit)
+iterations/
+projects/
+chat.json
+feedback.json
+active.json
+server.log
+opencode-run.log
+nohup.out
+.env
+scene-final-backup.json
+contract-final-backup.md
+prompt-opencode.txt
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+chrome*.log
+*.log

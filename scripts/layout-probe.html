@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>layout-probe</title>
+<style>
+  html,body{margin:0;background:#000}
+  iframe{border:0;display:block}
+  #out{color:#8f8;font:11px monospace;white-space:pre-wrap;padding:6px}
+</style>
+</head>
+<body>
+<!--
+  Alat ukur layout responsif studio.
+  Pakai: /scripts/layout-probe.html?w=390&h=844
+  Jalankan chromium --dump-dom lalu baca <pre id="out">.
+-->
+<iframe id="f" src="/?probe=1"></iframe>
+<pre id="out">menunggu…</pre>
+<script>
+const params = new URLSearchParams(location.search);
+const W = parseInt(params.get('w') || '390', 10);
+const H = parseInt(params.get('h') || '844', 10);
+const f = document.getElementById('f');
+f.style.width = W + 'px';
+f.style.height = H + 'px';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+f.onload = async () => {
+  await sleep(5000);
+  const out = document.getElementById('out');
+  try {
+    const d = f.contentDocument;
+    const rd = el => { const b = el.getBoundingClientRect(); return { x: Math.round(b.left), y: Math.round(b.top), w: Math.round(b.width), h: Math.round(b.height) }; };
+    const p = JSON.parse(d.documentElement.dataset.probe || '{}');
+    // Matikan transisi agar pengukuran headless (virtual time) langsung final.
+    const noAnim = d.createElement('style');
+    noAnim.textContent = '*{transition:none!important;animation:none!important}';
+    d.head.appendChild(noAnim);
+    const extra = {};
+    if (W < 640) {
+      d.querySelector('#btnDrawerOutliner').click();
+      await sleep(350);
+      extra.drawerOutlinerOpen = d.body.classList.contains('drawer-outliner');
+      extra.drawerOutlinerRect = rd(d.querySelector('#outliner'));
+      extra.drawerOnScreen = extra.drawerOutlinerRect.x >= 0;
+      d.querySelector('#drawerBackdrop').click();
+      await sleep(350);
+      extra.drawerClosedAfterBackdrop = !d.body.classList.contains('drawer-outliner');
+      extra.drawerOffScreenAgain = rd(d.querySelector('#outliner')).x < 0;
+
+      d.querySelector('#tabs button[data-tab="agent"]').click();
+      await sleep(350);
+      const bot = d.querySelector('#bottom');
+      extra.agentTabActive = d.querySelector('#tab-agent').classList.contains('active');
+      extra.bottomOpen = !bot.classList.contains('collapsed');
+      extra.bottomRect = rd(bot);
+      extra.chatLogRect = rd(d.querySelector('#chatLog'));
+      extra.chatInputRect = rd(d.querySelector('#chatText'));
+      extra.chatInputVisible = extra.chatInputRect.h > 0 && extra.chatInputRect.w > 0;
+      extra.chatSendVisible = rd(d.querySelector('#btnChatSend')).w > 0;
+      extra.touchTargets = [...d.querySelectorAll('#topbar button')].filter(b => getComputedStyle(b).display !== 'none').map(b => Math.round(b.getBoundingClientRect().height));
+      extra.touchTargetsMin = Math.min(...extra.touchTargets);
+      extra.scrollWidthAfter = d.documentElement.scrollWidth;
+      extra.overflowXAfter = d.documentElement.scrollWidth - d.documentElement.clientWidth;
+    }
+    extra.topbarChildren = [...d.querySelectorAll('#topbar > *')]
+      .filter(el => getComputedStyle(el).display !== 'none')
+      .map(el => ({ id: el.id || el.className, w: Math.round(el.getBoundingClientRect().width), h: Math.round(el.getBoundingClientRect().height) }));
+    extra.topbarRightEdge = Math.max(...[...d.querySelectorAll('#topbar button')].filter(b => getComputedStyle(b).display !== 'none').map(b => Math.round(b.getBoundingClientRect().right)));
+    extra.sceneNameText = d.querySelector('#sceneName').textContent;
+    out.textContent = JSON.stringify({ width: W, height: H, probe: p, extra }, null, 1);
+  } catch (e) {
+    out.textContent = 'PROBE ERROR: ' + (e && e.stack || e);
+  }
+};
+</script>
+</body>
+</html>

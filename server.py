@@ -1,0 +1,1324 @@
+#!/usr/bin/env python3
+"""Studio server: static files + API state/scene/feedback + live AI agent chat.
+
+Single source of truth: scene.json di root proyek.
+Agent menulis scene.json + iterations/; user melihat via studio & menyimpan edit via POST.
+Semua dependensi = python stdlib. Tidak ada paket baru.
+"""
+import base64
+import json
+import os
+import re
+import subprocess
+import sys
+import threading
+import time
+import urllib.error
+import urllib.request, urllib.parse
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+PORT = int(os.environ.get('STUDIO_PORT', '8091'))
+LOCK = threading.Lock()          # menulis scene.json / feedback.json
+CHAT_LOCK = threading.Lock()     # satu job agent aktif
+
+ROUTER_URL = 'http://127.0.0.1:8645/v1/chat/completions'
+ROUTER_MODELS_URL = 'http://127.0.0.1:8645/v1/models'
+OPENCODE_URL = 'http://127.0.0.1:49374'
+HERMES_URL = 'http://127.0.0.1:8642/v1/chat/completions'
+
+# Urutan fallback model gratis di router (yang pertama paling kuat).
+FREE_ROUTER_MODELS = [
+    'qwen/qwen4-max:free',
+    'meituan/longcat-2.5:free',
+    'upstage/solar-mini4:free',
+    'tencent/hy4-flash:free',
+    'stepfun/step-3.7-flash:free',
+]
+DEFAULT_MODEL = 'qwen/qwen4-max:free'
+OPENCODE_FALLBACK_MODELS = ['big-pickle', 'deepseek-v4.1-flash-free', 'minimax-m3.1-flash-free']
+HERMES_MODELS = ['hermes-4-405b']
+
+KNOWN_OBJECT_TYPES = {
+    'box', 'sphere', 'cylinder', 'cone', 'torus', 'torusKnot', 'plane',
+    'capsule', 'icosahedron', 'ring', 'gltf', 'sky', 'stars', 'instances',
+}
+KNOWN_LIGHT_TYPES = {'ambient', 'hemisphere', 'directional', 'point', 'spot'}
+
+CHAT = {
+    'running': False,
+    'job_id': None,
+    'model': DEFAULT_MODEL,
+    'started_at': None,
+    'status_lines': [],
+    'error': None,
+    'last_iteration': None,
+}
+CHAT_STATUS_MAX = 80
+
+
+# ─────────────────────────── util file ───────────────────────────
+def read_json(path, default=None):
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+
+def write_json(path, obj):
+    tmp = path + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+
+def read_text(path, default=''):
+    try:
+        with open(path, encoding='utf-8') as f:
+            return f.read()
+    except Exception:
+        return default
+
+
+def append_chat_message(msg):
+    path = os.path.join(ROOT, 'chat.json')
+    with LOCK:
+        msgs = read_json(path, [])
+        if not isinstance(msgs, list):
+            msgs = []
+        msgs.append(msg)
+        write_json(path, msgs)
+
+
+# ─────────────────────────── state API ───────────────────────────
+def state():
+    scene_path = os.path.join(ROOT, 'scene.json')
+    iters = []
+    idir = os.path.join(ROOT, 'iterations')
+    if os.path.isdir(idir):
+        for name in sorted(os.listdir(idir)):
+            d = os.path.join(idir, name)
+            if not os.path.isdir(d):
+                continue
+            shot = os.path.join(d, 'shot.png')
+            iters.append({
+                'id': name,
+                'shot': f'iterations/{name}/shot.png' if os.path.exists(shot) else None,
+                'checklist': read_json(os.path.join(d, 'checklist.json')),
+                'notes': read_text(os.path.join(d, 'notes.md')),
+                'mtime': os.path.getmtime(shot) if os.path.exists(shot) else os.path.getmtime(d),
+            })
+    return {
+        'project': active_project(),
+        'scene': read_json(scene_path),
+        'scene_mtime': os.path.getmtime(scene_path) if os.path.exists(scene_path) else 0,
+        'contract': read_text(os.path.join(ROOT, 'contract.md')),
+        'iterations': iters,
+        'feedback': read_json(os.path.join(ROOT, 'feedback.json'), []),
+        'server_time': time.time(),
+    }
+
+
+def chat_state():
+    msgs = read_json(os.path.join(ROOT, 'chat.json'), [])
+    with LOCK:
+        running = CHAT['running']
+        last_iter = CHAT['last_iteration']
+        if not last_iter and isinstance(msgs, list):
+            for m in reversed(msgs):
+                if m.get('role') == 'agent' and m.get('iteration'):
+                    last_iter = m['iteration']
+                    break
+        return {
+            'running': running,
+            'job_id': CHAT['job_id'],
+            'status_lines': list(CHAT['status_lines'][-CHAT_STATUS_MAX:]),
+            'messages': msgs if isinstance(msgs, list) else [],
+            'model': CHAT['model'],
+            'started_at': CHAT['started_at'],
+            'error': CHAT['error'],
+            'last_iteration': last_iter,
+        }
+
+
+def status(line):
+    stamp = time.strftime('%H:%M:%S')
+    with LOCK:
+        CHAT['status_lines'].append({'at': time.time(), 'time': stamp, 'text': line})
+        del CHAT['status_lines'][:-CHAT_STATUS_MAX]
+    print(f'[chat {stamp}] {line}', flush=True)
+
+
+# ─────────────────────────── iterations ───────────────────────────
+def next_iteration_id():
+    """iter-03, iter-04, ... berdasarkan folder yang ada (tidak pernah menimpa)."""
+    n = 0
+    idir = os.path.join(ROOT, 'iterations')
+    if os.path.isdir(idir):
+        for name in os.listdir(idir):
+            m = re.fullmatch(r'iter-(\d+)', name)
+            if m:
+                n = max(n, int(m.group(1)))
+    return 'iter-%02d' % (n + 1)
+
+
+# ─────────────────────────── validasi spec ───────────────────────────
+def validate_spec(spec):
+    errs = []
+    if not isinstance(spec, dict):
+        return ['scene harus berupa objek JSON']
+    for key in ('objects', 'lights', 'camera'):
+        if key not in spec:
+            errs.append(f'field wajib "{key}" tidak ada')
+    objs = spec.get('objects')
+    if not isinstance(objs, list):
+        errs.append('"objects" harus array')
+        objs = []
+    if not isinstance(spec.get('lights'), list):
+        errs.append('"lights" harus array')
+    cam = spec.get('camera')
+    if not isinstance(cam, dict):
+        errs.append('"camera" harus objek')
+    else:
+        for k in ('position', 'target'):
+            if not (isinstance(cam.get(k), list) and len(cam.get(k)) == 3):
+                errs.append(f'camera.{k} harus array 3 angka')
+        if not isinstance(cam.get('fov', 50), (int, float)):
+            errs.append('camera.fov harus angka')
+    seen = set()
+    for i, o in enumerate(objs):
+        if not isinstance(o, dict):
+            errs.append(f'objects[{i}] bukan objek')
+            continue
+        oid = o.get('id')
+        if not oid or not isinstance(oid, str):
+            errs.append(f'objects[{i}] tidak punya id string')
+        elif oid in seen:
+            errs.append(f'id objek duplikat: {oid}')
+        else:
+            seen.add(oid)
+        if o.get('type') not in KNOWN_OBJECT_TYPES:
+            errs.append(f'objek {oid or i}: type "{o.get("type")}" tidak dikenal')
+        if 'position' in o and not (isinstance(o['position'], list) and len(o['position']) == 3):
+            errs.append(f'objek {oid or i}: position harus array 3 angka')
+    lights = spec.get('lights') or []
+    for i, l in enumerate(lights):
+        if not isinstance(l, dict) or l.get('type') not in KNOWN_LIGHT_TYPES:
+            errs.append(f'lights[{i}]: type lampu tidak dikenal')
+    if not any(isinstance(l, dict) and l.get('type') != 'ambient' for l in lights):
+        errs.append('lampu minimal 1 selain ambient')
+    return errs
+
+
+# ─────────────────────────── LLM adapters ───────────────────────────
+def http_json(url, payload=None, headers=None, timeout=3, method=None):
+    data = None
+    hdrs = {'Accept': 'application/json'}
+    if headers:
+        hdrs.update(headers)
+    if payload is not None:
+        data = json.dumps(payload).encode('utf-8')
+        hdrs['Content-Type'] = 'application/json'
+    req = urllib.request.Request(url, data=data, headers=hdrs,
+                                 method=method or ('POST' if data else 'GET'))
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        raw = r.read()
+        return json.loads(raw.decode('utf-8')) if raw else {}
+
+
+def _message_text(msg):
+    """Ambil teks dari message OpenAI-compatible; dukung field reasoning."""
+    if not isinstance(msg, dict):
+        return ''
+    for key in ('content', 'reasoning', 'reasoning_content'):
+        val = msg.get(key)
+        if isinstance(val, str) and val.strip():
+            return val
+        if isinstance(val, list):
+            parts = []
+            for p in val:
+                if isinstance(p, dict) and isinstance(p.get('text'), str):
+                    parts.append(p['text'])
+                elif isinstance(p, str):
+                    parts.append(p)
+            if ''.join(parts).strip():
+                return ''.join(parts)
+    return ''
+
+
+def call_router(model, messages, max_tokens=20000, temperature=0.4):
+    """OpenAI-compatible router tanpa auth.
+
+    Dua gelombang: model utama + longcat (mampu output besar) lebih dulu.
+    Model kecil hanya dipakai jika gelombang pertama gagal, karena output scene
+    penuh (~4-5k token) sering terpotong di model dengan limit output kecil.
+    """
+    import queue
+    primary = []
+    for m in [model, 'meituan/longcat-2.5:free']:
+        if m not in primary:
+            primary.append(m)
+    secondary = [m for m in FREE_ROUTER_MODELS if m not in primary]
+    q = queue.Queue()
+
+    def worker(m):
+        try:
+            data = http_json(ROUTER_URL, {
+                'model': m,
+                'messages': messages,
+                'temperature': temperature,
+                'max_tokens': max_tokens,
+                'stream': False,
+            }, timeout=240)
+            choices = data.get('choices') or []
+            text = _message_text(choices[0].get('message')) if choices else ''
+            q.put((m, text.strip(), None))
+        except urllib.error.HTTPError as e:
+            detail = ''
+            try:
+                detail = e.read().decode('utf-8', 'replace')[:200]
+            except Exception:
+                pass
+            q.put((m, '', f'HTTP {e.code} {detail}'.strip()))
+        except Exception as e:
+            q.put((m, '', str(e)))
+
+    def collect(group, deadline, errors):
+        threads = []
+        for m in group:
+            t = threading.Thread(target=worker, args=(m,), daemon=True)
+            t.start()
+            threads.append(t)
+        status('memanggil model: ' + ', '.join(group))
+        for _ in group:
+            remain = deadline - time.time()
+            if remain <= 0:
+                break
+            try:
+                m, text, err = q.get(timeout=remain)
+            except queue.Empty:
+                break
+            if text:
+                if m != model:
+                    status(f'respons dari {m} (fallback dari {model})')
+                return (text, m)
+            errors.append(f'{m}: {err}')
+        return None
+
+    errors = []
+    deadline = time.time() + 300
+    got = collect(primary, deadline, errors)
+    if got:
+        return got
+    status('model utama + longcat gagal — mencoba model free lain…')
+    got = collect(secondary, deadline, errors)
+    if got:
+        return got
+    raise RuntimeError('semua model router gagal — ' + ' | '.join(errors[-3:] or ['timeout']))
+
+
+def _opencode_auth():
+    path = os.path.expanduser('~/.config/opencode/service.json')
+    conf = read_json(path, {})
+    pw = conf.get('password') if isinstance(conf, dict) else None
+    if not pw:
+        raise RuntimeError('password opencode service tidak ditemukan')
+    token = base64.b64encode(('opencode:' + pw).encode()).decode()
+    return {'Authorization': 'Basic ' + token}
+
+
+def _opencode_get(path, timeout=5):
+    return http_json(OPENCODE_URL + path, headers=_opencode_auth(), timeout=timeout)
+
+
+def _opencode_post(path, payload, timeout=120):
+    return http_json(OPENCODE_URL + path, payload, headers=_opencode_auth(), timeout=timeout)
+
+
+def call_opencode(model, prompt_text):
+    """OpenCode HTTP v2: buat session -> prompt -> tunggu idle -> baca pesan assistant."""
+    sid_resp = _opencode_post('/api/session', {'title': 'studio-agent'}, timeout=15)
+    sid = (sid_resp.get('data') or {}).get('id') or sid_resp.get('id')
+    if not sid:
+        raise RuntimeError('opencode: gagal membuat session')
+    _opencode_post(f'/api/session/{sid}/prompt', {
+        'text': prompt_text,
+        'model': {'providerID': 'opencode', 'modelID': model},
+        'resume': True,
+    }, timeout=30)
+    status('opencode: session dibuat, menunggu model selesai…')
+    _opencode_post(f'/api/experimental/session/{sid}/wait', {}, timeout=330)
+    msgs = _opencode_get(f'/api/session/{sid}/message', timeout=20)
+    items = msgs.get('data', msgs) if isinstance(msgs, dict) else msgs
+    if isinstance(items, dict):
+        items = items.get('messages', [])
+    texts = []
+    for item in items or []:
+        if not isinstance(item, dict) or item.get('type') != 'assistant':
+            continue
+        for part in item.get('content') or []:
+            if isinstance(part, dict) and part.get('type') == 'text' and part.get('text'):
+                texts.append(part['text'])
+    text = '\n'.join(texts).strip()
+    if not text:
+        raise RuntimeError('opencode: respons assistant kosong (cek kuota / model)')
+    return text, model
+
+
+def _hermes_key():
+    key = os.environ.get('API_SERVER_KEY', '').strip()
+    if key:
+        return key
+    env_path = os.path.join(ROOT, '.env')
+    for line in read_text(env_path).splitlines():
+        line = line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        k, v = line.split('=', 1)
+        if k.strip() == 'API_SERVER_KEY':
+            return v.strip().strip('"').strip("'")
+    return ''
+
+
+def call_hermes(model, messages, max_tokens=20000, temperature=0.4):
+    key = _hermes_key()
+    if not key:
+        raise RuntimeError('hermes belum dikonfigurasi: perlu API_SERVER_KEY')
+    data = http_json(HERMES_URL, {
+        'model': model,
+        'messages': messages,
+        'temperature': temperature,
+        'max_tokens': max_tokens,
+    }, headers={'Authorization': 'Bearer ' + key}, timeout=110)
+    choices = data.get('choices') or []
+    text = _message_text(choices[0].get('message')) if choices else ''
+    if not text.strip():
+        raise RuntimeError('hermes: respons kosong')
+    return text, model
+
+
+# ─────────────────────────── parse & prompt ───────────────────────────
+def extract_json_object(text):
+    """Toleran: buang code fence, cari objek JSON valid pertama."""
+    if not text:
+        return None
+    t = text.strip()
+    t = re.sub(r'^```(?:json|JSON)?\s*', '', t)
+    t = re.sub(r'\s*```\s*$', '', t).strip()
+    try:
+        obj = json.loads(t)
+        if isinstance(obj, dict):
+            return obj
+    except Exception:
+        pass
+    dec = json.JSONDecoder()
+    for m in re.finditer(r'\{', t):
+        try:
+            obj, _end = dec.raw_decode(t[m.start():])
+            if isinstance(obj, dict):
+                return obj
+        except Exception:
+            continue
+    return None
+
+
+SYSTEM_PROMPT = """Kamu adalah "Scene Designer" untuk Three.js Studio. Tugasmu mengubah scene 3D
+berdasarkan permintaan user dan menghasilkan spec JSON yang valid serta enak dilihat.
+
+OUTPUT WAJIB: HANYA SATU objek JSON valid. Tanpa markdown, tanpa code fence, tanpa teks lain.
+MODE DIFF (DEFAULT — cepat, output kecil, jangan tulis ulang scene penuh):
+{"reply":"penjelasan singkat dalam Bahasa Indonesia (1-3 kalimat)",
+ "diff":{
+   "upserts":[{...objek lengkap: id, type, params, position, rotation, scale, material...}],
+   "remove_ids":["id-objek-lama"],
+   "lights":[...HANYA bila berubah; array lampu lengkap...],
+   "camera":{...HANYA bila berubah...},
+   "environment":{...HANYA bila berubah...},
+   "post":{...HANYA bila berubah...}
+ },
+ "contract":"markdown kontrak baru (opsional, string)",
+ "resolved_feedback":[0,2]}
+ATURAN DIFF:
+- upserts HANYA objek baru/berubah. id sama = ganti objek itu; id baru = tambah.
+- JANGAN salin objek yang tidak berubah ke upserts. Output kecil = cepat.
+- Objek lama yang tidak disebut TETAP DIPERTAHANKAN server (merge otomatis).
+- Untuk SCENE BARU TOTAL saja: {"reply":..., "scene":{spec penuh}, "contract":...}.
+- id objek lama dipertahankan persis; hapus hanya yang diminta user atau yang rusak.
+- MEMINDAH/MENGUBAH objek = upsert dengan id yang SAMA PERSIS untuk semua part-nya (mis. mobil: badan+kabin+4 roda+lampu). JANGAN membuat id baru/varian untuk objek yang sudah ada (duplikat visual!).
+
+SCHEMA SPEC (semua field):
+{
+ "meta":{"name":"...","concept":"...","seed":42,"spec_version":1},
+ "environment":{"background":"#0b1020","fog":{"color":"#0b1020","near":18,"far":55},
+   "ground":{"size":60,"color":"#10131c","roughness":0.95},"exposure":1.1},
+ "camera":{"position":[14,9,16],"target":[0,2,0],"fov":45},
+ "lights":[{"id":"hemi","type":"hemisphere","color":"#2a3550","groundColor":"#0c0e14","intensity":0.5},
+   {"id":"moon","type":"directional","color":"#8fa8d8","intensity":0.8,"position":[-10,14,-8],"castShadow":true}],
+ "objects":[{"id":"gedung-1","type":"box","position":[0,2,0],"rotation":[0,0,0],
+   "scale":[1,1,1],"params":{"width":2,"height":4,"depth":2},
+   "material":{"color":"#232a3a","metalness":0.1,"roughness":0.8,
+     "emissive":"#000000","emissiveIntensity":1,"opacity":1,"wireframe":false,"flatShading":false,
+     "fog":true,"doubleSide":false}}]
+}
+
+Tipe objek: box, sphere, cylinder, cone, torus, torusKnot, plane, capsule, icosahedron, ring, gltf.
+params per tipe: box {width,height,depth}; sphere {radius}; cylinder {radiusTop,radiusBottom,height};
+cone {radius,height}; torus {radius,tube}; torusKnot {radius,tube}; plane {width,height};
+capsule {radius,length}; icosahedron {radius,detail}; ring {innerRadius,outerRadius}; gltf {url}.
+Tipe lampu: ambient, hemisphere, directional, point, spot. Position array [x,y,z] dalam meter.
+
+TIPE LANJUTAN (wajib dipakai untuk kualitas sinematik):
+- sky: {"type":"sky","params":{"top":"#04060e","horizon":"#1c2a4a","radius":220}} — langit gradasi, pengganti background polos.
+- stars: {"type":"stars","params":{"count":700,"radius":200,"size":0.8,"color":"#a8bcff","seed":7}} — bintang malam.
+- instances: {"type":"instances","geometry":{"type":"box","params":{...}},"material":{...},
+  "transforms":[{"p":[x,y,z],"r":[0,90,0],"s":1}, ...]} — ratusan objek berulang (jendela!) dalam 1 draw call.
+  Jendela gedung: grid individual 0.34x0.48, ~55% nyala (emissive hangat 2.4), sisanya kaca gelap — JANGAN strip polos.
+- post: {"bloom":{"strength":0.55,"radius":0.5,"threshold":0.72}} di root spec — bloom sinematik untuk sumber cahaya.
+Material tambahan: "fog":false untuk bulan/langit; emissiveIntensity 2-5 untuk objek menyala agar bloom bekerja.
+
+ATURAN LAYOUT & CAHAYA (pelajaran terverifikasi — pelanggaran membuat hasil ditolak vision):
+- Matahari/bulan HARUS menyinari fasad yang menghadap kamera (cek posisi light vs kamera). Fasad bayangan = gedung hitam pekat. Tambahkan warm fill redup dari sisi jendela.
+- Gedung di sisi kamera (foreground) RENDAH (≤2.5 m); gedung tinggi di belakang. Gedung tinggi di depan menghalangi mobil/orang (cek oklusi raycast otomatis akan menolak).
+- Mobil/orang/lampu jalan letakkan di area terbuka (persimpangan/trotoar) yang tidak terhalang gedung/pohon dari kamera.
+- Objek langit (bulan/matahari/awan) posisikan via vektor kamera: arah = forward + kanan×lr + atas×ud dengan lr≤0.4, ud≤0.35 (FOV ~49); lebih = di luar frame. Beri "sky":true pada awan.
+- textureRepeat skala objek: jalan [24,1], trotoar [12,1], ground [24,24]; tanpa ini tekstur tak terbaca.
+- Malam: jendela instanced ~55% emissive #ffb45e intensity 2.4, lampu jalan point 18 + bulb emissive 4.5, bloom .55/.5/.72, fog gelap, bintang, bulan fog:false.
+- Siang: jendela kaca gelap reflektif (metalness .7 roughness .12), lampu mati, sun 3.0, hemi .75, bloom .25 threshold .9, langit gradasi biru + awan.
+
+STANDAR ESTETIKA (smoke test lolos SAJA TIDAK CUKUP — hasil harus layak final, bukan seperti tutorial):
+- Komposisi 3 lapis: foreground (jalan/trotoar), midground (subjek), background (langit/bulan).
+- Detail: atap gedung punya AC unit/tangki/antena; jalan punya trotoar, crosswalk, marka; ada elemen skala manusia (mobil/orang).
+- Material: variasi roughness/metalness; gedung malam JANGAN hitam pekat — biru/abu gelap yang terbaca cahaya.
+- Cahaya: key light + fill (bounce hangat dari sisi jendela) + hemisphere; bayangan aktif.
+- Atmosfer: langit gradasi + bintang (malam) atau awan/gradasi biru (siang); fog kedalaman; bloom.
+
+ATURAN KETAT:
+- Satuan meter. Skala wajar (gedung 2-8 m, manusia 1.7 m).
+- Kamera JANGAN berada di dalam objek; beri jarak dari subjek.
+- Semua objek utama harus masuk frame dari kamera (tidak terpotong di tepi).
+- Palet warna hex konkret; jangan biarkan material default abu-abu terang bocor.
+- Jangan hapus objek yang tidak diminta user hapus. Perubahan incremental:
+  pertahankan struktur scene yang ada kecuali user minta scene baru total.
+- Jika user minta scene baru, ganti seluruh objects/lights/environment/camera dan tulis kontrak baru.
+- Minimal 1 lampu selain ambient. Background jangan putih polos. Emissive untuk objek menyala.
+  Fog opsional.
+- id objek unik, huruf kecil dengan tanda hubung. Pertahankan id objek lama bila tidak diubah.
+- Feedback terbuka: selesaikan yang relevan dan sebutkan indeksnya di resolved_feedback
+  (indeks array feedback yang diberikan, 0-based). Hanya tandai yang benar-benar selesai.
+
+SMOKE TEST otomatis akan mengecek: no_build_errors, all_objects_built, has_lighting,
+not_black_frame, subject_in_frame (coverage 2-70%), framing_not_extreme, objects_in_view.
+Pastikan scene lolos semuanya: cukup terang, subjek mengisi frame, semua objek terlihat.
+Tulis JSON PADAT (satu baris, tanpa indentasi/spasi berlebih) agar tidak terpotong.
+Jawab selalu dalam Bahasa Indonesia untuk field "reply" dan "contract"."""
+
+
+def build_agent_prompt(user_text, repair=None):
+    scene = read_json(os.path.join(ROOT, 'scene.json'), {})
+    contract = read_text(os.path.join(ROOT, 'contract.md'))
+    fb = read_json(os.path.join(ROOT, 'feedback.json'), [])
+    open_fb = [(i, f) for i, f in enumerate(fb) if f.get('status') == 'open']
+    history = read_json(os.path.join(ROOT, 'chat.json'), [])
+    history = history[-6:] if isinstance(history, list) else []
+
+    parts = ['=== KONTRAK SCENE SAAT INI ===', contract or '(belum ada)', '']
+    parts += ['=== SCENE SAAT INI (JSON) ===',
+              json.dumps(scene, ensure_ascii=False)[:60000], '']
+    if open_fb:
+        parts.append('=== FEEDBACK TERBUKA (indeks array asli) ===')
+        for i, f in open_fb:
+            parts.append(f'[{i}] {f.get("text", "")}')
+        parts.append('')
+    if history:
+        parts.append('=== RIWAYAT CHAT TERAKHIR ===')
+        for m in history:
+            parts.append(f'{m.get("role", "?")}: {str(m.get("text", ""))[:700]}')
+        parts.append('')
+    if repair:
+        parts += ['=== PERBAIKAN DIPERLUKAN (SMOKE TEST GAGAL) ===', repair, '']
+    parts.append('=== PERMINTAAN USER ===')
+    parts.append(user_text)
+    parts.append('')
+    parts.append('Ingat: balas HANYA satu objek JSON valid sesuai format di system prompt.')
+    return '\n'.join(parts)
+
+
+def ask_llm(model, user_text, repair=None, max_tokens=20000):
+    """model: 'router:<id>' | 'opencode:<id>' | 'hermes:<id>' | '<id>' (router).
+
+    Catatan: id router seperti 'qwen/qwen4-max:free' mengandung ':' sehingga
+    hanya prefix backend yang dikenal yang boleh dipecah.
+    """
+    backend, mid = 'router', model
+    for known in ('router', 'opencode', 'hermes'):
+        if model.startswith(known + ':'):
+            backend, mid = known, model[len(known) + 1:]
+            break
+    prompt = build_agent_prompt(user_text, repair)
+    if backend == 'opencode':
+        status(f'memanggil opencode:{mid} (bisa 1-3 menit, harap tunggu)…')
+        return call_opencode(mid, SYSTEM_PROMPT + '\n\n' + prompt)
+    messages = [{'role': 'system', 'content': SYSTEM_PROMPT},
+                {'role': 'user', 'content': prompt}]
+    if backend == 'hermes':
+        status(f'memanggil hermes:{mid}…')
+        return call_hermes(mid, messages, max_tokens=max_tokens)
+    return call_router(mid, messages, max_tokens=max_tokens)
+
+
+# ─────────────────────────── agent job ───────────────────────────
+def _apply_result(result, iter_id):
+    """Tulis scene.json + contract.md, resolve feedback. Return spec."""
+    spec = result['scene']
+    spec.setdefault('meta', {})
+    spec['meta']['last_edit'] = 'agent'
+    spec['meta']['iteration'] = iter_id
+    spec['meta']['saved_at'] = time.time()
+    with LOCK:
+        write_json(os.path.join(ROOT, 'scene.json'), spec)
+        contract = result.get('contract')
+        if isinstance(contract, str) and contract.strip():
+            with open(os.path.join(ROOT, 'contract.md'), 'w', encoding='utf-8') as f:
+                f.write(contract.strip() + '\n')
+        resolved = result.get('resolved_feedback') or []
+        if resolved:
+            fb = read_json(os.path.join(ROOT, 'feedback.json'), [])
+            changed = False
+            for idx in resolved:
+                if isinstance(idx, int) and 0 <= idx < len(fb):
+                    fb[idx]['status'] = 'resolved'
+                    fb[idx]['resolved_by'] = iter_id
+                    changed = True
+            if changed:
+                write_json(os.path.join(ROOT, 'feedback.json'), fb)
+    return spec
+
+
+def _render(iter_id, notes):
+    status(f'render {iter_id} (headless chromium)…')
+    cmd = [sys.executable, os.path.join(ROOT, 'scripts', 'render.py'), iter_id,
+           '--notes', notes[:800]]
+    try:
+        proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=150)
+    except subprocess.TimeoutExpired:
+        status(f'render {iter_id} timeout (>150s)')
+        return {'ok': False, 'smoke': {'pass': False, 'checks': []},
+                'errors': ['render timeout']}
+    rep = read_json(os.path.join(ROOT, 'iterations', iter_id, 'checklist.json'), {})
+    checks = (rep.get('smoke') or {}).get('checks', []) if isinstance(rep, dict) else []
+    npass = sum(1 for c in checks if c.get('pass'))
+    smoke_pass = bool(isinstance(rep, dict) and rep.get('ok')
+                      and (rep.get('smoke') or {}).get('pass'))
+    status(f"smoke {iter_id}: {npass}/{len(checks)} {'✓' if smoke_pass else '✗'}")
+    if proc.returncode not in (0, 2) and not checks:
+        status('render gagal: ' + (proc.stderr or '')[-300:])
+    return {'ok': smoke_pass, 'smoke': rep.get('smoke') if isinstance(rep, dict) else {},
+            'checks': checks, 'npass': npass, 'ntotal': len(checks),
+            'errors': (rep.get('errors') if isinstance(rep, dict) else []) or []}
+
+
+VISION_MODELS = ['meituan/longcat-2.5:free', 'qwen/qwen4-max:free']
+VISION_QUESTION = (
+    'Kritik render 3D ini sebagai karya final (bukan cek teknis). Nilai 1-10 tiap dimensi: '
+    'komposisi (kedalaman 3 lapis, focal point), detail (jendela individual, atap, elemen kehidupan), '
+    'material (tekstur terbaca, tidak flat), cahaya (arah konsisten, bayangan, bloom bila malam), '
+    'atmosfer (langit gradasi, kabut, mood). Cek juga: apakah subjek utama (mobil/orang/lampu) terlihat? '
+    'WAJIB akhiri respons dengan tiga baris persis format ini:\n'
+    'SKOR: komposisi=<n> detail=<n> material=<n> cahaya=<n> atmosfer=<n>\n'
+    'VERDICT: <LAYAK FINAL atau MASIH TUTORIAL>\n'
+    'KRITIK: <satu kalimat perbaikan paling berdampak, bahasa Indonesia>')
+
+
+def vision_gate(iter_id):
+    """Nilai shot.png dengan model vision. Return {pass, avg, scores, critique} atau None bila unavailable."""
+    shot = os.path.join(ROOT, 'iterations', iter_id, 'shot.png')
+    if not os.path.exists(shot):
+        return None
+    img = base64.b64encode(open(shot, 'rb').read()).decode()
+    for vm in VISION_MODELS:
+        try:
+            data = http_json(ROUTER_URL, {
+                'model': vm, 'max_tokens': 700, 'temperature': 0.1,
+                'messages': [{'role': 'user', 'content': [
+                    {'type': 'text', 'text': VISION_QUESTION},
+                    {'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,' + img}},
+                ]}],
+            }, timeout=90)
+            text = _message_text((data.get('choices') or [{}])[0].get('message'))
+            ms = re.search(r'komposisi=(\d+)\s+detail=(\d+)\s+material=(\d+)\s+cahaya=(\d+)\s+atmosfer=(\d+)', text)
+            mv = re.search(r'VERDICT:\s*(LAYAK FINAL|MASIH TUTORIAL)', text)
+            mk = re.search(r'KRITIK:\s*(.+)', text)
+            if not ms:
+                continue
+            scores = {k: int(v) for k, v in zip(['komposisi', 'detail', 'material', 'cahaya', 'atmosfer'], ms.groups())}
+            avg = sum(scores.values()) / 5
+            verdict_ok = (mv.group(1) == 'LAYAK FINAL') if mv else (avg >= 7)
+            return {'pass': bool(verdict_ok and avg >= 6.0), 'avg': avg,
+                    'scores': ', '.join(f'{k}={v}' for k, v in scores.items()),
+                    'critique': (mk.group(1).strip() if mk else text[-200:])}
+        except Exception:
+            continue
+    return None
+
+
+def _fail_summary(render):
+    failing = [f"{c.get('id')}: {c.get('detail', '')}"
+               for c in render.get('checks', []) if not c.get('pass')]
+    lines = failing or render.get('errors') or ['smoke test gagal tanpa detail']
+    return '\n'.join('- ' + x for x in lines)
+
+
+def _job_active(job_id):
+    with LOCK:
+        return CHAT.get('job_id') == job_id and CHAT.get('running')
+
+
+def apply_diff(current, diff):
+    """Gabungkan diff kecil ke scene penuh: upsert by id, remove_ids, ganti lights/camera/env/post opsional."""
+    spec = json.loads(json.dumps(current))
+    objs = spec.get('objects') or []
+    removes = set(diff.get('remove_ids') or [])
+    objs = [o for o in objs if o.get('id') not in removes]
+    by_id = {o.get('id'): i for i, o in enumerate(objs)}
+    n_up = 0
+    for o in diff.get('upserts') or []:
+        if not isinstance(o, dict) or not o.get('id'):
+            continue
+        if o['id'] in by_id:
+            objs[by_id[o['id']]] = o
+        else:
+            objs.append(o)
+            by_id[o['id']] = len(objs) - 1
+        n_up += 1
+    if not objs:
+        raise ValueError('diff menghapus semua objek tanpa pengganti')
+    spec['objects'] = objs
+    if isinstance(diff.get('lights'), list):
+        spec['lights'] = diff['lights']
+    for key in ('camera', 'environment', 'post', 'meta'):
+        if isinstance(diff.get(key), dict):
+            spec[key] = {**(spec.get(key) or {}), **diff[key]}
+    return spec, n_up, len(removes)
+
+
+def materialize_result(result):
+    """Terima {diff:...} (default, cepat) atau {scene:...} (scene baru total). Return (spec, mode)."""
+    if not isinstance(result, dict):
+        return None, ''
+    if isinstance(result.get('scene'), dict):
+        return result['scene'], 'full'
+    if isinstance(result.get('diff'), dict):
+        current = read_json(os.path.join(ROOT, 'scene.json'), {})
+        spec, n_up, n_rm = apply_diff(current, result['diff'])
+        return spec, f'diff (+{n_up} upsert, -{n_rm} hapus)'
+    return None, ''
+
+
+def run_agent_job(job_id, user_text, model):
+    try:
+        status(f'job {job_id} dimulai · model {model}')
+        status('menyiapkan konteks (contract, scene, feedback, riwayat)…')
+        raw, used_model = ask_llm(model, user_text)
+        status(f'memanggil model {used_model}… respons diterima, mem-parsing JSON')
+        result = extract_json_object(raw)
+        spec0, mode0 = materialize_result(result)
+
+        if not spec0:
+            status('JSON tidak valid — potongan respons: ' + repr(raw[:220]))
+            status('retry sekali dengan instruksi tegas')
+            raw, used_model = ask_llm(
+                model, user_text,
+                repair='Respons sebelumnya bukan JSON valid. Balas HANYA satu objek JSON '
+                       'dengan kunci reply, diff (upserts/remove_ids), contract, resolved_feedback.')
+            result = extract_json_object(raw)
+            spec0, mode0 = materialize_result(result)
+        if not spec0:
+            raise RuntimeError('model tidak menghasilkan JSON diff/scene yang valid setelah retry')
+        result['scene'] = spec0
+        status(f'mode {mode0}')
+
+        errs = validate_spec(result['scene'])
+        if errs:
+            status('validasi spec gagal — retry sekali: ' + '; '.join(errs[:4]))
+            raw, used_model = ask_llm(
+                model, user_text,
+                repair='Spec sebelumnya TIDAK VALID:\n' + '\n'.join('- ' + e for e in errs) +
+                       '\nPerbaiki dan kirim JSON lengkap yang valid.')
+            result = extract_json_object(raw)
+            spec1, _ = materialize_result(result)
+            if not spec1:
+                raise RuntimeError('retry validasi gagal: ' + '; '.join(errs[:4]))
+            result['scene'] = spec1
+            errs = validate_spec(result['scene'])
+            if errs:
+                raise RuntimeError('spec tetap tidak valid: ' + '; '.join(errs[:6]))
+        status(f"validasi spec OK ({len(result['scene'].get('objects', []))} objek, "
+               f"{len(result['scene'].get('lights', []))} lampu)")
+
+        if not _job_active(job_id):
+            return  # job sudah dibatalkan/diganti watchdog — jangan tulis apa pun
+        reply = str(result.get('reply') or '').strip() or 'Scene diperbarui.'
+        iter_id = next_iteration_id()
+        _apply_result(result, iter_id)
+        status(f'menulis scene.json + contract.md · {iter_id}')
+        render = _render(iter_id, reply)
+
+        # Satu ronde perbaikan jika smoke gagal.
+        if not render['ok']:
+            if not _job_active(job_id):
+                return
+            status('smoke gagal — satu ronde perbaikan otomatis')
+            repair_text = ('Smoke test otomatis GAGAL untuk iterasi ini. Perbaiki scene.\n' +
+                           _fail_summary(render) +
+                           '\nKirim JSON DIFF (upserts/remove_ids) yang memperbaiki poin gagal — JANGAN tulis ulang seluruh scene.')
+            raw, used_model = ask_llm(model, user_text, repair=repair_text)
+            fixed = extract_json_object(raw)
+            fixed_spec, _ = materialize_result(fixed)
+            if fixed_spec:
+                fixed['scene'] = fixed_spec
+            if fixed_spec and not validate_spec(fixed_spec):
+                reply = str(fixed.get('reply') or reply).strip() or reply
+                iter_id2 = next_iteration_id()
+                _apply_result(fixed, iter_id2)
+                status(f'menulis perbaikan · {iter_id2}')
+                render2 = _render(iter_id2, reply)
+                if render2['ok']:
+                    iter_id, render, result = iter_id2, render2, fixed
+                else:
+                    status('perbaikan masih gagal — iterasi terakhir disimpan sebagai bukti')
+                    iter_id, render = iter_id2, render2
+            else:
+                status('perbaikan model tidak valid — mempertahankan iterasi gagal')
+
+        # Gerbang estetika otomatis: vision menilai hasil; maks 2 ronde perbaikan.
+        # Edit kecil (diff ≤8 objek, tanpa ubah lighting/kamera/lingkungan) cukup cek teknis —
+        # menilai ulang seluruh scene untuk satu mobil tambahan = buang waktu 2-3 menit.
+        vision_summary = ''
+        d = result.get('diff') or {}
+        minor_edit = (isinstance(result.get('diff'), dict)
+                      and len(d.get('upserts') or []) <= 15
+                      and len(d.get('remove_ids') or []) <= 8
+                      and not any(k in d for k in ('lights', 'camera', 'environment', 'post')))
+        if render['ok'] and minor_edit:
+            status('edit kecil — gerbang estetika dilewati (smoke + oklusi cukup untuk perubahan minor)')
+            vision_summary = 'Edit minor: cek teknis 8/8 (gerbang estetika untuk perubahan besar/scene baru)'
+        if render['ok'] and not minor_edit:
+            for vround in range(2):
+                if not _job_active(job_id):
+                    return
+                status(f'gerbang estetika: cek vision ronde {vround + 1}…')
+                v = vision_gate(iter_id)
+                if v is None:
+                    status('vision tidak tersedia — gerbang estetika dilewati (smoke tetap pass)')
+                    break
+                if v['pass']:
+                    vision_summary = f"Estetika: LAYAK FINAL (skor {v['scores']})"
+                    status(f"estetika LAYAK FINAL (rata-rata {v['avg']:.1f})")
+                    break
+                status(f"estetika belum final (rata-rata {v['avg']:.1f}) — perbaikan otomatis")
+                raw, used_model = ask_llm(model, user_text, repair=(
+                    'Smoke test LOLOS tapi gerbang estetika vision MENOLAK hasil ini.\n'
+                    f"Skor: {v['scores']}\nKritik vision: {v['critique']}\n"
+                    'Perbaiki HANYA poin kritik dengan mengubah material/lighting/post pada objek yang ADA; '
+                    'JANGAN menambah objek dekoratif baru atau varian id; tanpa menghapus '
+                    'objek yang sudah ada dan tanpa mengubah layout yang sudah lolos oklusi. '
+                    'Kirim JSON DIFF (upserts/remove_ids) — JANGAN tulis ulang seluruh scene.'))
+                fixed = extract_json_object(raw)
+                fixed_spec, _ = materialize_result(fixed)
+                if fixed_spec:
+                    fixed['scene'] = fixed_spec
+                if fixed_spec and not validate_spec(fixed_spec):
+                    reply = str(fixed.get('reply') or reply).strip() or reply
+                    iter_id2 = next_iteration_id()
+                    _apply_result(fixed, iter_id2)
+                    status(f'menulis perbaikan estetika · {iter_id2}')
+                    render2 = _render(iter_id2, reply)
+                    if render2['ok']:
+                        iter_id, render, result = iter_id2, render2, fixed
+                    else:
+                        status('perbaikan estetika gagal smoke — scene dikembalikan ke iterasi lolos terakhir')
+                        with LOCK:
+                            write_json(os.path.join(ROOT, 'scene.json'), result['scene'])
+                        break
+                else:
+                    status('perbaikan estetika tidak valid — berhenti di iterasi terakhir')
+                    break
+            else:
+                vision_summary = 'Estetika: belum final setelah 2 ronde perbaikan (iterasi terbaik disimpan)'
+
+        with LOCK:
+            CHAT['last_iteration'] = iter_id
+        smoke = render.get('smoke') or {}
+        ok = bool(render.get('ok'))
+        npass, ntotal = render.get('npass', 0), render.get('ntotal', 0)
+        summary = (f"Smoke {npass}/{ntotal} {'lolos ✓' if ok else 'gagal ✗'} · iterasi {iter_id}"
+                   if ntotal else f"Render selesai · iterasi {iter_id} (tanpa checklist)")
+        if not _job_active(job_id):
+            return
+        full_reply = f"{reply}\n\n{summary}" + (f"\n{vision_summary}" if vision_summary else '')
+        append_chat_message({
+            'role': 'agent', 'text': full_reply, 'at': time.time(),
+            'iteration': iter_id, 'model': used_model,
+            'smoke': {'pass': ok, 'passed': npass, 'total': ntotal},
+        })
+        status(f'selesai · {iter_id} · smoke ' + ('PASS' if ok else 'FAIL'))
+        if not ok:
+            with LOCK:
+                CHAT['error'] = 'smoke test gagal: ' + _fail_summary(render)[:400]
+    except Exception as e:
+        msg = f'Agent gagal: {e}'
+        status(msg)
+        append_chat_message({'role': 'agent', 'text': msg, 'at': time.time(),
+                             'iteration': None, 'model': model, 'error': True})
+        with LOCK:
+            CHAT['error'] = str(e)
+    finally:
+        with LOCK:
+            CHAT['running'] = False
+
+
+def start_job(text, model):
+    with CHAT_LOCK:
+        with LOCK:
+            if CHAT['running']:
+                return None
+            job_id = 'job-%d' % int(time.time() * 1000)
+            CHAT.update({
+                'running': True, 'job_id': job_id, 'model': model,
+                'started_at': time.time(), 'status_lines': [],
+                'error': None, 'last_iteration': None,
+            })
+        append_chat_message({'role': 'user', 'text': text, 'at': time.time(),
+                             'iteration': None, 'model': model})
+        t = threading.Thread(target=run_agent_job, args=(job_id, text, model), daemon=True)
+        t.start()
+
+        def _watchdog(jid):
+            time.sleep(1080)
+            with LOCK:
+                stale = CHAT.get('job_id') == jid and CHAT.get('running')
+                if stale:
+                    CHAT['running'] = False
+                    CHAT['job_id'] = None
+                    CHAT['error'] = 'timeout watchdog 1080s — job dibatalkan otomatis'
+            if stale:
+                status('watchdog: job macet >1080s, dibatalkan otomatis')
+                append_chat_message({'role': 'agent', 'at': time.time(), 'iteration': None,
+                                     'model': model, 'error': True,
+                                     'text': 'Agent gagal: macet >18 menit (watchdog). Model terlalu lama atau kuota habis. Coba lagi, atau ganti backend/model di dropdown.'})
+        threading.Thread(target=_watchdog, args=(job_id,), daemon=True).start()
+        return job_id
+
+
+# ─────────────────────────── backend discovery ───────────────────────────
+def _router_backends():
+    try:
+        data = http_json(ROUTER_MODELS_URL, timeout=3)
+        ids = [m.get('id') for m in data.get('data', []) if isinstance(m, dict)]
+        free = [i for i in ids if i and 'free' in i.lower()]
+        models = free or FREE_ROUTER_MODELS
+        return {'id': 'router', 'label': 'Router (OpenAI-compatible)',
+                'available': True, 'status': 'ready', 'reason': '',
+                'models': [{'id': m, 'value': m, 'backend': 'router', 'label': m} for m in models]}
+    except Exception as e:
+        return {'id': 'router', 'label': 'Router (OpenAI-compatible)',
+                'available': False, 'status': 'unavailable',
+                'reason': f'router tidak merespons: {e}',
+                'models': [{'id': m, 'value': m, 'backend': 'router', 'label': m}
+                           for m in FREE_ROUTER_MODELS]}
+
+
+def _opencode_models():
+    try:
+        data = _opencode_get('/api/model', timeout=3)
+        items = data.get('data', data) if isinstance(data, dict) else data
+        out = []
+        for m in items or []:
+            if not isinstance(m, dict) or m.get('providerID') != 'opencode':
+                continue
+            if m.get('enabled') is False:
+                continue
+            mid = m.get('modelID') or m.get('id')
+            if not mid:
+                continue
+            out.append(mid)
+        # prioritaskan model free yang diketahui
+        order = {m: i for i, m in enumerate(OPENCODE_FALLBACK_MODELS)}
+        out.sort(key=lambda x: (order.get(x, 99), x))
+        seen, uniq = set(), []
+        for m in out:
+            if m not in seen:
+                seen.add(m)
+                uniq.append(m)
+        return uniq or OPENCODE_FALLBACK_MODELS
+    except Exception:
+        return OPENCODE_FALLBACK_MODELS
+
+
+def _start_opencode():
+    try:
+        proc = subprocess.run(['opencode', 'service', 'start'], capture_output=True,
+                              text=True, timeout=15)
+        return proc.returncode == 0
+    except Exception:
+        return False
+
+
+def _opencode_backend():
+    models = _opencode_models()
+    try:
+        info = _opencode_get('/api/info', timeout=3)
+        ver = info.get('version', '?')
+        return {'id': 'opencode', 'label': 'OpenCode service', 'available': True,
+                'status': 'ready', 'reason': '', 'version': ver,
+                'models': [{'id': m, 'value': 'opencode:' + m, 'backend': 'opencode',
+                            'label': m} for m in models]}
+    except Exception:
+        if _start_opencode():
+            models = _opencode_models()
+            try:
+                info = _opencode_get('/api/info', timeout=4)
+                return {'id': 'opencode', 'label': 'OpenCode service', 'available': True,
+                        'status': 'ready', 'reason': '', 'version': info.get('version', '?'),
+                        'models': [{'id': m, 'value': 'opencode:' + m, 'backend': 'opencode',
+                                    'label': m} for m in models]}
+            except Exception as e:
+                reason = str(e)
+        else:
+            reason = 'server opencode tidak aktif dan gagal dihidupkan'
+        return {'id': 'opencode', 'label': 'OpenCode service', 'available': False,
+                'status': 'unavailable', 'reason': reason,
+                'models': [{'id': m, 'value': 'opencode:' + m, 'backend': 'opencode',
+                            'label': m} for m in models]}
+
+
+def _hermes_backend():
+    key = _hermes_key()
+    models = [{'id': m, 'value': 'hermes:' + m, 'backend': 'hermes', 'label': m}
+              for m in HERMES_MODELS]
+    if not key:
+        return {'id': 'hermes', 'label': 'Hermes gateway', 'available': False,
+                'status': 'unconfigured', 'reason': 'perlu API_SERVER_KEY',
+                'models': models}
+    try:
+        http_json(HERMES_URL.replace('/chat/completions', '/models'),
+                  headers={'Authorization': 'Bearer ' + key}, timeout=3)
+        return {'id': 'hermes', 'label': 'Hermes gateway', 'available': True,
+                'status': 'ready', 'reason': '', 'models': models}
+    except Exception as e:
+        return {'id': 'hermes', 'label': 'Hermes gateway', 'available': False,
+                'status': 'unavailable', 'reason': f'gateway: {e}', 'models': models}
+
+
+def backends():
+    return {'backends': [_router_backends(), _opencode_backend(), _hermes_backend()],
+            'default_model': DEFAULT_MODEL}
+
+
+# ─────────────────────────── HTTP handler ───────────────────────────
+
+# ─────────────────────────── projek & export ───────────────────────────
+import shutil, zipfile, io, datetime
+
+PROJECTS = os.path.join(ROOT, 'projects')
+ACTIVE_FILE = os.path.join(ROOT, 'active.json')
+PROJECT_FILES = ['scene.json', 'contract.md', 'feedback.json', 'chat.json']
+
+
+def slugify(name):
+    s = re.sub(r'[^a-z0-9]+', '-', str(name).lower()).strip('-')
+    return s[:40] or 'projek'
+
+
+def active_project():
+    a = read_json(ACTIVE_FILE, {})
+    return a.get('name') or slugify((read_json(os.path.join(ROOT, 'scene.json'), {}).get('meta') or {}).get('name') or 'tanpa-nama')
+
+
+def set_active(name):
+    write_json(ACTIVE_FILE, {'name': name, 'at': time.time()})
+
+
+def snapshot_current(name):
+    """Salin workspace root ke projects/<name> (auto-save sebelum new/load)."""
+    dst = os.path.join(PROJECTS, slugify(name))
+    os.makedirs(dst, exist_ok=True)
+    for f in PROJECT_FILES:
+        src = os.path.join(ROOT, f)
+        if os.path.exists(src):
+            shutil.copy2(src, os.path.join(dst, f))
+    idir = os.path.join(ROOT, 'iterations')
+    if os.path.isdir(idir):
+        shutil.copytree(idir, os.path.join(dst, 'iterations'), dirs_exist_ok=True)
+    return dst
+
+
+def list_projects():
+    out = []
+    if os.path.isdir(PROJECTS):
+        for name in sorted(os.listdir(PROJECTS)):
+            d = os.path.join(PROJECTS, name)
+            if not os.path.isdir(d):
+                continue
+            sc = read_json(os.path.join(d, 'scene.json'), {})
+            idir = os.path.join(d, 'iterations')
+            iters = sorted([x for x in os.listdir(idir)]) if os.path.isdir(idir) else []
+            thumb = None
+            for it in reversed(iters):
+                p = os.path.join(idir, it, 'shot.png')
+                if os.path.exists(p):
+                    thumb = f'projects/{name}/iterations/{it}/shot.png'
+                    break
+            out.append({'name': name, 'title': (sc.get('meta') or {}).get('name') or name,
+                        'objects': len(sc.get('objects') or []), 'iterations': len(iters),
+                        'mtime': os.path.getmtime(os.path.join(d, 'scene.json')) if os.path.exists(os.path.join(d, 'scene.json')) else 0,
+                        'thumb': thumb})
+    return out
+
+
+def starter_spec(title):
+    return {
+        'meta': {'name': title, 'concept': '', 'seed': 42, 'spec_version': 1},
+        'environment': {'background': '#10131a', 'ground': {'size': 40, 'color': '#1a1e26', 'roughness': 0.95}, 'exposure': 1.1},
+        'camera': {'position': [7, 5, 9], 'target': [0, 1, 0], 'fov': 50},
+        'lights': [
+            {'id': 'hemi', 'type': 'hemisphere', 'color': '#8899bb', 'groundColor': '#222233', 'intensity': 0.7},
+            {'id': 'key', 'type': 'directional', 'color': '#fff2d8', 'intensity': 2.0, 'position': [8, 12, 6], 'castShadow': True, 'shadowExtent': 20}],
+        'objects': []}
+
+
+def reset_workspace(title):
+    write_json(os.path.join(ROOT, 'scene.json'), starter_spec(title))
+    with open(os.path.join(ROOT, 'contract.md'), 'w', encoding='utf-8') as f:
+        f.write(f'# Kontrak — {title}\n\n## Konsep\n(belum ada — tulis prompt di tab Agent untuk membangun scene)\n\n## Acceptance criteria\nA. Smoke 8/8 pass.\nB. Gerbang estetika vision ≥6 + verdict layak final (untuk perubahan besar).\n')
+    write_json(os.path.join(ROOT, 'feedback.json'), [])
+    write_json(os.path.join(ROOT, 'chat.json'), [])
+    idir = os.path.join(ROOT, 'iterations')
+    if os.path.isdir(idir):
+        shutil.rmtree(idir)
+    os.makedirs(idir, exist_ok=True)
+
+
+def load_project_dir(name):
+    src = os.path.join(PROJECTS, slugify(name))
+    if not os.path.isdir(src):
+        raise RuntimeError(f'projek "{name}" tidak ditemukan')
+    for f in PROJECT_FILES:
+        p = os.path.join(src, f)
+        if os.path.exists(p):
+            shutil.copy2(p, os.path.join(ROOT, f))
+    idir = os.path.join(ROOT, 'iterations')
+    if os.path.isdir(idir):
+        shutil.rmtree(idir)
+    shutil.copytree(os.path.join(src, 'iterations'), idir, dirs_exist_ok=True)
+
+
+CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0'
+
+
+def standalone_html(spec):
+    """HTML mandiri satu file: spec inline + builder inline (import CDN) + viewer orbit."""
+    builder = read_text(os.path.join(ROOT, 'js', 'scene-builder.js'))
+    builder = re.sub(r"^import \* as THREE from 'three';\s*\n", '', builder, flags=re.M)
+    builder = builder.replace("from '../vendor/GLTFLoader.js'", f"from '{CDN}/examples/jsm/loaders/GLTFLoader.js'")
+    builder = re.sub(r"from '../vendor/jsm/postprocessing/([^']+)'",
+                     lambda m: f"from '{CDN}/examples/jsm/postprocessing/{m.group(1)}'", builder)
+    title = (spec.get('meta') or {}).get('name') or 'Three.js Scene'
+    return f"""<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{title} — Three.js Studio Export</title>
+<style>html,body{{margin:0;height:100%;overflow:hidden;background:#000}}canvas{{display:block;width:100%;height:100%}}
+#info{{position:fixed;top:10px;left:12px;color:#cfd3dc;font:12px/1.4 system-ui;background:rgba(15,17,22,.7);padding:6px 12px;border-radius:6px;pointer-events:none}}
+</style>
+<script type="importmap">{{"imports":{{"three":"{CDN}/build/three.module.js"}}}}</script>
+</head><body>
+<canvas id="cv"></canvas><div id="info"><b>{title}</b> · drag: orbit · scroll: zoom · export Three.js Studio</div>
+<script type="module">
+import * as THREE from 'three';
+import {{ OrbitControls }} from '{CDN}/examples/jsm/controls/OrbitControls.js';
+{builder}
+const SPEC = {json.dumps(spec, ensure_ascii=False)};
+const cv = document.getElementById('cv');
+const handle = await buildScene(SPEC);
+const renderer = makeRenderer(cv, innerWidth, innerHeight, {{ exposure: SPEC.environment?.exposure ?? 1.1 }});
+handle.camera.aspect = innerWidth / innerHeight; handle.camera.updateProjectionMatrix();
+handle.composer = makeComposer(handle, renderer, innerWidth, innerHeight);
+const controls = new OrbitControls(handle.camera, cv);
+controls.enableDamping = true; controls.target.copy(handle.target);
+addEventListener('resize', () => {{
+  renderer.setSize(innerWidth, innerHeight, false);
+  handle.composer?.setSize(innerWidth, innerHeight);
+  handle.camera.aspect = innerWidth / innerHeight; handle.camera.updateProjectionMatrix();
+}});
+renderer.setAnimationLoop(() => {{
+  controls.update();
+  if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
+}});
+</script></body></html>"""
+
+
+def export_zip(spec):
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
+        z.writestr('scene.json', json.dumps(spec, ensure_ascii=False, indent=2))
+        z.writestr('standalone.html', standalone_html(spec))
+        for f in ['contract.md', 'feedback.json', 'chat.json']:
+            p = os.path.join(ROOT, f)
+            if os.path.exists(p):
+                z.write(p, f)
+        idir = os.path.join(ROOT, 'iterations')
+        if os.path.isdir(idir):
+            for it in sorted(os.listdir(idir)):
+                for fn in os.listdir(os.path.join(idir, it)):
+                    z.write(os.path.join(idir, it, fn), f'iterations/{it}/{fn}')
+    return buf.getvalue()
+
+
+class Handler(SimpleHTTPRequestHandler):
+    def __init__(self, *a, **kw):
+        super().__init__(*a, directory=ROOT, **kw)
+
+    def log_message(self, fmt, *args):
+        pass  # senyap; akses penting dicatat manual
+
+    def _send(self, code, obj):
+        body = json.dumps(obj, ensure_ascii=False).encode('utf-8')
+        self.send_response(code)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
+        self.end_headers()
+        self.wfile.write(body)
+
+    def end_headers(self):
+        # scene.json / chat.json harus selalu segar untuk polling.
+        if not self.path.startswith('/api/'):
+            self.send_header('Cache-Control', 'no-cache')
+        super().end_headers()
+
+    def do_GET(self):
+        path = self.path.split('?')[0]
+        if path == '/api/state':
+            return self._send(200, state())
+        if path == '/api/health':
+            return self._send(200, {'ok': True})
+        if path == '/api/chat/state':
+            return self._send(200, chat_state())
+        if path == '/api/backends':
+            return self._send(200, backends())
+        if path == '/api/projects':
+            return self._send(200, {'active': active_project(), 'projects': list_projects()})
+        if path == '/api/export':
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            fmt = (qs.get('format') or ['html'])[0]
+            spec = read_json(os.path.join(ROOT, 'scene.json'), {})
+            stamp = datetime.date.today().isoformat()
+            base = slugify((spec.get('meta') or {}).get('name') or 'scene') + '-' + stamp
+            if fmt == 'json':
+                body, ctype, ext = json.dumps(spec, ensure_ascii=False, indent=2).encode(), 'application/json', 'json'
+            elif fmt == 'zip':
+                body, ctype, ext = export_zip(spec), 'application/zip', 'zip'
+            else:
+                body, ctype, ext = standalone_html(spec).encode(), 'text/html', 'html'
+            self.send_response(200)
+            self.send_header('Content-Type', ctype)
+            self.send_header('Content-Disposition', f'attachment; filename="{base}.{ext}"')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        return super().do_GET()
+
+    def do_POST(self):
+        path = self.path.split('?')[0]
+        try:
+            length = int(self.headers.get('Content-Length', 0))
+            payload = json.loads(self.rfile.read(length) or b'{}')
+        except Exception as e:
+            return self._send(400, {'ok': False, 'error': str(e)})
+        if path == '/api/chat/cancel':
+            with LOCK:
+                was = bool(CHAT.get('running'))
+                if was:
+                    CHAT['running'] = False
+                    CHAT['job_id'] = None
+                    CHAT['error'] = 'dibatalkan user'
+            if was:
+                status('job dibatalkan oleh user')
+                append_chat_message({'role': 'agent', 'at': time.time(), 'iteration': None,
+                                     'model': CHAT.get('model'), 'error': True,
+                                     'text': 'Job dibatalkan oleh user. Kirim prompt baru untuk memulai lagi.'})
+            return self._send(200, {'ok': True, 'cancelled': was})
+        if path in ('/api/project/new', '/api/project/save', '/api/project/load'):
+            with LOCK:
+                if CHAT.get('running'):
+                    return self._send(409, {'ok': False, 'error': 'agent sedang berjalan — batalkan/tunggu dulu sebelum ganti projek'})
+            name = slugify(payload.get('name') or '')
+            if path == '/api/project/new':
+                if not name:
+                    return self._send(400, {'ok': False, 'error': 'nama projek wajib'})
+                cur = read_json(os.path.join(ROOT, 'scene.json'), {})
+                if cur.get('objects'):
+                    snapshot_current(active_project())
+                reset_workspace(payload.get('name') or name)
+                set_active(name)
+                return self._send(200, {'ok': True, 'project': name})
+            if path == '/api/project/save':
+                if not name:
+                    name = active_project()
+                dst = snapshot_current(name)
+                set_active(name)
+                return self._send(200, {'ok': True, 'project': name, 'path': dst})
+            if path == '/api/project/load':
+                cur = read_json(os.path.join(ROOT, 'scene.json'), {})
+                if cur.get('objects'):
+                    snapshot_current(active_project())
+                try:
+                    load_project_dir(name)
+                except Exception as e:
+                    return self._send(404, {'ok': False, 'error': str(e)})
+                set_active(name)
+                return self._send(200, {'ok': True, 'project': name})
+        with LOCK:
+            if path == '/api/scene':
+                spec = payload.get('scene')
+                if not isinstance(spec, dict) or 'objects' not in spec:
+                    return self._send(400, {'ok': False, 'error': 'spec tidak valid'})
+                spec.setdefault('meta', {})['last_edit'] = 'user'
+                spec['meta']['saved_at'] = time.time()
+                write_json(os.path.join(ROOT, 'scene.json'), spec)
+                return self._send(200, {'ok': True, 'saved': 'scene.json'})
+            if path == '/api/feedback':
+                text = (payload.get('text') or '').strip()
+                if not text:
+                    return self._send(400, {'ok': False, 'error': 'feedback kosong'})
+                fb = read_json(os.path.join(ROOT, 'feedback.json'), [])
+                fb.append({'text': text, 'at': time.time(), 'iteration': payload.get('iteration'), 'status': 'open'})
+                write_json(os.path.join(ROOT, 'feedback.json'), fb)
+                return self._send(200, {'ok': True, 'count': len(fb)})
+            if path == '/api/feedback/resolve':
+                fb = read_json(os.path.join(ROOT, 'feedback.json'), [])
+                idx = payload.get('index')
+                if isinstance(idx, int) and 0 <= idx < len(fb):
+                    fb[idx]['status'] = 'resolved'
+                    write_json(os.path.join(ROOT, 'feedback.json'), fb)
+                    return self._send(200, {'ok': True})
+                return self._send(400, {'ok': False, 'error': 'index tidak valid'})
+        if path == '/api/chat':
+            text = (payload.get('text') or '').strip()
+            model = (payload.get('model') or '').strip() or DEFAULT_MODEL
+            if not text:
+                return self._send(400, {'ok': False, 'error': 'teks permintaan kosong'})
+            if len(text) > 4000:
+                return self._send(400, {'ok': False, 'error': 'teks terlalu panjang (maks 4000)'})
+            job_id = start_job(text, model)
+            if job_id is None:
+                return self._send(409, {'ok': False, 'error': 'masih ada job agent berjalan'})
+            return self._send(200, {'ok': True, 'job_id': job_id, 'model': model})
+        return self._send(404, {'ok': False, 'error': 'endpoint tidak dikenal'})
+
+
+if __name__ == '__main__':
+    print(f'Three.js Studio serving {ROOT} on 0.0.0.0:{PORT}', flush=True)
+    ThreadingHTTPServer(('0.0.0.0', PORT), Handler).serve_forever()

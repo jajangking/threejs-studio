@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>headless-render</title>
+<style>body{margin:0;background:#000}#shot{display:none}</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<img id="shot" alt="">
+<pre id="report">{}</pre>
+<script type="module">
+import { buildScene, makeRenderer, makeComposer, smokeCheck } from './js/scene-builder.js';
+
+const params = new URLSearchParams(location.search);
+const scenePath = params.get('scene') || 'scene.json';
+const W = parseInt(params.get('w') || '1280'), H = parseInt(params.get('h') || '720');
+const cv = document.getElementById('cv');
+cv.width = W; cv.height = H;
+
+const report = { ok: false, errors: [] };
+window.addEventListener('error', e => report.errors.push(String(e.message)));
+
+try {
+  const spec = await (await fetch(scenePath + '?t=' + Date.now())).json();
+  const handle = await buildScene(spec);
+  const renderer = makeRenderer(cv, W, H, { preserveDrawingBuffer: true, exposure: spec.environment?.exposure ?? 1.1 });
+  handle.camera.aspect = W / H;
+  handle.camera.updateProjectionMatrix();
+  handle.composer = makeComposer(handle, renderer, W, H);
+  const smoke = smokeCheck(handle, renderer);
+  // beberapa frame ekstra agar shadow map & material stabil
+  for (let i = 0; i < 3; i++) handle.composer ? handle.composer.render() : renderer.render(handle.scene, handle.camera);
+  document.getElementById('shot').src = cv.toDataURL('image/png');
+  Object.assign(report, { ok: true, specName: spec.meta?.name, smoke });
+} catch (e) {
+  report.errors.push(String(e && e.stack || e));
+}
+document.getElementById('report').textContent = JSON.stringify(report);
+window.__RENDER_DONE = true;
+</script>
+</body>
+</html>

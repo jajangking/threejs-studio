@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>studio-frame</title>
+<style>html,body{margin:0;padding:0;background:#000;overflow:hidden}iframe{border:0;display:block}</style>
+</head>
+<body>
+<!-- Wrapper untuk screenshot ukuran viewport presisi (Chromium headless punya lebar minimum layout). -->
+<iframe id="f"></iframe>
+<script>
+const p = new URLSearchParams(location.search);
+const W = parseInt(p.get('w') || '390', 10), H = parseInt(p.get('h') || '844', 10);
+const f = document.getElementById('f');
+f.style.width = W + 'px'; f.style.height = H + 'px';
+document.body.style.width = W + 'px'; document.body.style.height = H + 'px';
+const tab = p.get('tab');
+f.src = '/?frame=' + W + 'x' + H + (tab ? '&tab=' + encodeURIComponent(tab) : '');
+</script>
+</body>
+</html>

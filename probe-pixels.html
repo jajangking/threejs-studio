@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html><body><pre id="out">{}</pre>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { buildScene, makeRenderer, makeComposer } from './js/scene-builder.js';
+const out = { checks: [] };
+try {
+  const spec = await (await fetch('scene.json?t=' + Date.now())).json();
+  const handle = await buildScene(spec);
+  const cam = handle.camera;
+  cam.aspect = 1280 / 720; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+  // muat screenshot iter-10
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = 'iterations/iter-14/shot.png?t=' + Date.now(); });
+  const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+  const ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0);
+  const W = img.width, H = img.height;
+  // Titik sampel permukaan yang BENAR (bukan pusat objek yang bisa mengenai jendela/bayangan)
+  const targets = [];
+  for (const o of spec.objects) {
+    if (['mobil-1','mobil-2','mobil-3'].includes(o.id)) targets.push({ id: o.id + '(kap)', pt: [o.position[0] + .95, o.position[1] + .21 * 1.35 + .02, o.position[2]], expect: o.material.color });
+    if (['orang-1-kepala','orang-2-kepala','awan-1-2','awan-2-2'].includes(o.id)) targets.push({ id: o.id, pt: o.position, expect: o.material.color });
+    if (o.id === 'gedung-1') targets.push({ id: 'gedung-1(fasad bawah)', pt: [o.position[0] + o.params.width/2 + .03, o.position[1] - o.params.height/2 + .4, o.position[2]], expect: o.material.color });
+    if (o.id === 'jalan-x') targets.push({ id: 'jalan-x(aspal)', pt: [3.5, .03, .5], expect: o.material.color });
+  }
+  for (const t of targets) {
+    const id = t.id;
+    const c = new THREE.Vector3().fromArray(t.pt);
+    const p = c.clone().project(cam);
+    const x = Math.round((p.x + 1) / 2 * W), y = Math.round((1 - p.y) / 2 * H);
+    let sample = null;
+    if (x >= 2 && x < W - 2 && y >= 2 && y < H - 2 && p.z < 1) {
+      const d = ctx.getImageData(x - 2, y - 2, 5, 5).data;
+      let r = 0, g = 0, b = 0;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      const n = d.length / 4;
+      sample = [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
+    }
+    out.checks.push({ id, pixel: [x, y], inFrame: p.z < 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1, sampledRGB: sample, expectedColor: t.expect });
+  }
+  // cek tekstur terpasang
+  out.textures = [];
+  for (const id of ['gedung-1', 'jalan-x', '__ground']) {
+    const m = handle.registry.get(id);
+    out.textures.push({ id, hasMap: !!m?.material?.map, mapImage: m?.material?.map?.image?.width || null });
+  }
+  // Diagnosa: render sendiri & bandingkan piksel
+  out.diag = { colorManagement: THREE.ColorManagement.enabled };
+  const cv2 = document.createElement('canvas'); cv2.width = 1280; cv2.height = 720;
+  const ren = makeRenderer(cv2, 1280, 720, { preserveDrawingBuffer: true, exposure: spec.environment?.exposure ?? 1 });
+  handle.composer = makeComposer(handle, ren, 1280, 720);
+  const draw = () => handle.composer ? handle.composer.render() : ren.render(handle.scene, cam);
+  draw();
+  const sampleCv = document.createElement('canvas'); sampleCv.width = 1280; sampleCv.height = 720;
+  const ctx2 = sampleCv.getContext('2d');
+  ctx2.drawImage(cv2, 0, 0);
+  // titik permukaan atas mobil-1 (merah) — tepat di atas surface
+  const m1 = spec.objects.find(o => o.id === 'mobil-1');
+  const topPt = new THREE.Vector3(m1.position[0], m1.position[1] + .21 * 1.35 + .01, m1.position[2]);
+  const sampleAt = (pt, key) => {
+    const c = pt.clone().project(cam);
+    const x = Math.round((c.x + 1) / 2 * 1280), y = Math.round((1 - c.y) / 2 * 720);
+    const d = ctx2.getImageData(x - 2, y - 2, 5, 5).data;
+    let rr = 0, gg = 0, bb = 0; for (let i = 0; i < d.length; i += 4) { rr += d[i]; gg += d[i+1]; bb += d[i+2]; }
+    const n = d.length / 4;
+    out.diag[key] = { rgb: [Math.round(rr/n), Math.round(gg/n), Math.round(bb/n)], px: [x, y] };
+  };
+  sampleAt(topPt, 'ownRender_mobil1_top');
+  // tanpa shadow SUNGGUH-SUNGGUH (needsUpdate semua material)
+  ren.shadowMap.enabled = false;
+  handle.scene.traverse(o => { if (o.isLight) o.castShadow = false; if (o.isMesh && o.material) o.material.needsUpdate = true; });
+  draw();
+  ctx2.drawImage(cv2, 0, 0);
+  sampleAt(topPt, 'noShadow_mobil1_top');
+  // hanya matahari (hemi & fill & point dimatikan)
+  handle.scene.traverse(o => { if (o.isLight && o.name !== 'sunlight') o.intensity = 0; });
+  draw();
+  ctx2.drawImage(cv2, 0, 0);
+  sampleAt(topPt, 'sunOnly_mobil1_top');
+  // RAYCAST: apa yang sebenarnya terlihat di piksel atap mobil-1?
+  const rc = new THREE.Raycaster();
+  const ndc = new THREE.Vector2((569 / 1280) * 2 - 1, -(476 / 720) * 2 + 1);
+  rc.setFromCamera(ndc, cam);
+  const hits = rc.intersectObjects(handle.scene.children, true).slice(0, 5);
+  out.diag.raycast = hits.map(h => ({ name: h.object.name || h.object.type, id: h.object.userData?.specId, dist: +h.distance.toFixed(2), point: h.point.toArray().map(v => +v.toFixed(2)) }));
+  const m1obj = handle.registry.get('mobil-1');
+  out.diag.mobil1 = m1obj ? { worldPos: m1obj.getWorldPosition(new THREE.Vector3()).toArray(), visible: m1obj.visible, scale: m1obj.scale.toArray(), inScene: !!m1obj.parent, type: m1obj.type } : 'TIDAK ADA DI REGISTRY';
+  out.diag.sun = spec.lights.find(l => l.id === 'sunlight');
+  out.diag.gedung1mat = { color: spec.objects.find(o => o.id === 'gedung-1').material.color, texture: spec.objects.find(o => o.id === 'gedung-1').material.texture };
+  out.diag.roadIds = spec.objects.filter(o => o.id.includes('jalan')).map(o => o.id);
+  out.ok = true;
+} catch (e) { out.err = String(e && e.stack || e); }
+document.getElementById('out').textContent = JSON.stringify(out);
+</script></body></html>
