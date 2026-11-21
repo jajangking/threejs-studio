@@ -5,8 +5,8 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-04",
-    "saved_at": 1795265907.3945184
+    "iteration": "iter-06",
+    "saved_at": 1795268561.0031118
   },
   "environment": {
     "background": "#0e1118",
@@ -3679,6 +3679,1469 @@
           ]
         }
       ]
+    },
+    {
+      "id": "tissue-cluster",
+      "name": "Tisu tertiup angin",
+      "type": "group",
+      "position": [
+        0,
+        6.7,
+        -0.3
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "animate": {
+        "type": "oscillate",
+        "axis": "y",
+        "amplitude": 35,
+        "period": 6
+      },
+      "children": [
+        {
+          "id": "tissue-01",
+          "type": "group",
+          "position": [
+            1.15,
+            0.3,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "x",
+            "amplitude": 18,
+            "period": 0.72
+          },
+          "children": [
+            {
+              "id": "tissue-01-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.32
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.14,
+                "height": 0.012,
+                "depth": 0.64
+              },
+              "material": {
+                "color": "#fff1e0",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-02",
+          "type": "group",
+          "position": [
+            0.8132,
+            1.1132,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "y",
+            "amplitude": 22,
+            "period": 0.88
+          },
+          "children": [
+            {
+              "id": "tissue-02-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.29
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.12,
+                "height": 0.012,
+                "depth": 0.58
+              },
+              "material": {
+                "color": "#ffe6d5",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-03",
+          "type": "group",
+          "position": [
+            0.0,
+            1.45,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "x",
+            "amplitude": 16,
+            "period": 0.65
+          },
+          "children": [
+            {
+              "id": "tissue-03-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.35
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.16,
+                "height": 0.012,
+                "depth": 0.7
+              },
+              "material": {
+                "color": "#f6ede1",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-04",
+          "type": "group",
+          "position": [
+            -0.8132,
+            1.1132,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "y",
+            "amplitude": 20,
+            "period": 1.02
+          },
+          "children": [
+            {
+              "id": "tissue-04-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.3
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.13,
+                "height": 0.012,
+                "depth": 0.6
+              },
+              "material": {
+                "color": "#fff1e0",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-05",
+          "type": "group",
+          "position": [
+            -1.15,
+            0.3,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "x",
+            "amplitude": 24,
+            "period": 0.78
+          },
+          "children": [
+            {
+              "id": "tissue-05-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.34
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.15,
+                "height": 0.012,
+                "depth": 0.68
+              },
+              "material": {
+                "color": "#ffe6d5",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-06",
+          "type": "group",
+          "position": [
+            -0.8132,
+            -0.5132,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "y",
+            "amplitude": 15,
+            "period": 0.93
+          },
+          "children": [
+            {
+              "id": "tissue-06-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.27
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.11,
+                "height": 0.012,
+                "depth": 0.54
+              },
+              "material": {
+                "color": "#f6ede1",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-07",
+          "type": "group",
+          "position": [
+            -0.0,
+            -0.85,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "x",
+            "amplitude": 20,
+            "period": 0.7
+          },
+          "children": [
+            {
+              "id": "tissue-07-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.31
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.14,
+                "height": 0.012,
+                "depth": 0.62
+              },
+              "material": {
+                "color": "#fff1e0",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-08",
+          "type": "group",
+          "position": [
+            0.8132,
+            -0.5132,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "y",
+            "amplitude": 18,
+            "period": 1.1
+          },
+          "children": [
+            {
+              "id": "tissue-08-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.33
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.12,
+                "height": 0.012,
+                "depth": 0.66
+              },
+              "material": {
+                "color": "#ffe6d5",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-09",
+          "type": "group",
+          "position": [
+            0.6652,
+            0.5755,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "x",
+            "amplitude": 14,
+            "period": 0.82
+          },
+          "children": [
+            {
+              "id": "tissue-09-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.25
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.1,
+                "height": 0.012,
+                "depth": 0.5
+              },
+              "material": {
+                "color": "#f6ede1",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-10",
+          "type": "group",
+          "position": [
+            -0.2755,
+            0.9652,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "y",
+            "amplitude": 19,
+            "period": 0.68
+          },
+          "children": [
+            {
+              "id": "tissue-10-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.28
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.13,
+                "height": 0.012,
+                "depth": 0.56
+              },
+              "material": {
+                "color": "#fff1e0",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-11",
+          "type": "group",
+          "position": [
+            -0.6652,
+            0.0245,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "x",
+            "amplitude": 17,
+            "period": 0.95
+          },
+          "children": [
+            {
+              "id": "tissue-11-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.3
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.11,
+                "height": 0.012,
+                "depth": 0.6
+              },
+              "material": {
+                "color": "#ffe6d5",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tissue-12",
+          "type": "group",
+          "position": [
+            0.2755,
+            -0.3652,
+            1.36
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "animate": {
+            "type": "oscillate",
+            "axis": "y",
+            "amplitude": 21,
+            "period": 0.76
+          },
+          "children": [
+            {
+              "id": "tissue-12-strip",
+              "type": "box",
+              "position": [
+                0,
+                0,
+                0.32
+              ],
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.14,
+                "height": 0.012,
+                "depth": 0.64
+              },
+              "material": {
+                "color": "#f6ede1",
+                "metalness": 0,
+                "roughness": 0.92,
+                "opacity": 0.95,
+                "doubleSide": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "internal-motor",
+      "name": "Mekanisme dalam motor & leher",
+      "type": "group",
+      "position": [
+        0,
+        6.7,
+        -0.3
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "animate": {
+        "type": "oscillate",
+        "axis": "y",
+        "amplitude": 35,
+        "period": 6
+      },
+      "children": [
+        {
+          "id": "stator-core",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            -0.5
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.52,
+            "radiusBottom": 0.52,
+            "height": 0.66
+          },
+          "material": {
+            "color": "#4a4f5c",
+            "metalness": 0.75,
+            "roughness": 0.45
+          }
+        },
+        {
+          "id": "stator-lam-1",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            -0.74
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.54,
+            "radiusBottom": 0.54,
+            "height": 0.05
+          },
+          "material": {
+            "color": "#5c6270",
+            "metalness": 0.8,
+            "roughness": 0.4
+          }
+        },
+        {
+          "id": "stator-lam-2",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            -0.26
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.54,
+            "radiusBottom": 0.54,
+            "height": 0.05
+          },
+          "material": {
+            "color": "#5c6270",
+            "metalness": 0.8,
+            "roughness": 0.4
+          }
+        },
+        {
+          "id": "winding-front",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            -0.16
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.44,
+            "tube": 0.08
+          },
+          "material": {
+            "color": "#c8763c",
+            "metalness": 0.85,
+            "roughness": 0.3,
+            "emissive": "#3a1a08",
+            "emissiveIntensity": 0.4
+          }
+        },
+        {
+          "id": "winding-rear",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            -0.84
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.44,
+            "tube": 0.08
+          },
+          "material": {
+            "color": "#c8763c",
+            "metalness": 0.85,
+            "roughness": 0.3,
+            "emissive": "#3a1a08",
+            "emissiveIntensity": 0.4
+          }
+        },
+        {
+          "id": "winding-mid",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            -0.5
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.4,
+            "tube": 0.045
+          },
+          "material": {
+            "color": "#b5682f",
+            "metalness": 0.8,
+            "roughness": 0.35
+          }
+        },
+        {
+          "id": "armature",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            -0.5
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.26,
+            "radiusBottom": 0.26,
+            "height": 0.54
+          },
+          "material": {
+            "color": "#7a8090",
+            "metalness": 0.7,
+            "roughness": 0.4
+          }
+        },
+        {
+          "id": "shaft",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            0.05
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.06,
+            "radiusBottom": 0.06,
+            "height": 1.75
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.95,
+            "roughness": 0.2
+          }
+        },
+        {
+          "id": "bearing-front",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.12
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.1,
+            "tube": 0.035
+          },
+          "material": {
+            "color": "#9aa2b2",
+            "metalness": 0.9,
+            "roughness": 0.25
+          }
+        },
+        {
+          "id": "bearing-rear",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            -0.86
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.1,
+            "tube": 0.035
+          },
+          "material": {
+            "color": "#9aa2b2",
+            "metalness": 0.9,
+            "roughness": 0.25
+          }
+        },
+        {
+          "id": "capacitor",
+          "type": "cylinder",
+          "position": [
+            0.38,
+            0.9,
+            -0.55
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.15,
+            "radiusBottom": 0.15,
+            "height": 0.44
+          },
+          "material": {
+            "color": "#2f3b5c",
+            "metalness": 0.3,
+            "roughness": 0.55
+          }
+        },
+        {
+          "id": "capacitor-band",
+          "type": "torus",
+          "position": [
+            0.38,
+            0.98,
+            -0.55
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.15,
+            "tube": 0.02
+          },
+          "material": {
+            "color": "#d9dde6",
+            "metalness": 0.6,
+            "roughness": 0.35
+          }
+        },
+        {
+          "id": "motor-bracket",
+          "type": "box",
+          "position": [
+            0,
+            -0.25,
+            -0.2
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.5,
+            "height": 0.3,
+            "depth": 0.5
+          },
+          "material": {
+            "color": "#2b2f38",
+            "metalness": 0.15,
+            "roughness": 0.6
+          }
+        },
+        {
+          "id": "osc-motor",
+          "type": "cylinder",
+          "position": [
+            -0.28,
+            -0.24,
+            0.18
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.15,
+            "radiusBottom": 0.15,
+            "height": 0.26
+          },
+          "material": {
+            "color": "#23262e",
+            "metalness": 0.2,
+            "roughness": 0.55
+          }
+        },
+        {
+          "id": "osc-gear",
+          "type": "cylinder",
+          "position": [
+            0,
+            -0.34,
+            0.18
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.3,
+            "radiusBottom": 0.3,
+            "height": 0.07
+          },
+          "material": {
+            "color": "#4a4f5c",
+            "metalness": 0.6,
+            "roughness": 0.4
+          }
+        },
+        {
+          "id": "osc-pinion",
+          "type": "cylinder",
+          "position": [
+            0.34,
+            -0.34,
+            0.18
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.12,
+            "radiusBottom": 0.12,
+            "height": 0.07
+          },
+          "material": {
+            "color": "#6a7080",
+            "metalness": 0.7,
+            "roughness": 0.35
+          }
+        },
+        {
+          "id": "pivot-bolt",
+          "type": "cylinder",
+          "position": [
+            0,
+            -0.3,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.1,
+            "radiusBottom": 0.1,
+            "height": 0.5
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.9,
+            "roughness": 0.25
+          }
+        }
+      ]
+    },
+    {
+      "id": "base-counterweight",
+      "type": "cylinder",
+      "position": [
+        0,
+        0.13,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "radiusTop": 1.55,
+        "radiusBottom": 1.55,
+        "height": 0.14
+      },
+      "material": {
+        "color": "#1c1f26",
+        "metalness": 0.4,
+        "roughness": 0.6
+      }
+    },
+    {
+      "id": "base-plate",
+      "type": "cylinder",
+      "position": [
+        0,
+        0.055,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "radiusTop": 1.7,
+        "radiusBottom": 1.7,
+        "height": 0.04
+      },
+      "material": {
+        "color": "#3a3f4c",
+        "metalness": 0.5,
+        "roughness": 0.5
+      }
+    },
+    {
+      "id": "base-bolt-1",
+      "type": "cylinder",
+      "position": [
+        1.2,
+        0.68,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.07,
+        "height": 0.06
+      },
+      "material": {
+        "color": "#c9ced8",
+        "metalness": 0.9,
+        "roughness": 0.3
+      }
+    },
+    {
+      "id": "base-bolt-2",
+      "type": "cylinder",
+      "position": [
+        -1.2,
+        0.68,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.07,
+        "height": 0.06
+      },
+      "material": {
+        "color": "#c9ced8",
+        "metalness": 0.9,
+        "roughness": 0.3
+      }
+    },
+    {
+      "id": "base-bolt-3",
+      "type": "cylinder",
+      "position": [
+        0,
+        0.68,
+        1.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "radiusTop": 0.07,
+        "radiusBottom": 0.07,
+        "height": 0.06
+      },
+      "material": {
+        "color": "#c9ced8",
+        "metalness": 0.9,
+        "roughness": 0.3
+      }
+    },
+    {
+      "id": "pole-wire",
+      "type": "cylinder",
+      "position": [
+        0.08,
+        3.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "radiusTop": 0.035,
+        "radiusBottom": 0.035,
+        "height": 5.7
+      },
+      "material": {
+        "color": "#b5652f",
+        "metalness": 0.5,
+        "roughness": 0.5
+      }
+    },
+    {
+      "id": "panel-pcb",
+      "type": "box",
+      "position": [
+        0,
+        3.4,
+        0.26
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "width": 0.6,
+        "height": 0.98,
+        "depth": 0.025
+      },
+      "material": {
+        "color": "#1e4d34",
+        "metalness": 0.1,
+        "roughness": 0.7
+      }
+    },
+    {
+      "id": "panel-contact-1",
+      "type": "box",
+      "position": [
+        0,
+        3.72,
+        0.29
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "width": 0.16,
+        "height": 0.16,
+        "depth": 0.02
+      },
+      "material": {
+        "color": "#d9b44a",
+        "metalness": 0.8,
+        "roughness": 0.3
+      }
+    },
+    {
+      "id": "panel-contact-2",
+      "type": "box",
+      "position": [
+        0,
+        3.42,
+        0.29
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "width": 0.16,
+        "height": 0.16,
+        "depth": 0.02
+      },
+      "material": {
+        "color": "#d9b44a",
+        "metalness": 0.8,
+        "roughness": 0.3
+      }
+    },
+    {
+      "id": "panel-contact-3",
+      "type": "box",
+      "position": [
+        0,
+        3.12,
+        0.29
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "params": {
+        "width": 0.16,
+        "height": 0.16,
+        "depth": 0.02
+      },
+      "material": {
+        "color": "#d9b44a",
+        "metalness": 0.8,
+        "roughness": 0.3
+      }
     }
   ],
   "power": {
