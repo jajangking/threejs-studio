@@ -239,14 +239,34 @@ button:disabled{opacity:.4;cursor:default}
 .dd-note{font-size:10.5px;color:var(--dim);margin-top:6px}
 #exportPanel button{display:block;width:100%;text-align:left;margin-bottom:6px;padding:8px 10px}
 #projName{font-size:11px;color:var(--dim);font-family:var(--mono);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media(max-width:1023px){#btnProjects .lbl,#btnExport .lbl{display:none}}
-@media(max-width:639px){#projName{display:none}.dropdown{top:48px;right:6px}}
+#topbar{overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+#topbar::-webkit-scrollbar{display:none}
+#topbar>*{flex:none}
+#topbar .spacer{flex:1 1 0;min-width:0}
+@media(max-width:1199px){#projName{display:none}}
+@media(max-width:1100px){#btnProjects .lbl,#btnExport .lbl,#btnFrame .lbl,#btnGrid .lbl,#btnReload .lbl,#btnSave .lbl{display:none}}
+@media(max-width:899px){#sceneName{display:none}
+  #inspector{position:fixed;top:var(--topbar-h);bottom:0;right:0;left:auto;z-index:60;width:min(84vw,320px);
+    border-left:1px solid var(--border);transform:translateX(102%);transition:transform .22s ease;box-shadow:0 0 30px rgba(0,0,0,.55)}
+  body.drawer-inspector #inspector{transform:none}}
+@media(max-width:639px){#projName{display:none}.dropdown{top:48px;right:6px}
+  #syncDot{display:none}
+  #linkRekaman{font-size:10px;padding:0 6px;min-height:40px;display:inline-flex;align-items:center}
+  #topbar{gap:4px}
+  #topbar .seg button{min-width:32px;padding:0 4px}
+  #sceneName{display:none}}
+@media(max-width:479px){
+  #topbar{gap:3px;padding:0 5px}
+  #topbar button{min-width:34px;min-height:38px;padding:0 5px}
+  #topbar .seg button{min-width:27px;padding:0 2px;font-size:11px}
+  #linkRekaman{font-size:9px;padding:0 4px;min-height:38px}
+  #btnSave{font-size:15px}}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:#333a46;border-radius:5px}
 ::-webkit-scrollbar-track{background:transparent}
 
 /* ── Tablet: 640–1023px — panel lebih sempit, label topbar diringkas ── */
-@media (max-width:1023px){
+@media (max-width:1100px){
   #outliner{width:180px}
   #inspector{width:230px}
   #topbar{gap:6px;padding:0 8px}
@@ -305,6 +325,15 @@ button:disabled{opacity:.4;cursor:default}
   .chat-msg{max-width:97%}
   #dirtyBanner{font-size:11px;padding:5px 8px}
   #dirtyBanner button{min-height:34px}
+}
+@media(max-width:639px){#vpStats{display:none}}
+/* compact final <480px — menang atas semua aturan sebelumnya */
+@media(max-width:479px){
+  #topbar{gap:3px;padding:0 5px}
+  #topbar #gizmoSeg button{min-width:26px;padding:0 2px;font-size:11px}
+  #topbar #gizmoSeg{gap:1px}
+  #topbar #btnDrawerOutliner,#topbar #btnDrawerInspector,#topbar #btnProjects,#topbar #btnExport,#topbar #btnSave{min-width:34px;padding:0 4px}
+  #topbar #linkRekaman{font-size:9px;padding:0 4px;min-height:38px}
 }
 </style>
 <script type="importmap">

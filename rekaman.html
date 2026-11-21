@@ -46,16 +46,44 @@ canvas{display:block;width:100%;height:100%}
 #videoProgress a{color:var(--accent)}
 #toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(22,24,29,.95);border:1px solid var(--border);color:var(--text);padding:7px 16px;border-radius:8px;z-index:100;font-size:12px;display:none}
 #hint{position:absolute;bottom:10px;left:10px;color:#6b7280;font-size:10px;z-index:4}
+#topbar{overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+#topbar::-webkit-scrollbar{display:none}
+#topbar>*{flex:none}
+#topbar .spacer{flex:1 1 0;min-width:0}
+.lbl-s{display:none}
+@media(max-width:639px){
+  #topbar .lbl{display:none}
+  #topbar .lbl-s{display:inline}
+  #topbar .logo{font-size:14px}
+}
+@media(max-width:899px){
+  #shotPanel{display:none}
+  #hint{display:none}
+  #sceneName{display:none}
+  #vpCine{max-width:94%;font-size:10px;top:8px}
+  #vpCine button{padding:3px 7px;font-size:10px}
+}
+@media(max-width:639px){
+  #topbar{gap:6px;padding:0 8px}
+  #topbar .logo{font-size:12px}
+  #topbar a,#topbar button{padding:4px 8px;font-size:11px}
+  #vpTimeline{bottom:52px;padding:4px 8px;gap:5px;max-width:96%}
+  #vpTimeline input[type=range]{width:120px}
+  #vpControls{bottom:8px;right:8px;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:70%}
+  .vp-ctl{padding:4px 8px;font-size:10.5px}
+  #cineCaption{bottom:100px;max-width:92%;font-size:12px;padding:6px 12px}
+  .cine-info{display:none}
+}
 </style>
 </head>
 <body>
 <div id="topbar">
-  <span class="logo">🎬 STUDIO REKAMAN</span>
+  <span class="logo">🎬<span class="lbl"> STUDIO REKAMAN</span></span>
   <span id="sceneName">memuat…</span>
   <span class="spacer"></span>
-  <button id="btnVideo" class="primary" title="Render tur sinematik → MP4 (ffmpeg)">🎬 Video MP4</button>
-  <button id="btnExportHtml" title="HTML interaktif: klik aksi, shift-drag fisika, mode jalan">🌐 Export Interaktif</button>
-  <a href="/" title="Kembali ke Studio Design">🎨 Design</a>
+  <button id="btnVideo" class="primary" title="Render tur sinematik → MP4 (ffmpeg)">🎬<span class="lbl"> Video MP4</span><span class="lbl-s"> MP4</span></button>
+  <button id="btnExportHtml" title="HTML interaktif: klik aksi, shift-drag fisika, mode jalan">🌐<span class="lbl"> Export Interaktif</span></button>
+  <a href="/" title="Kembali ke Studio Design">🎨<span class="lbl"> Design</span></a>
 </div>
 <div id="stage">
   <canvas id="cv"></canvas>
