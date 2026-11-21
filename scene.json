@@ -1,11 +1,11 @@
 {
   "meta": {
     "name": "kipas angin detail",
-    "concept": "Standing fan studio: base kaki, tiang chrome, motor, 3 bilah, gril ganda, panel kontrol, kabel",
+    "concept": "Standing fan studio dengan mekanika: rotor berputar (spin z 10 rad/s), kepala osilasi ±35° periode 6s, LED kedip, saklar Nyala/Mati.",
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-01",
+    "iteration": "iter-02",
     "saved_at": 1795264358.6297941
   },
   "environment": {
@@ -261,641 +261,6 @@
       }
     },
     {
-      "id": "motor",
-      "type": "cylinder",
-      "position": [
-        0,
-        7,
-        -0.7
-      ],
-      "rotation": [
-        1.5708,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radiusTop": 0.72,
-        "radiusBottom": 0.72,
-        "height": 1
-      },
-      "material": {
-        "color": "#2b2f38",
-        "metalness": 0.15,
-        "roughness": 0.6
-      }
-    },
-    {
-      "id": "motor-face",
-      "type": "cylinder",
-      "position": [
-        0,
-        7,
-        -0.15
-      ],
-      "rotation": [
-        1.5708,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radiusTop": 0.55,
-        "radiusBottom": 0.62,
-        "height": 0.18
-      },
-      "material": {
-        "color": "#3a3f4c",
-        "metalness": 0.2,
-        "roughness": 0.55
-      }
-    },
-    {
-      "id": "motor-back",
-      "type": "cylinder",
-      "position": [
-        0,
-        7,
-        -1.25
-      ],
-      "rotation": [
-        1.5708,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radiusTop": 0.5,
-        "radiusBottom": 0.6,
-        "height": 0.25
-      },
-      "material": {
-        "color": "#23262e",
-        "metalness": 0.1,
-        "roughness": 0.7
-      }
-    },
-    {
-      "id": "hub",
-      "type": "cylinder",
-      "position": [
-        0,
-        7,
-        0.45
-      ],
-      "rotation": [
-        1.5708,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radiusTop": 0.3,
-        "radiusBottom": 0.34,
-        "height": 0.5
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.8,
-        "roughness": 0.3
-      }
-    },
-    {
-      "id": "blade-1",
-      "type": "box",
-      "position": [
-        0,
-        7.825,
-        0.45
-      ],
-      "rotation": [
-        0,
-        0.45,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.95,
-        "height": 0.5,
-        "depth": 0.05
-      },
-      "material": {
-        "color": "#e6e9f0",
-        "metalness": 0.1,
-        "roughness": 0.35,
-        "opacity": 0.92
-      }
-    },
-    {
-      "id": "blade-2",
-      "type": "box",
-      "position": [
-        0.714,
-        6.5875,
-        0.45
-      ],
-      "rotation": [
-        0,
-        0.45,
-        -2.094
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.95,
-        "height": 0.5,
-        "depth": 0.05
-      },
-      "material": {
-        "color": "#e6e9f0",
-        "metalness": 0.1,
-        "roughness": 0.35,
-        "opacity": 0.92
-      }
-    },
-    {
-      "id": "blade-3",
-      "type": "box",
-      "position": [
-        -0.714,
-        6.5875,
-        0.45
-      ],
-      "rotation": [
-        0,
-        0.45,
-        -4.189
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.95,
-        "height": 0.5,
-        "depth": 0.05
-      },
-      "material": {
-        "color": "#e6e9f0",
-        "metalness": 0.1,
-        "roughness": 0.35,
-        "opacity": 0.92
-      }
-    },
-    {
-      "id": "grill-rear-rim",
-      "type": "torus",
-      "position": [
-        0,
-        7,
-        -0.05
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radius": 1.3,
-        "tube": 0.05
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "grill-rear-ring-1",
-      "type": "torus",
-      "position": [
-        0,
-        7,
-        -0.05
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radius": 0.55,
-        "tube": 0.02
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "grill-rear-ring-2",
-      "type": "torus",
-      "position": [
-        0,
-        7,
-        -0.05
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radius": 0.95,
-        "tube": 0.02
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "grill-front-rim",
-      "type": "torus",
-      "position": [
-        0,
-        7,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radius": 1.3,
-        "tube": 0.05
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "grill-front-ring-1",
-      "type": "torus",
-      "position": [
-        0,
-        7,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radius": 0.45,
-        "tube": 0.02
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "grill-front-ring-2",
-      "type": "torus",
-      "position": [
-        0,
-        7,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radius": 0.85,
-        "tube": 0.02
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "spoke-1",
-      "type": "box",
-      "position": [
-        0.675,
-        7,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        -1.5708
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.035,
-        "height": 1.28,
-        "depth": 0.03
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "spoke-2",
-      "type": "box",
-      "position": [
-        0.4774,
-        7.4774,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        -0.7854
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.035,
-        "height": 1.28,
-        "depth": 0.03
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "spoke-3",
-      "type": "box",
-      "position": [
-        0,
-        7.675,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.035,
-        "height": 1.28,
-        "depth": 0.03
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "spoke-4",
-      "type": "box",
-      "position": [
-        -0.4774,
-        7.4774,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        0.7854
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.035,
-        "height": 1.28,
-        "depth": 0.03
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "spoke-5",
-      "type": "box",
-      "position": [
-        -0.675,
-        7,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        1.5708
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.035,
-        "height": 1.28,
-        "depth": 0.03
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "spoke-6",
-      "type": "box",
-      "position": [
-        -0.4774,
-        6.5226,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        2.3562
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.035,
-        "height": 1.28,
-        "depth": 0.03
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "spoke-7",
-      "type": "box",
-      "position": [
-        0,
-        6.325,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        3.1416
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.035,
-        "height": 1.28,
-        "depth": 0.03
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "spoke-8",
-      "type": "box",
-      "position": [
-        0.4774,
-        6.5226,
-        1
-      ],
-      "rotation": [
-        0,
-        0,
-        3.927
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.035,
-        "height": 1.28,
-        "depth": 0.03
-      },
-      "material": {
-        "color": "#c9ced8",
-        "metalness": 0.85,
-        "roughness": 0.28
-      }
-    },
-    {
-      "id": "grill-cap",
-      "type": "cylinder",
-      "position": [
-        0,
-        7,
-        1.02
-      ],
-      "rotation": [
-        1.5708,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radiusTop": 0.22,
-        "radiusBottom": 0.22,
-        "height": 0.12
-      },
-      "material": {
-        "color": "#2b2f38",
-        "metalness": 0.2,
-        "roughness": 0.5
-      }
-    },
-    {
       "id": "panel",
       "type": "box",
       "position": [
@@ -1073,35 +438,12 @@
         "roughness": 0.4,
         "emissive": "#4ade80",
         "emissiveIntensity": 3
-      }
-    },
-    {
-      "id": "osc-knob",
-      "type": "cylinder",
-      "position": [
-        0,
-        6.35,
-        0
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radiusTop": 0.18,
-        "radiusBottom": 0.18,
-        "height": 0.4
       },
-      "material": {
-        "color": "#ff6b4a",
-        "metalness": 0.2,
-        "roughness": 0.45
+      "animate": {
+        "type": "blink",
+        "period": 1.2,
+        "min": 0.05,
+        "max": 3
       }
     },
     {
@@ -1159,6 +501,714 @@
         "metalness": 0,
         "roughness": 0.95
       }
+    },
+    {
+      "id": "head",
+      "name": "Kepala kipas (osilasi)",
+      "type": "group",
+      "position": [
+        0,
+        6.7,
+        -0.3
+      ],
+      "animate": {
+        "type": "oscillate",
+        "axis": "y",
+        "amplitude": 35,
+        "period": 6
+      },
+      "children": [
+        {
+          "id": "motor",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            -0.4
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.72,
+            "radiusBottom": 0.72,
+            "height": 1
+          },
+          "material": {
+            "color": "#2b2f38",
+            "metalness": 0.15,
+            "roughness": 0.6
+          }
+        },
+        {
+          "id": "motor-face",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            0.15
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.55,
+            "radiusBottom": 0.62,
+            "height": 0.18
+          },
+          "material": {
+            "color": "#3a3f4c",
+            "metalness": 0.2,
+            "roughness": 0.55
+          }
+        },
+        {
+          "id": "motor-back",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            -0.95
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.5,
+            "radiusBottom": 0.6,
+            "height": 0.25
+          },
+          "material": {
+            "color": "#23262e",
+            "metalness": 0.1,
+            "roughness": 0.7
+          }
+        },
+        {
+          "id": "grill-rear-rim",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 1.3,
+            "tube": 0.05
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-rear-ring-1",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.55,
+            "tube": 0.02
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-rear-ring-2",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            0.25
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.95,
+            "tube": 0.02
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-front-rim",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 1.3,
+            "tube": 0.05
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-front-ring-1",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.45,
+            "tube": 0.02
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-front-ring-2",
+          "type": "torus",
+          "position": [
+            0,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radius": 0.85,
+            "tube": 0.02
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "grill-cap",
+          "type": "cylinder",
+          "position": [
+            0,
+            0.3,
+            1.32
+          ],
+          "rotation": [
+            1.5708,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.22,
+            "radiusBottom": 0.22,
+            "height": 0.12
+          },
+          "material": {
+            "color": "#2b2f38",
+            "metalness": 0.2,
+            "roughness": 0.5
+          }
+        },
+        {
+          "id": "osc-knob",
+          "type": "cylinder",
+          "position": [
+            0,
+            -0.35,
+            0.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "radiusTop": 0.18,
+            "radiusBottom": 0.18,
+            "height": 0.4
+          },
+          "material": {
+            "color": "#ff6b4a",
+            "metalness": 0.2,
+            "roughness": 0.45
+          }
+        },
+        {
+          "id": "spoke-1",
+          "type": "box",
+          "position": [
+            0.675,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            -1.5708
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.035,
+            "height": 1.28,
+            "depth": 0.03
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-2",
+          "type": "box",
+          "position": [
+            0.4774,
+            0.7774,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            -0.7854
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.035,
+            "height": 1.28,
+            "depth": 0.03
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-3",
+          "type": "box",
+          "position": [
+            0,
+            0.975,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.035,
+            "height": 1.28,
+            "depth": 0.03
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-4",
+          "type": "box",
+          "position": [
+            -0.4774,
+            0.7774,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            0.7854
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.035,
+            "height": 1.28,
+            "depth": 0.03
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-5",
+          "type": "box",
+          "position": [
+            -0.675,
+            0.3,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            1.5708
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.035,
+            "height": 1.28,
+            "depth": 0.03
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-6",
+          "type": "box",
+          "position": [
+            -0.4774,
+            -0.1774,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            2.3562
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.035,
+            "height": 1.28,
+            "depth": 0.03
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-7",
+          "type": "box",
+          "position": [
+            0,
+            -0.375,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            3.1416
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.035,
+            "height": 1.28,
+            "depth": 0.03
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "spoke-8",
+          "type": "box",
+          "position": [
+            0.4774,
+            -0.1774,
+            1.3
+          ],
+          "rotation": [
+            0,
+            0,
+            3.927
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "params": {
+            "width": 0.035,
+            "height": 1.28,
+            "depth": 0.03
+          },
+          "material": {
+            "color": "#c9ced8",
+            "metalness": 0.85,
+            "roughness": 0.28
+          }
+        },
+        {
+          "id": "rotor",
+          "name": "Rotor (bilah berputar)",
+          "type": "group",
+          "position": [
+            0,
+            0.3,
+            0.75
+          ],
+          "animate": {
+            "type": "spin",
+            "axis": "z",
+            "speed": 10
+          },
+          "children": [
+            {
+              "id": "hub",
+              "type": "cylinder",
+              "position": [
+                0,
+                0,
+                0.0
+              ],
+              "rotation": [
+                1.5708,
+                0,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "radiusTop": 0.3,
+                "radiusBottom": 0.34,
+                "height": 0.5
+              },
+              "material": {
+                "color": "#c9ced8",
+                "metalness": 0.8,
+                "roughness": 0.3
+              }
+            },
+            {
+              "id": "blade-1",
+              "type": "box",
+              "position": [
+                0,
+                0.825,
+                0.0
+              ],
+              "rotation": [
+                0,
+                0.45,
+                0
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.95,
+                "height": 0.5,
+                "depth": 0.05
+              },
+              "material": {
+                "color": "#e6e9f0",
+                "metalness": 0.1,
+                "roughness": 0.35,
+                "opacity": 0.92
+              }
+            },
+            {
+              "id": "blade-2",
+              "type": "box",
+              "position": [
+                0.714,
+                -0.4125,
+                0.0
+              ],
+              "rotation": [
+                0,
+                0.45,
+                -2.094
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.95,
+                "height": 0.5,
+                "depth": 0.05
+              },
+              "material": {
+                "color": "#e6e9f0",
+                "metalness": 0.1,
+                "roughness": 0.35,
+                "opacity": 0.92
+              }
+            },
+            {
+              "id": "blade-3",
+              "type": "box",
+              "position": [
+                -0.714,
+                -0.4125,
+                0.0
+              ],
+              "rotation": [
+                0,
+                0.45,
+                -4.189
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "params": {
+                "width": 0.95,
+                "height": 0.5,
+                "depth": 0.05
+              },
+              "material": {
+                "color": "#e6e9f0",
+                "metalness": 0.1,
+                "roughness": 0.35,
+                "opacity": 0.92
+              }
+            }
+          ]
+        }
+      ]
     }
-  ]
+  ],
+  "power": {
+    "label": "Nyala",
+    "default": true,
+    "affects": [
+      "rotor",
+      "head",
+      "led"
+    ]
+  }
 }

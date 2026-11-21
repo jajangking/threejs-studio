@@ -41,7 +41,7 @@ HERMES_MODELS = ['hermes-4-405b']
 
 KNOWN_OBJECT_TYPES = {
     'box', 'sphere', 'cylinder', 'cone', 'torus', 'torusKnot', 'plane',
-    'capsule', 'icosahedron', 'ring', 'gltf', 'sky', 'stars', 'instances',
+    'capsule', 'icosahedron', 'ring', 'gltf', 'sky', 'stars', 'instances', 'group',
 }
 KNOWN_LIGHT_TYPES = {'ambient', 'hemisphere', 'directional', 'point', 'spot'}
 
@@ -175,6 +175,16 @@ def validate_spec(spec):
     if not isinstance(objs, list):
         errs.append('"objects" harus array')
         objs = []
+    # flatten group.children untuk validasi id/type rekursif
+    flat = []
+    def walk(lst):
+        for o in lst:
+            if isinstance(o, dict):
+                flat.append(o)
+                if isinstance(o.get('children'), list):
+                    walk(o['children'])
+    walk(objs)
+    objs = flat
     if not isinstance(spec.get('lights'), list):
         errs.append('"lights" harus array')
     cam = spec.get('camera')
@@ -487,6 +497,19 @@ ATURAN LAYOUT & CAHAYA (pelajaran terverifikasi — pelanggaran membuat hasil di
 - textureRepeat skala objek: jalan [24,1], trotoar [12,1], ground [24,24]; tanpa ini tekstur tak terbaca.
 - Malam: jendela instanced ~55% emissive #ffb45e intensity 2.4, lampu jalan point 18 + bulb emissive 4.5, bloom .55/.5/.72, fog gelap, bintang, bulan fog:false.
 - Siang: jendela kaca gelap reflektif (metalness .7 roughness .12), lampu mati, sun 3.0, hemi .75, bloom .25 threshold .9, langit gradasi biru + awan.
+
+MEKANIKA & ANIMASI (untuk permintaan "bisa nyala/berputar/bergerak"):
+- group: {"id":"rotor","type":"group","position":[x,y,z],"children":[{objek posisi LOKAL relatif group}]}
+  Pivot rotasi = posisi group. Bilah kipas WAJIB children rotor (koordinat lokal dari poros), bukan objek flat.
+- animate pada objek/group:
+  spin: {"type":"spin","axis":"z","speed":10} — rad/detik, poros lokal; visual enak 5-15 (jangan >50, strobing)
+  oscillate: {"type":"oscillate","axis":"y","amplitude":35,"period":6} — derajat, goyang kiri-kanan
+  float: {"type":"float","amplitude":0.2,"period":3} — naik-turun
+  blink: {"type":"blink","period":1,"min":0.05,"max":3} — emissiveIntensity berkedip
+- power (saklar Nyala/Mati muncul di viewport): {"label":"Nyala","default":true,"affects":["rotor","head","led"]}
+  affects = id animasi/emissive yang berhenti saat power off. WAJIB ada untuk mekanika "bisa nyala".
+- Pola kipas: group "head" (oscillate y) berisi motor+gril+panel; di dalamnya group "rotor" (spin z)
+  berisi hub+bilah; LED blink; power affects ["rotor","head","led"]. Posisi children = world - posisi group.
 
 STANDAR ESTETIKA (smoke test lolos SAJA TIDAK CUKUP — hasil harus layak final, bukan seperti tutorial):
 - Komposisi 3 lapis: foreground (jalan/trotoar), midground (subjek), background (langit/bulan).
@@ -1141,6 +1164,10 @@ def standalone_html(spec):
 <script type="importmap">{{"imports":{{"three":"{CDN}/build/three.module.js"}}}}</script>
 </head><body>
 <canvas id="cv"></canvas><div id="info"><b>{title}</b> · drag: orbit · scroll: zoom · export Three.js Studio</div>
+<div id="ctl"></div>
+<style>#ctl{{position:fixed;bottom:12px;right:12px;display:flex;gap:6px}}
+#ctl button{{background:rgba(30,33,40,.9);border:1px solid #2e333d;color:#cfd3dc;border-radius:6px;padding:8px 14px;font:600 13px system-ui;cursor:pointer}}
+#ctl button.on{{background:#1d3a2a;border-color:#3fb96b;color:#7ee2a8}}</style>
 <script type="module">
 import * as THREE from 'three';
 import {{ OrbitControls }} from '{CDN}/examples/jsm/controls/OrbitControls.js';
@@ -1158,7 +1185,30 @@ addEventListener('resize', () => {{
   handle.composer?.setSize(innerWidth, innerHeight);
   handle.camera.aspect = innerWidth / innerHeight; handle.camera.updateProjectionMatrix();
 }});
+let animT = 0, powerOn = SPEC.power?.default ?? true, playing = true;
+const clock = new THREE.Clock();
+const ctl = document.getElementById('ctl');
+function drawCtl() {{
+  ctl.innerHTML = '';
+  if (SPEC.power) {{
+    const b = document.createElement('button');
+    b.textContent = (powerOn ? '⏻ ' : '⭘ ') + (SPEC.power.label || 'Nyala');
+    b.className = powerOn ? 'on' : '';
+    b.onclick = () => {{ powerOn = !powerOn; drawCtl(); }};
+    ctl.appendChild(b);
+  }}
+  if ((handle.animations || []).length) {{
+    const b = document.createElement('button');
+    b.textContent = playing ? '⏸ Jeda' : '▶ Putar';
+    b.onclick = () => {{ playing = !playing; drawCtl(); }};
+    ctl.appendChild(b);
+  }}
+}}
+drawCtl();
 renderer.setAnimationLoop(() => {{
+  const dt = Math.min(clock.getDelta(), 0.1);
+  if (playing) animT += dt;
+  applyAnimations(handle, animT, powerOn);
   controls.update();
   if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
 }});

@@ -193,10 +193,15 @@ export async function buildScene(spec, opts = {}) {
   }
 
   const gltfLoader = new GLTFLoader();
-  for (const o of spec.objects || []) {
+  const animations = [];
+  async function buildOne(o, parent) {
     try {
       let mesh;
-      if (o.type === 'sky') {
+      if (o.type === 'group') {
+        // Pivot mekanika: children bertransformasi relatif terhadap group
+        mesh = new THREE.Group();
+        for (const c of o.children || []) await buildOne(c, mesh);
+      } else if (o.type === 'sky') {
         // Langit gradasi (shader) — pengganti background polos
         const p = o.params || {};
         const geo = new THREE.SphereGeometry(p.radius ?? 200, 32, 16);
@@ -279,12 +284,17 @@ export async function buildScene(spec, opts = {}) {
       mesh.visible = o.visible ?? true;
       mesh.userData.specId = o.id;
       if (o.sky) mesh.userData.isSky = true;  // elemen langit/dekorasi jauh (awan dll)
-      scene.add(mesh);
+      if (mesh.material) mesh.userData.baseEmissive = mesh.material.emissiveIntensity ?? 1;
+      parent.add(mesh);
       registry.set(o.id, mesh);
+      if (o.animate) animations.push({ id: o.id, obj: mesh, anim: o.animate,
+        baseRot: mesh.rotation.clone(), basePos: mesh.position.clone(),
+        baseEmissive: mesh.material?.emissiveIntensity ?? 1 });
     } catch (e) { errors.push(`object ${o.id}: ${e.message}`); }
   }
+  for (const o of spec.objects || []) await buildOne(o, scene);
 
-  return { scene, camera, target, registry, errors, spec };
+  return { scene, camera, target, registry, errors, spec, animations };
 }
 
 // Renderer dengan pengaturan warna & tone mapping yang BENAR (anti warna pucat).
@@ -430,6 +440,34 @@ export function smokeCheck(handle, renderer) {
   report.coverage = coverage;
   report.meanLum = meanLum;
   return report;
+}
+
+// Mekanika: spin/oscillate/float/blink + saklar power (spec.power.affects = id terdampak).
+// Deterministik terhadap t — render headless menangkap pose pada t tetap.
+export function applyAnimations(handle, t, powerOn = true) {
+  const power = handle.spec.power;
+  const affects = new Set(power?.affects || []);
+  const blinkIds = new Set();
+  for (const a of handle.animations || []) {
+    const active = powerOn || !affects.has(a.id);
+    const an = a.anim, ax = an.axis || 'z';
+    if (an.type === 'spin') {
+      a.obj.rotation[ax] = a.baseRot[ax] + (active ? (an.speed ?? 5) * t : 0);
+    } else if (an.type === 'oscillate') {
+      a.obj.rotation[ax] = a.baseRot[ax] + (active ? deg(an.amplitude ?? 30) * Math.sin(2 * Math.PI * t / (an.period ?? 4) + (an.phase ?? 0)) : 0);
+    } else if (an.type === 'float') {
+      a.obj.position.y = a.basePos.y + (active ? (an.amplitude ?? 0.2) * Math.sin(2 * Math.PI * t / (an.period ?? 3)) : 0);
+    } else if (an.type === 'blink' && a.obj.material) {
+      blinkIds.add(a.id);
+      const hi = active && Math.sin(2 * Math.PI * t / (an.period ?? 1)) > 0;
+      a.obj.material.emissiveIntensity = hi ? (an.max ?? a.baseEmissive) : (an.min ?? 0.05);
+    }
+  }
+  if (power) for (const id of affects) {
+    if (blinkIds.has(id)) continue;
+    const o = handle.registry.get(id);
+    if (o?.material?.emissive) o.material.emissiveIntensity = powerOn ? (o.userData.baseEmissive ?? 1) : (o.userData.baseEmissive ?? 1) * 0.06;
+  }
 }
 
 export function disposeHandle(handle) {

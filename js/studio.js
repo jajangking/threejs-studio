@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { TransformControls } from '../vendor/TransformControls.js';
 import { GLTFExporter } from '../vendor/GLTFExporter.js';
-import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle } from './scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
 const deg = THREE.MathUtils.degToRad, rad2deg = THREE.MathUtils.radToDeg;
@@ -15,6 +15,7 @@ let spec = null, handle = null, renderer, orbit, gizmo, grid;
 let selectedId = null, dirty = false, lastMtime = 0, serverState = null;
 let iterations = [], cmpSel = [], consoleErrors = 0, liveReport = null;
 let dragging = false, downPos = null;
+let animT = 0, animPlaying = true, powerOn = true;
 const clock = new THREE.Clock();
 
 // ── responsif: drawer mobile ──
@@ -95,6 +96,11 @@ new ResizeObserver(() => {
 let frames = 0, statT = 0;
 function animate() {
   requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  if (handle?.animations?.length) {
+    if (animPlaying) animT += dt;
+    applyAnimations(handle, animT, powerOn);
+  }
   orbit.update();
   const cam = handle?.camera || bootCam;
   const sc = handle?.scene || bootScene;
@@ -119,6 +125,8 @@ async function rebuild(newSpec, announce) {
   handle.camera.aspect = wrap.clientWidth / Math.max(1, wrap.clientHeight);
   handle.camera.updateProjectionMatrix();
   handle.composer = makeComposer(handle, renderer, wrap.clientWidth, Math.max(1, wrap.clientHeight));
+  animT = 0; animPlaying = true; powerOn = spec.power?.default ?? true;
+  updateVpControls();
   orbit.object = handle.camera;
   orbit.target.copy(handle.target);
   orbit.update();
@@ -259,6 +267,29 @@ function renderInspector() {
     g.appendChild(row('Fog far', inp('number', fog.far ?? 60, '', v => { fog.far = v; if (handle.scene.fog) handle.scene.fog.far = v; markDirty(); })));
     if (env.ground) g.appendChild(row('Ground', inp('color', env.ground.color || '#1a1e26', '', v => { env.ground.color = v; handle.registry.get('__ground')?.material.color.set(v); markDirty(); })));
     el.appendChild(g);
+  }
+}
+
+// ── kontrol mekanika di viewport ──
+function updateVpControls() {
+  const el = $('#vpControls'); if (!el) return;
+  el.innerHTML = '';
+  const hasAnim = (handle?.animations?.length || 0) > 0;
+  if (spec?.power) {
+    const b = document.createElement('button');
+    b.className = 'vp-ctl' + (powerOn ? ' on' : '');
+    b.textContent = (powerOn ? '⏻ ' : '⭘ ') + (spec.power.label || 'Nyala');
+    b.title = 'Saklar daya mekanika';
+    b.onclick = () => { powerOn = !powerOn; updateVpControls(); };
+    el.appendChild(b);
+  }
+  if (hasAnim) {
+    const b = document.createElement('button');
+    b.className = 'vp-ctl';
+    b.textContent = animPlaying ? '⏸ Jeda' : '▶ Putar';
+    b.title = 'Jalankan/jeda animasi';
+    b.onclick = () => { animPlaying = !animPlaying; updateVpControls(); };
+    el.appendChild(b);
   }
 }
 
@@ -719,6 +750,16 @@ const startTab = new URLSearchParams(location.search).get('tab');
 if (startTab && document.querySelector(`#tabs button[data-tab="${startTab}"]`)) {
   setTimeout(() => openTab(startTab), 500);
 }
+
+// ── debug handle (verifikasi mekanika) ──
+window.__studioDebug = {
+  get handle() { return handle; },
+  get powerOn() { return powerOn; },
+  get animT() { return animT; },
+  get playing() { return animPlaying; },
+  step(dt) { animT += dt; applyAnimations(handle, animT, powerOn); if (handle?.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera); },
+  setPower(v) { powerOn = v; updateVpControls(); },
+};
 
 // ── projek & export ──
 const projPanel = $('#projPanel'), exportPanel = $('#exportPanel');
