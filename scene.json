@@ -5,8 +5,8 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-02",
-    "saved_at": 1795290233.0507152
+    "iteration": "iter-03",
+    "saved_at": 1795290885.458709
   },
   "environment": {
     "background": "#151b24",
@@ -479,7 +479,7 @@
       "animate": {
         "type": "spin",
         "axis": "z",
-        "speed": 0.72
+        "speed": 0.105
       },
       "children": [
         {
@@ -686,7 +686,7 @@
       }
     },
     {
-      "id": "platina",
+      "id": "penopang-mesin",
       "type": "cylinder",
       "position": [
         0,
@@ -699,610 +699,181 @@
         0
       ],
       "params": {
-        "radiusTop": 1.06,
-        "radiusBottom": 1.06,
+        "radiusTop": 1.02,
+        "radiusBottom": 1.02,
         "height": 0.03
       },
       "material": {
-        "color": "#8a6d3b",
-        "metalness": 0.7,
+        "color": "#8a8f96",
+        "metalness": 0.55,
         "roughness": 0.45
       }
     },
     {
-      "id": "barel-per",
+      "id": "baterai-aa",
       "type": "group",
       "position": [
-        -0.85,
-        2.4,
+        -0.55,
+        2.25,
+        -0.09
+      ],
+      "children": [
+        {
+          "id": "baterai-aa-badan",
+          "type": "cylinder",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            90
+          ],
+          "params": {
+            "radiusTop": 0.13,
+            "radiusBottom": 0.13,
+            "height": 0.52
+          },
+          "material": {
+            "color": "#1f2328",
+            "metalness": 0.2,
+            "roughness": 0.45
+          }
+        },
+        {
+          "id": "baterai-aa-positif",
+          "type": "cylinder",
+          "position": [
+            0.28,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            90
+          ],
+          "params": {
+            "radiusTop": 0.045,
+            "radiusBottom": 0.045,
+            "height": 0.03
+          },
+          "material": {
+            "color": "#c9ced6",
+            "metalness": 0.8,
+            "roughness": 0.25
+          }
+        },
+        {
+          "id": "baterai-aa-label",
+          "type": "box",
+          "position": [
+            0,
+            0,
+            0.132
+          ],
+          "params": {
+            "width": 0.32,
+            "height": 0.18,
+            "depth": 0.005
+          },
+          "material": {
+            "color": "#d7b24a",
+            "metalness": 0.1,
+            "roughness": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "id": "pcb-kuarsa",
+      "type": "box",
+      "position": [
+        0.15,
+        2.62,
+        -0.07
+      ],
+      "params": {
+        "width": 0.95,
+        "height": 0.75,
+        "depth": 0.035
+      },
+      "material": {
+        "color": "#1d6b46",
+        "metalness": 0.15,
+        "roughness": 0.7
+      }
+    },
+    {
+      "id": "kristal-kuarsa",
+      "type": "cylinder",
+      "position": [
+        0.38,
+        2.78,
+        -0.05
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "params": {
+        "radiusTop": 0.028,
+        "radiusBottom": 0.028,
+        "height": 0.11
+      },
+      "material": {
+        "color": "#cfd6de",
+        "metalness": 0.85,
+        "roughness": 0.2
+      }
+    },
+    {
+      "id": "kumparan-motor",
+      "type": "torus",
+      "position": [
+        0.35,
+        2.38,
+        -0.05
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "params": {
+        "radius": 0.11,
+        "tube": 0.028
+      },
+      "material": {
+        "color": "#b87333",
+        "metalness": 0.65,
+        "roughness": 0.35
+      }
+    },
+    {
+      "id": "rotor-stepper",
+      "type": "group",
+      "position": [
+        0.35,
+        2.38,
         -0.03
       ],
       "animate": {
         "type": "spin",
         "axis": "z",
-        "speed": -0.02
+        "speed": 6.283
       },
       "children": [
         {
-          "id": "barel-per-cakram",
+          "id": "rotor-stepper-magnet",
           "type": "cylinder",
           "position": [
             0,
             0,
             0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.34,
-            "radiusBottom": 0.34,
-            "height": 0.022
-          },
-          "material": {
-            "color": "#b08d57",
-            "metalness": 0.75,
-            "roughness": 0.3
-          }
-        },
-        {
-          "id": "barel-per-gigi",
-          "type": "instances",
-          "geometry": {
-            "type": "box",
-            "params": {
-              "width": 0.085,
-              "height": 0.045,
-              "depth": 0.04
-            }
-          },
-          "material": {
-            "color": "#b08d57",
-            "metalness": 0.72,
-            "roughness": 0.36
-          },
-          "transforms": [
-            {
-              "p": [
-                0.4,
-                0.0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                0.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.346,
-                0.2,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                30.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.2,
-                0.346,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                60.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.0,
-                0.4,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                90.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.2,
-                0.346,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                120.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.346,
-                0.2,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                150.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.4,
-                0.0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                180.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.346,
-                -0.2,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                210.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.2,
-                -0.346,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                240.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.0,
-                -0.4,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                270.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.2,
-                -0.346,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                300.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.346,
-                -0.2,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                330.0
-              ],
-              "s": 1
-            }
-          ]
-        },
-        {
-          "id": "barel-per-pinion",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            -0.045
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.1,
-            "radiusBottom": 0.1,
-            "height": 0.075
-          },
-          "material": {
-            "color": "#7c8794",
-            "metalness": 0.85,
-            "roughness": 0.3
-          }
-        }
-      ]
-    },
-    {
-      "id": "roda-tengah",
-      "type": "group",
-      "position": [
-        -0.35,
-        2.54,
-        0.0
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": 0.12
-      },
-      "children": [
-        {
-          "id": "roda-tengah-cakram",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.3,
-            "radiusBottom": 0.3,
-            "height": 0.022
-          },
-          "material": {
-            "color": "#c9a227",
-            "metalness": 0.75,
-            "roughness": 0.3
-          }
-        },
-        {
-          "id": "roda-tengah-gigi",
-          "type": "instances",
-          "geometry": {
-            "type": "box",
-            "params": {
-              "width": 0.085,
-              "height": 0.045,
-              "depth": 0.04
-            }
-          },
-          "material": {
-            "color": "#c9a227",
-            "metalness": 0.72,
-            "roughness": 0.36
-          },
-          "transforms": [
-            {
-              "p": [
-                0.335,
-                0.0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                0.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.237,
-                0.237,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                45.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.0,
-                0.335,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                90.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.237,
-                0.237,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                135.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.335,
-                0.0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                180.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.237,
-                -0.237,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                225.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.0,
-                -0.335,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                270.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.237,
-                -0.237,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                315.0
-              ],
-              "s": 1
-            }
-          ]
-        },
-        {
-          "id": "roda-tengah-pinion",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            -0.045
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.09,
-            "radiusBottom": 0.09,
-            "height": 0.075
-          },
-          "material": {
-            "color": "#7c8794",
-            "metalness": 0.85,
-            "roughness": 0.3
-          }
-        }
-      ]
-    },
-    {
-      "id": "roda-ketiga",
-      "type": "group",
-      "position": [
-        0.07,
-        2.46,
-        0.02
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": -0.5
-      },
-      "children": [
-        {
-          "id": "roda-ketiga-cakram",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.26,
-            "radiusBottom": 0.26,
-            "height": 0.022
-          },
-          "material": {
-            "color": "#c9a227",
-            "metalness": 0.75,
-            "roughness": 0.3
-          }
-        },
-        {
-          "id": "roda-ketiga-gigi",
-          "type": "instances",
-          "geometry": {
-            "type": "box",
-            "params": {
-              "width": 0.085,
-              "height": 0.045,
-              "depth": 0.04
-            }
-          },
-          "material": {
-            "color": "#c9a227",
-            "metalness": 0.72,
-            "roughness": 0.36
-          },
-          "transforms": [
-            {
-              "p": [
-                0.29,
-                0.0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                0.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.205,
-                0.205,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                45.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.0,
-                0.29,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                90.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.205,
-                0.205,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                135.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.29,
-                0.0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                180.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.205,
-                -0.205,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                225.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.0,
-                -0.29,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                270.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.205,
-                -0.205,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                315.0
-              ],
-              "s": 1
-            }
-          ]
-        },
-        {
-          "id": "roda-ketiga-pinion",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            -0.045
           ],
           "rotation": [
             90,
@@ -1312,32 +883,51 @@
           "params": {
             "radiusTop": 0.075,
             "radiusBottom": 0.075,
-            "height": 0.075
+            "height": 0.03
           },
           "material": {
-            "color": "#7c8794",
-            "metalness": 0.85,
+            "color": "#707782",
+            "metalness": 0.75,
+            "roughness": 0.3
+          }
+        },
+        {
+          "id": "rotor-stepper-pin",
+          "type": "box",
+          "position": [
+            0.06,
+            0,
+            0
+          ],
+          "params": {
+            "width": 0.03,
+            "height": 0.08,
+            "depth": 0.02
+          },
+          "material": {
+            "color": "#9aa4b2",
+            "metalness": 0.8,
             "roughness": 0.3
           }
         }
       ]
     },
     {
-      "id": "roda-keempat",
+      "id": "gir-detik-kuarsa",
       "type": "group",
       "position": [
-        0.43,
-        2.58,
-        0.04
+        0.1,
+        2.45,
+        -0.01
       ],
       "animate": {
         "type": "spin",
         "axis": "z",
-        "speed": 0.72
+        "speed": 0.105
       },
       "children": [
         {
-          "id": "roda-keempat-cakram",
+          "id": "gir-detik-cakram",
           "type": "cylinder",
           "position": [
             0,
@@ -1352,556 +942,159 @@
           "params": {
             "radiusTop": 0.22,
             "radiusBottom": 0.22,
-            "height": 0.022
+            "height": 0.02
           },
           "material": {
-            "color": "#d4af37",
-            "metalness": 0.75,
-            "roughness": 0.3
+            "color": "#c9a227",
+            "metalness": 0.7,
+            "roughness": 0.35
           }
         },
         {
-          "id": "roda-keempat-gigi",
+          "id": "gir-detik-gigi",
           "type": "instances",
           "geometry": {
             "type": "box",
             "params": {
-              "width": 0.085,
-              "height": 0.045,
-              "depth": 0.04
+              "width": 0.07,
+              "height": 0.035,
+              "depth": 0.035
             }
           },
           "material": {
-            "color": "#d4af37",
-            "metalness": 0.72,
-            "roughness": 0.36
+            "color": "#c9a227",
+            "metalness": 0.7,
+            "roughness": 0.35
           },
           "transforms": [
             {
               "p": [
-                0.25,
-                0.0,
+                0.24,
+                0,
                 0
               ],
               "r": [
                 0,
                 0,
-                0.0
+                0
               ],
               "s": 1
             },
             {
               "p": [
-                0.177,
-                0.177,
+                0.17,
+                0.17,
                 0
               ],
               "r": [
                 0,
                 0,
-                45.0
+                45
               ],
               "s": 1
             },
             {
               "p": [
-                0.0,
-                0.25,
+                0,
+                0.24,
                 0
               ],
               "r": [
                 0,
                 0,
-                90.0
+                90
               ],
               "s": 1
             },
             {
               "p": [
-                -0.177,
-                0.177,
+                -0.17,
+                0.17,
                 0
               ],
               "r": [
                 0,
                 0,
-                135.0
+                135
               ],
               "s": 1
             },
             {
               "p": [
-                -0.25,
-                0.0,
+                -0.24,
+                0,
                 0
               ],
               "r": [
                 0,
                 0,
-                180.0
+                180
               ],
               "s": 1
             },
             {
               "p": [
-                -0.177,
-                -0.177,
+                -0.17,
+                -0.17,
                 0
               ],
               "r": [
                 0,
                 0,
-                225.0
+                225
               ],
               "s": 1
             },
             {
               "p": [
-                -0.0,
-                -0.25,
+                0,
+                -0.24,
                 0
               ],
               "r": [
                 0,
                 0,
-                270.0
+                270
               ],
               "s": 1
             },
             {
               "p": [
-                0.177,
-                -0.177,
+                0.17,
+                -0.17,
                 0
               ],
               "r": [
                 0,
                 0,
-                315.0
+                315
               ],
               "s": 1
             }
           ]
-        },
-        {
-          "id": "roda-keempat-pinion",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            -0.045
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.065,
-            "radiusBottom": 0.065,
-            "height": 0.075
-          },
-          "material": {
-            "color": "#7c8794",
-            "metalness": 0.85,
-            "roughness": 0.3
-          }
         }
       ]
     },
     {
-      "id": "roda-jalan",
+      "id": "gir-menit-kuarsa",
       "type": "group",
       "position": [
-        0.75,
-        2.48,
-        0.06
+        -0.15,
+        2.62,
+        0.01
       ],
       "animate": {
         "type": "spin",
         "axis": "z",
-        "speed": -1.6
+        "speed": 0.12
       },
       "children": [
         {
-          "id": "roda-jalan-cakram",
+          "id": "gir-menit-cakram",
           "type": "cylinder",
           "position": [
             0,
             0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.17,
-            "radiusBottom": 0.17,
-            "height": 0.022
-          },
-          "material": {
-            "color": "#d4af37",
-            "metalness": 0.75,
-            "roughness": 0.3
-          }
-        },
-        {
-          "id": "roda-jalan-gigi",
-          "type": "instances",
-          "geometry": {
-            "type": "box",
-            "params": {
-              "width": 0.085,
-              "height": 0.045,
-              "depth": 0.04
-            }
-          },
-          "material": {
-            "color": "#d4af37",
-            "metalness": 0.72,
-            "roughness": 0.36
-          },
-          "transforms": [
-            {
-              "p": [
-                0.2,
-                0.0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                0.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.141,
-                0.141,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                45.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.0,
-                0.2,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                90.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.141,
-                0.141,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                135.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.2,
-                0.0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                180.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.141,
-                -0.141,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                225.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.0,
-                -0.2,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                270.0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.141,
-                -0.141,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                315.0
-              ],
-              "s": 1
-            }
-          ]
-        },
-        {
-          "id": "roda-jalan-pinion",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            -0.045
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.055,
-            "radiusBottom": 0.055,
-            "height": 0.075
-          },
-          "material": {
-            "color": "#7c8794",
-            "metalness": 0.85,
-            "roughness": 0.3
-          }
-        }
-      ]
-    },
-    {
-      "id": "jangkar",
-      "type": "group",
-      "position": [
-        0.72,
-        2.8,
-        0.075
-      ],
-      "animate": {
-        "type": "oscillate",
-        "axis": "z",
-        "amplitude": 7,
-        "period": 1.2
-      },
-      "children": [
-        {
-          "id": "jangkar-poros",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.035,
-            "radiusBottom": 0.035,
-            "height": 0.1
-          },
-          "material": {
-            "color": "#7c8794",
-            "metalness": 0.85,
-            "roughness": 0.3
-          }
-        },
-        {
-          "id": "jangkar-lengan-kiri",
-          "type": "box",
-          "position": [
-            -0.14,
-            -0.16,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            -45
-          ],
-          "params": {
-            "width": 0.34,
-            "height": 0.05,
-            "depth": 0.05
-          },
-          "material": {
-            "color": "#9aa4b2",
-            "metalness": 0.8,
-            "roughness": 0.35
-          }
-        },
-        {
-          "id": "jangkar-lengan-kanan",
-          "type": "box",
-          "position": [
-            0.14,
-            -0.16,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            45
-          ],
-          "params": {
-            "width": 0.34,
-            "height": 0.05,
-            "depth": 0.05
-          },
-          "material": {
-            "color": "#9aa4b2",
-            "metalness": 0.8,
-            "roughness": 0.35
-          }
-        },
-        {
-          "id": "jangkar-palet-kiri",
-          "type": "box",
-          "position": [
-            -0.26,
-            -0.28,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            20
-          ],
-          "params": {
-            "width": 0.07,
-            "height": 0.06,
-            "depth": 0.055
-          },
-          "material": {
-            "color": "#d8dde5",
-            "metalness": 0.85,
-            "roughness": 0.25
-          }
-        },
-        {
-          "id": "jangkar-palet-kanan",
-          "type": "box",
-          "position": [
-            0.26,
-            -0.28,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            -20
-          ],
-          "params": {
-            "width": 0.07,
-            "height": 0.06,
-            "depth": 0.055
-          },
-          "material": {
-            "color": "#d8dde5",
-            "metalness": 0.85,
-            "roughness": 0.25
-          }
-        },
-        {
-          "id": "jangkar-garpu",
-          "type": "box",
-          "position": [
-            0,
-            -0.24,
-            0.02
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "params": {
-            "width": 0.04,
-            "height": 0.22,
-            "depth": 0.04
-          },
-          "material": {
-            "color": "#9aa4b2",
-            "metalness": 0.8,
-            "roughness": 0.35
-          }
-        }
-      ]
-    },
-    {
-      "id": "bandul",
-      "type": "group",
-      "position": [
-        0.6,
-        2.76,
-        0.045
-      ],
-      "animate": {
-        "type": "oscillate",
-        "axis": "z",
-        "amplitude": 9,
-        "period": 1.2
-      },
-      "children": [
-        {
-          "id": "batang-bandul",
-          "type": "cylinder",
-          "position": [
-            0,
-            -0.575,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.018,
-            "radiusBottom": 0.018,
-            "height": 1.15
-          },
-          "material": {
-            "color": "#b08d57",
-            "metalness": 0.8,
-            "roughness": 0.32
-          }
-        },
-        {
-          "id": "bandul-bob",
-          "type": "cylinder",
-          "position": [
-            0,
-            -1.15,
             0
           ],
           "rotation": [
@@ -1912,210 +1105,146 @@
           "params": {
             "radiusTop": 0.18,
             "radiusBottom": 0.18,
-            "height": 0.06
+            "height": 0.02
           },
           "material": {
-            "color": "#d4af37",
-            "metalness": 0.82,
-            "roughness": 0.26
-          }
-        }
-      ]
-    },
-    {
-      "id": "roda-menit",
-      "type": "group",
-      "position": [
-        -0.12,
-        2.78,
-        0.085
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": -0.12
-      },
-      "children": [
-        {
-          "id": "roda-menit-cakram",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.12,
-            "radiusBottom": 0.12,
-            "height": 0.022
-          },
-          "material": {
-            "color": "#c9a227",
-            "metalness": 0.75,
-            "roughness": 0.3
+            "color": "#b08d57",
+            "metalness": 0.7,
+            "roughness": 0.35
           }
         },
         {
-          "id": "roda-menit-gigi",
+          "id": "gir-menit-gigi",
           "type": "instances",
           "geometry": {
             "type": "box",
             "params": {
-              "width": 0.085,
-              "height": 0.045,
-              "depth": 0.04
+              "width": 0.07,
+              "height": 0.035,
+              "depth": 0.035
             }
           },
           "material": {
-            "color": "#c9a227",
-            "metalness": 0.72,
-            "roughness": 0.36
+            "color": "#b08d57",
+            "metalness": 0.7,
+            "roughness": 0.35
           },
           "transforms": [
             {
               "p": [
-                0.14,
-                0.0,
+                0.2,
+                0,
                 0
               ],
               "r": [
                 0,
                 0,
-                0.0
+                0
               ],
               "s": 1
             },
             {
               "p": [
-                0.099,
-                0.099,
+                0.141,
+                0.141,
                 0
               ],
               "r": [
                 0,
                 0,
-                45.0
+                45
               ],
               "s": 1
             },
             {
               "p": [
-                0.0,
-                0.14,
+                0,
+                0.2,
                 0
               ],
               "r": [
                 0,
                 0,
-                90.0
+                90
               ],
               "s": 1
             },
             {
               "p": [
-                -0.099,
-                0.099,
+                -0.141,
+                0.141,
                 0
               ],
               "r": [
                 0,
                 0,
-                135.0
+                135
               ],
               "s": 1
             },
             {
               "p": [
-                -0.14,
-                0.0,
+                -0.2,
+                0,
                 0
               ],
               "r": [
                 0,
                 0,
-                180.0
+                180
               ],
               "s": 1
             },
             {
               "p": [
-                -0.099,
-                -0.099,
+                -0.141,
+                -0.141,
                 0
               ],
               "r": [
                 0,
                 0,
-                225.0
+                225
               ],
               "s": 1
             },
             {
               "p": [
-                -0.0,
-                -0.14,
+                0,
+                -0.2,
                 0
               ],
               "r": [
                 0,
                 0,
-                270.0
+                270
               ],
               "s": 1
             },
             {
               "p": [
-                0.099,
-                -0.099,
+                0.141,
+                -0.141,
                 0
               ],
               "r": [
                 0,
                 0,
-                315.0
+                315
               ],
               "s": 1
             }
           ]
-        },
-        {
-          "id": "roda-menit-pinion",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            -0.045
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.04,
-            "radiusBottom": 0.04,
-            "height": 0.075
-          },
-          "material": {
-            "color": "#7c8794",
-            "metalness": 0.85,
-            "roughness": 0.3
-          }
         }
       ]
     },
     {
-      "id": "roda-jam",
+      "id": "gir-jam-kuarsa",
       "type": "group",
       "position": [
         -0.35,
-        2.54,
-        0.1
+        2.45,
+        0.03
       ],
       "animate": {
         "type": "spin",
@@ -2124,7 +1253,7 @@
       },
       "children": [
         {
-          "id": "roda-jam-cakram",
+          "id": "gir-jam-cakram",
           "type": "cylinder",
           "position": [
             0,
@@ -2139,41 +1268,41 @@
           "params": {
             "radiusTop": 0.16,
             "radiusBottom": 0.16,
-            "height": 0.022
+            "height": 0.02
           },
           "material": {
             "color": "#d4af37",
-            "metalness": 0.75,
-            "roughness": 0.3
+            "metalness": 0.7,
+            "roughness": 0.35
           }
         },
         {
-          "id": "roda-jam-gigi",
+          "id": "gir-jam-gigi",
           "type": "instances",
           "geometry": {
             "type": "box",
             "params": {
-              "width": 0.085,
-              "height": 0.045,
-              "depth": 0.04
+              "width": 0.07,
+              "height": 0.035,
+              "depth": 0.035
             }
           },
           "material": {
             "color": "#d4af37",
-            "metalness": 0.72,
-            "roughness": 0.36
+            "metalness": 0.7,
+            "roughness": 0.35
           },
           "transforms": [
             {
               "p": [
                 0.18,
-                0.0,
+                0,
                 0
               ],
               "r": [
                 0,
                 0,
-                0.0
+                0
               ],
               "s": 1
             },
@@ -2186,20 +1315,20 @@
               "r": [
                 0,
                 0,
-                45.0
+                45
               ],
               "s": 1
             },
             {
               "p": [
-                0.0,
+                0,
                 0.18,
                 0
               ],
               "r": [
                 0,
                 0,
-                90.0
+                90
               ],
               "s": 1
             },
@@ -2212,20 +1341,20 @@
               "r": [
                 0,
                 0,
-                135.0
+                135
               ],
               "s": 1
             },
             {
               "p": [
                 -0.18,
-                0.0,
+                0,
                 0
               ],
               "r": [
                 0,
                 0,
-                180.0
+                180
               ],
               "s": 1
             },
@@ -2238,20 +1367,20 @@
               "r": [
                 0,
                 0,
-                225.0
+                225
               ],
               "s": 1
             },
             {
               "p": [
-                -0.0,
+                0,
                 -0.18,
                 0
               ],
               "r": [
                 0,
                 0,
-                270.0
+                270
               ],
               "s": 1
             },
@@ -2264,35 +1393,11 @@
               "r": [
                 0,
                 0,
-                315.0
+                315
               ],
               "s": 1
             }
           ]
-        },
-        {
-          "id": "roda-jam-pinion",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            -0.045
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "params": {
-            "radiusTop": 0.05,
-            "radiusBottom": 0.05,
-            "height": 0.075
-          },
-          "material": {
-            "color": "#7c8794",
-            "metalness": 0.85,
-            "roughness": 0.3
-          }
         }
       ]
     }
@@ -2329,7 +1434,7 @@
         "sweep": 55,
         "duration": 5,
         "ease": "inOut",
-        "caption": "Jam dinding analog: di balik wajah krem tersimpan mesin mekanis berbasis roda gigi dan bandul."
+        "caption": "Jam dinding kuarsa: tampilan klasik di luar, mesin bertenaga baterai di dalam."
       },
       {
         "id": "reveal",
@@ -2347,37 +1452,27 @@
         ],
         "transition": "dissolve",
         "transitionDuration": 0.6,
-        "caption": "Wajah dan jarum terlepas — tampak kereta roda dari per utama sampai roda jalan."
+        "caption": "Modul kuarsa terlihat: baterai AA, PCB, kristal kuarsa, kumparan, dan roda gigi."
       },
       {
-        "id": "tengah",
+        "id": "kuarsa-close",
         "type": "zoom",
-        "target": "roda-tengah",
-        "fromDistance": 3.4,
-        "toDistance": 1.6,
+        "target": "kristal-kuarsa",
+        "fromDistance": 2.8,
+        "toDistance": 1.2,
         "duration": 3.5,
         "transition": "dissolve",
         "transitionDuration": 0.5,
-        "caption": "Roda tengah berputar sekali per jam dan membawa jarum menit."
+        "caption": "Kristal kuarsa memberi getaran stabil yang dibagi rangkaian elektronik menjadi pulsa waktu."
       },
       {
-        "id": "escape",
+        "id": "motor-close",
         "type": "zoom",
-        "target": "jangkar",
+        "target": "rotor-stepper",
         "fromDistance": 2.2,
         "toDistance": 1.1,
-        "duration": 3,
-        "caption": "Jangkar menahan lalu melepas satu gigi roda jalan — detak tik-tok lahir di sini."
-      },
-      {
-        "id": "bandul-shot",
-        "type": "orbit",
-        "target": "bandul",
-        "radius": 2,
-        "height": 1.2,
-        "sweep": 30,
         "duration": 3.5,
-        "caption": "Bandul berosilasi pada periode tetap dan mengatur laju seluruh kereta roda."
+        "caption": "Kumparan menggerakkan rotor stepper; putaran diteruskan lewat roda gigi ke jarum detik, menit, dan jam."
       },
       {
         "id": "tutup",
@@ -2394,7 +1489,7 @@
         ],
         "target": "wajah-jam",
         "duration": 3,
-        "caption": "Rangkaian mekanik meneruskan tenaga pegas menjadi gerak jarum yang teratur."
+        "caption": "Hasilnya gerak jarum yang presisi dan efisien dengan sumber daya baterai."
       }
     ],
     "loop": true,

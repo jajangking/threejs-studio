@@ -857,7 +857,7 @@ def build_agent_prompt(user_text, repair=None, selection=None):
     fb = read_json(os.path.join(ROOT, 'feedback.json'), [])
     open_fb = [(i, f) for i, f in enumerate(fb) if f.get('status') == 'open']
     history = read_json(os.path.join(ROOT, 'chat.json'), [])
-    history = history[-6:] if isinstance(history, list) else []
+    history = history[-4:] if isinstance(history, list) else []
 
     parts = ['=== KONTRAK SCENE SAAT INI ===', contract or '(belum ada)', '']
     if CHAT.get('scope') == 'production':
@@ -878,12 +878,12 @@ def build_agent_prompt(user_text, repair=None, selection=None):
     clip_an = read_json(os.path.join(ROOT, 'clip-analysis.json'), None)
     if clip_an:
         parts += ['=== REFERENSI GERAK KAMERA DARI CLIP (analisis vision — tiru shot-nya) ===',
-                  json.dumps(clip_an, ensure_ascii=False)[:2500], '']
+                  json.dumps(clip_an, ensure_ascii=False)[:1200], '']
     ref = read_text(os.path.join(ROOT, 'reference-analysis.md'))
     if ref:
         parts += ['=== REFERENSI FOTO USER (analisis vision — bangun scene MENDEKATI referensi ini) ===', ref, '']
     parts += ['=== SCENE SAAT INI (JSON) ===',
-              json.dumps(scene, ensure_ascii=False)[:60000], '']
+              json.dumps(scene, ensure_ascii=False)[:28000], '']
     if open_fb:
         parts.append('=== FEEDBACK TERBUKA (indeks array asli) ===')
         for i, f in open_fb:
@@ -941,7 +941,17 @@ def ask_llm(model, user_text, repair=None, max_tokens=20000):
     prompt = build_agent_prompt(user_text, repair, selection)
     if backend == 'opencode':
         status(f'memanggil opencode:{mid} (bisa 1-3 menit, harap tunggu)…')
-        return call_opencode(mid, SYSTEM_PROMPT + '\n\n' + prompt)
+        try:
+            return call_opencode(mid, SYSTEM_PROMPT + '\n\n' + prompt)
+        except Exception as e:
+            if not any(k in str(e).lower() for k in ('timeout', 'timed out', '504', 'gateway')):
+                raise
+            fb = 'tencent/hy4-flash:free'  # model cepat, tidak perlu API key
+            status(f'⚠️ opencode timeout — fallback otomatis ke {fb} (jangan perlu kirim ulang)')
+            msgs = [{'role': 'system', 'content': SYSTEM_PROMPT}, {'role': 'user', 'content': prompt}]
+            out = call_router(fb, msgs, max_tokens=max_tokens)
+            status('✍️ fallback merespons — memvalidasi jawaban…')
+            return (out[0] if isinstance(out, tuple) else out), fb
     messages = [{'role': 'system', 'content': SYSTEM_PROMPT},
                 {'role': 'user', 'content': prompt}]
     if backend == 'hermes':
@@ -1379,7 +1389,7 @@ def run_agent_job(job_id, user_text, model):
     except Exception as e:
         if not _job_active(job_id):
             return  # job sudah dibatalkan/diganti — zombie jangan menulis apa pun
-        msg = f'Agent gagal: {e}'
+        msg = f'Agent gagal: {e} — coba kirim ulang atau ganti model router yang lebih cepat di dropdown'
         status(msg)
         append_chat_message({'role': 'agent', 'text': msg, 'at': time.time(),
                              'iteration': None, 'model': model, 'error': True})
