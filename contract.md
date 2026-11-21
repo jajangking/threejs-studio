@@ -1,24 +1,33 @@
-# Kontrak — kabel data charger (teardown)
+# Kontrak — jam dinding (mesin mekanis)
 
 ## Konsep
-Kabel USB-C braided premium digelung di atas tikar studio gelap. Selain tampilan luar, kini setiap lapisan dalam tersedia sebagai objek nyata: anyaman → 4 kawat berinsulasi (VBus/GND/D−/D+) → isolasi → PCB → pin tembaga, siap dibedah.
+Jam dinding klasik bernuansa interior modern. Di balik wajah krem tersimpan mesin mekanis nyata: tong per penggerak, kereta roda gigi, jangkar escapement, dan bandul pengatur waktu.
 
 ## Objek wajib
-- desk-mat; cable-braid (instances anyam).
-- kawat-vbus / kawat-gnd / kawat-dminus / kawat-dplus: 4 instances kawat mengikuti spline kabel (radius 0.013 m), tertanam di dalam anyaman.
-- connector-a/b: group berisi boot, 4 ridge, shell, seam, tip, insert, LED + kawat-vbus/gnd/dminus/dplus, isolasi, pcb, pin-1..4.
-- cable-ring-a-1/2, cable-ring-b-1/2: cincin logam aksen.
+- dinding, papan-bawah, casing-jam, wajah-jam, bezel, lintasan-menit, penanda-jam (12 instancing).
+- jarum-jam / jarum-menit / jarum-detik + pusat-jam (mekanika permukaan).
+- platina, barel-per (+ drum, gigi, poros): sumber tenaga pegas pada tong bergigi (going barrel).
+- roda-tengah, roda-ketiga, roda-keempat, roda-jalan: kereta roda; pasangan gigi-pinion berlawanan arah, laju naik menuju escape.
+- jangkar dua palet + garpu: mengunci/melepas satu gigi roda-jalan per ayunan (detak tik-tok).
+- bandul batang + bob: osilasi periode tetap, tersambung ke jangkar lewat garpu (periode sama 1,2 s).
+- roda-menit + roda-jam: motion work 12:1 (cannon pinion → roda menit → roda jam) sehingga jarum jam = 1/12 laju jarum menit.
+- rak, pot, tanaman, bingkai, lukisan: penyeimbang komposisi tiga lapis.
 
 ## Palet hex
-Anyam #1c2633 · Karet #161d28 / ridge #26303e · Aluminium #c4ccd6 / seam #7b8794 · Tip #6d7a88 · LED emissive #37e6ff · Kawat #d9474f / #232830 / #cfd6df / #35b06f · Isolasi #3a3026 · PCB #1c6b4d · Pin #e0b64a · Tikar #1a2331 · Ground #141924 · Background #080b12
+- Dinding #26303c, papan bawah #1b222b, latar #151b24
+- Casing #2b2119, wajah #f2e9d8, bezel/pusat #c9a227 / #d4af37
+- Kuningan mesin #b08d57 / #c9a227 / #d4af37, baja #7c8794 / #9aa4b2
+- Penanda #2b2620, jarum #23201c, jarum detik #c0392b
+- Kayu #5a4632, pot #a8613f, daun #3f7a4a, bingkai #3b2f24, lukisan #6a8fa8
 
-## Kamera & lighting
-Posisi [5.8,7.2,8.8], target [0,0.2,0], fov 45. Hemi #93a9cc 0.9; key #fff0da 2.4 + bayangan; fill #6f8fd0 0.8; rim #b9ccff 1.25; exposure 1.2; bloom 0.55/0.5/0.78.
+## Kamera
+Default [0,2.6,6] → [0,2.5,0], fov 45 (wajah utuh). Tur 6 shot: establish → exploded reveal → closeup roda tengah → jangkar/escape → bandul → pull back, masing-masing berkaption.
 
-## Cara bedah (panel 🔬 Bedah bawaan studio)
-Exploded slider atau preset 25/50/75% untuk memisah shell & kawat; Section (sumbu X/Y/Z + posisi potong + Caps) mis. sumbu Y posisi 0.10 membelah kabel menyingkap 4 kawat; X-ray untuk melihat kawat tembaga di dalam housing; Isolasi + Label nama untuk membaca tiap kawat.
+## Lighting
+Hemisphere #9fb4d8 / #242a35 0.55; key #fff0d6 2.3 dari [6,9,7] + shadow; fill #8fb3ff 0.45 dari [-6,4,5]; bloom 0.25/0.5/0.9.
 
 ## Acceptance criteria
-A. Smoke 8/8 lolos; kawat tersembunyi saat normal (tanpa duplikat visual).
-B. Saat Section/Explode/X-ray, 4 kawat + PCB + pin terbaca jelas dengan warna berbeda.
-C. Konektor tetap solid tertutup di tampilan default; LED menyala dengan bloom.
+A. Smoke 8/8 lolos; tampilan default tetap jam utuh dan mesin tersembunyi seperti jam asli.
+B. Mesin terbaca melalui Bedah exploded/cutaway dan tur kamera; semua roda, jangkar, bandul terlihat.
+C. Arah putar roda berselang-seling, laju naik ke roda-jalan, jangkar dan bandul sinkron, jarum jam = 1/12 jarum menit.
+D. Tidak ada komponen rekaan; semua bagian mengikuti mekanika jam mekanis yang sebenarnya.

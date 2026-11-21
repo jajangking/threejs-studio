@@ -41,6 +41,50 @@ try {
 function renderFrame() {
   if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
 }
+function finalize(src, effects, frame) {
+  const fx = effects || [];
+  const has = n => fx.some(e => e.type === n);
+  bctx.globalAlpha = 1; bctx.globalCompositeOperation = 'source-over'; bctx.filter = 'none';
+  bctx.clearRect(0, 0, W, H);
+  // motion blur: frame sebelumnya jadi lapisan bawah
+  if (has('motionBlur') && window.__prevFrame) {
+    bctx.drawImage(window.__prevFrame, 0, 0, W, H);
+    bctx.globalAlpha = 0.55;
+  }
+  const grade = fx.find(e => e.type === 'colorGrade');
+  const FILTERS = {
+    clean: 'contrast(1.08) saturate(1.05) brightness(1.03)',
+    teal: 'contrast(1.16) saturate(1.25) sepia(0.12) hue-rotate(165deg)',
+    noir: 'grayscale(1) contrast(1.35) brightness(0.92)',
+    warm: 'sepia(0.22) saturate(1.18) contrast(1.08)',
+  };
+  if (grade && FILTERS[grade.look]) bctx.filter = FILTERS[grade.look];
+  bctx.drawImage(src, 0, 0, W, H);
+  bctx.filter = 'none'; bctx.globalAlpha = 1;
+  // glitch: potongan horizontal tergeser (seed dari nomor frame → deterministik)
+  const gl = fx.find(e => e.type === 'glitch');
+  if (gl) {
+    let seed = (frame + 1) * 9301 + 49297;
+    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    for (let k = 0; k < (gl.slices || 4); k++) {
+      const y = Math.floor(rnd() * H), h = 4 + Math.floor(rnd() * 14), dx = Math.floor((rnd() - 0.5) * (gl.amount || 22));
+      bctx.drawImage(blend, 0, y, W, h, dx, y, W, h);
+    }
+  }
+  // vignette
+  if (has('vignette')) {
+    const g = bctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.72);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.58)');
+    bctx.fillStyle = g; bctx.fillRect(0, 0, W, H);
+  }
+  // letterbox
+  const lb = fx.find(e => e.type === 'letterbox');
+  if (lb) { const bh = Math.floor(H * (lb.ratio || 0.09)); bctx.fillStyle = '#000'; bctx.fillRect(0, 0, W, bh); bctx.fillRect(0, H - bh, W, bh); }
+  // simpan frame untuk motion blur berikutnya
+  if (!window.__prevFrame) { window.__prevFrame = document.createElement('canvas'); window.__prevFrame.width = W; window.__prevFrame.height = H; }
+  window.__prevFrame.getContext('2d').drawImage(blend, 0, 0);
+  return blend.toDataURL('image/jpeg', 0.85);
+}
   handle.dof = spec.cameraPath?.dof?.enabled ? spec.cameraPath.dof : null;
   if (handle.dof) handle.composer = makeComposer(handle, renderer, W, H);
   const dur = parseFloat(q.get('duration') || '') || (path ? path.dur : 10);
@@ -76,10 +120,10 @@ function renderFrame() {
       if (tr.type === 'wipe') bctx.restore();
       if (tr.type === 'fade') { bctx.fillStyle = '#000'; bctx.globalAlpha = 1 - tr.u; bctx.fillRect(0, 0, W, H); }
       bctx.globalAlpha = 1;
-      var data = blend.toDataURL('image/jpeg', 0.85);
+      var data = finalize(blend, (sh?.effects || path?.effects || []), i);
     } else {
       applyPose(t); renderFrame();
-      var data = cv.toDataURL('image/jpeg', 0.85);
+      var data = finalize(cv, (sh?.effects || path?.effects || []), i);
     }
     await fetch('/api/video/frame', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job, i, data }) });
     if (i % 10 === 0) prog.textContent = `frame ${i}/${total}`;

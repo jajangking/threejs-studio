@@ -6,7 +6,7 @@ import { PointerLockControls } from '../vendor/PointerLockControls.js';
 import {
   buildScene, makeRenderer, makeComposer, frameCamera, applyAnimations, stepPhysics, resetPhysics,
   applyExplode, compileCameraPath, sampleCameraPath, syncCaps,
-  applyExplosion, startDrag, moveDrag, endDrag, makeAudio, updateAudio, audioClick, setDOF, updateDOF,
+  applyExplosion, startDrag, moveDrag, endDrag, makeAudio, updateAudio, audioClick, setDOF, updateDOF, SHOT_LIBRARY_NAMES,
 } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
@@ -418,6 +418,26 @@ function skInitTargets() {
   sel.innerHTML = ids.map(id => `<option value="${id}">${id}</option>`).join('');
   const cur = skCP().dof?.target; if (cur && ids.includes(cur)) sel.value = cur;
 }
+$('#skAddShot').onclick = () => {
+  const cp = skCP(); cp.shots = cp.shots || [];
+  cp.shots.push({ preset: $('#skPreset').value, target: $('#skDofTarget').value || null, duration: 5,
+    caption: `Shot ${cp.shots.length + 1} dari pustaka` });
+  cinePath = compileCameraPath(handle); cineT = 0; cinePlaying = true;
+  renderCinePanel(); renderShotPanel(); renderTimeline();
+  toast(`Shot "${$('#skPreset').value}" ditambahkan — ${cp.shots.length} shot total`);
+};
+document.querySelectorAll('[data-fx]').forEach(b => b.onclick = () => {
+  const cp = skCP(); cp.effects = cp.effects || [];
+  const t = b.dataset.fx, i = cp.effects.findIndex(e => e.type === t);
+  if (i >= 0) cp.effects.splice(i, 1); else cp.effects.push({ type: t });
+  b.classList.toggle('on', i < 0);
+  toast(`Efek ${t} ${i < 0 ? 'aktif' : 'dimatikan'} — berlaku saat render MP4`);
+});
+$('#skGrade').onchange = () => {
+  const cp = skCP(); cp.effects = (cp.effects || []).filter(e => e.type !== 'colorGrade');
+  if ($('#skGrade').value) cp.effects.push({ type: 'colorGrade', look: $('#skGrade').value });
+  toast($('#skGrade').value ? `Color grade ${$('#skGrade').value} aktif` : 'Color grade dimatikan');
+};
 $('#skDof').onclick = () => {
   const cp = skCP(); const on = !(cp.dof?.enabled);
   const opts = { enabled: on, target: $('#skDofTarget').value || null, aperture: parseFloat($('#skAperture').value), maxblur: 0.012 };
@@ -431,6 +451,50 @@ $('#skDof').onclick = () => {
 };
 $('#skAperture').oninput = () => { const d = skCP().dof; if (d?.enabled) { d.aperture = parseFloat($('#skAperture').value); updateDOF(handle); } };
 $('#skDofTarget').onchange = () => { const d = skCP().dof; if (d?.enabled) { d.target = $('#skDofTarget').value; updateDOF(handle); } };
+$('#skPropose').onclick = async () => {
+  const brief = $('#skBrief').value.trim(); if (!brief) return toast('Tulis brief dulu');
+  $('#skDirectInfo').textContent = 'Agent menyusun usulan shot…';
+  try {
+    const r = await fetch('/api/direct/propose', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brief, model: $('#adModel')?.value || null }) }).then(x => x.json());
+    if (!r.ok) return toast('Gagal: ' + (r.error || '?'));
+    const poll = setInterval(async () => {
+      const st = await (await fetch('/api/chat/state')).json();
+      if (st.running) return;
+      clearInterval(poll);
+      const prop = await (await fetch('/api/state')).json();
+      $('#skDirectInfo').textContent = 'Usulan siap — cek tab 🤖 Agent, lalu setujui di sini';
+      toast('📋 Usul sutradara siap — review di panel Agent');
+    }, 3000);
+  } catch (e) { toast('Gagal: ' + e.message); }
+};
+$('#skApprove').onclick = async () => {
+  const r = await fetch('/api/direct/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(x => x.json());
+  if (!r.ok) return toast('Gagal: ' + r.error);
+  $('#skDirectInfo').textContent = `${r.shots} shot disetujui & diterapkan`;
+  toast(`✅ ${r.shots} shot diterapkan — tur dimuat ulang`);
+};
+$('#skClipBtn').onclick = () => {
+  const f = $('#skClipFile').files[0]; if (!f) return toast('Pilih video/GIF dulu');
+  $('#skClipInfo').textContent = 'Mengekstrak frame & menganalisis gerak kamera…';
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const r = await fetch('/api/clip/imitate', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: reader.result, type: f.type }) }).then(x => x.json());
+      if (!r.ok) return toast('Gagal: ' + r.error);
+      const poll = setInterval(async () => {
+        const s = await (await fetch('/api/clip/state?job=' + r.job)).json();
+        if (s.status === 'analyzing' || s.status === 'generating') return;
+        clearInterval(poll);
+        if (s.status === 'error') return toast('Analisis gagal: ' + s.error);
+        $('#skClipInfo').textContent = (s.analysis?.note || JSON.stringify(s.analysis)).slice(0, 160);
+        toast('🎞️ Gerak kamera referensi aktif — prompt agent berikutnya akan menirunya');
+      }, 3000);
+    } catch (e) { toast('Gagal: ' + e.message); }
+  };
+  reader.readAsDataURL(f);
+};
 $('#skBoard').onclick = async () => {
   toast('📸 Menyusun storyboard per shot…', 9000);
   try {

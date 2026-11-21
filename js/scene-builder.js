@@ -900,6 +900,54 @@ function objSize(handle, id) {
   return Math.max(0.3, Math.max(s.x, s.y, s.z));
 }
 
+// ── Pustaka shot bernama (ala preset After Effects, dipanggil agent via "preset") ──
+export const SHOT_LIBRARY = {
+  'hero-orbit': o => ({ type: 'orbit', target: o.target ?? null, radius: o.radius ?? 9, height: o.height ?? 3, startAngle: o.startAngle ?? 0, sweep: 360, duration: o.duration ?? 12, fov: 50, caption: o.caption || 'Putaran hero mengelilingi subjek' }),
+  'hitchcock': o => ({ type: 'zoom', target: o.target ?? null, fromDistance: o.fromDistance ?? 10, toDistance: o.toDistance ?? 3, fov: o.fov ?? 50, duration: o.duration ?? 5, caption: o.caption || 'Dolly zoom — latar berubah, subjek tetap' }),
+  'dolly-zoom': o => SHOT_LIBRARY.hitchcock(o),
+  'whip-reveal': o => ({ type: 'path', points: o.points ?? [[-8, 3, 5], [0, 2.5, 4], [8, 3, 5]], target: o.target ?? null, duration: o.duration ?? 2.5, fov: 55, transition: 'dissolve', caption: o.caption || 'Sapuan cepat membuka adegan' }),
+  'snorricam': o => ({ type: 'orbit', target: o.target ?? null, radius: o.radius ?? 3.2, height: o.height ?? 1.4, sweep: o.sweep ?? 45, duration: o.duration ?? 6, fov: o.fov ?? 42, caption: o.caption || 'Kamera mengunci subjek, latar bergerak' }),
+  'top-down-explode': o => ({ type: 'orbit', target: o.target ?? null, radius: o.radius ?? 8, height: o.height ?? 9, sweep: o.sweep ?? 120, duration: o.duration ?? 8, fov: 50, explode: o.explode ?? [0, 0.7], caption: o.caption || 'Tampak atas — komponen terbuka berlapis' }),
+  'macro-detail': o => ({ type: 'zoom', target: o.target ?? null, framing: o.framing, fromDistance: o.fromDistance ?? 6, toDistance: o.toDistance ?? 2, duration: o.duration ?? 4, fov: 40, caption: o.caption || 'Detail mikro komponen' }),
+  'crane-reveal': o => ({ type: 'crane', from: o.from ?? [5, 1, 5], toY: o.toY ?? 8, target: o.target ?? null, duration: o.duration ?? 5, caption: o.caption || 'Kamera naik membuka ruang' }),
+  'parallax-walk': o => ({ type: 'path', points: o.points ?? [[-6, 2, 5], [-2, 2, 3], [3, 2, 3], [7, 2, 5]], target: o.target ?? null, duration: o.duration ?? 8, caption: o.caption || 'Jalan menyamping — parallax lapisan' }),
+};
+export const SHOT_LIBRARY_NAMES = Object.keys(SHOT_LIBRARY);
+
+// Ekspresi kecil & deterministik: ramp(a,b,ease), orbit(id,r,h,sweep,dur),
+// path(id1,id2,...), track(id), wave(base,amp,period). Tanpa eval().
+function compileExpr(v, handle) {
+  if (typeof v !== 'string') return null;
+  const m = /^(\w+)\((.*)\)$/.exec(v.trim());
+  if (!m) return null;
+  const fn = m[1];
+  const args = m[2].split(',').map(a => a.trim().replace(/^['"]|['"]$/g, ''));
+  const num = (i, d) => (args[i] !== undefined && !isNaN(parseFloat(args[i]))) ? parseFloat(args[i]) : d;
+  if (fn === 'ramp') {
+    const a = num(0, 50), b = num(1, 30), mode = args[2] || 'ease';
+    return u => { const x = mode === 'linear' ? u : u * u * (3 - 2 * u); return a + (b - a) * x; };
+  }
+  if (fn === 'orbit') {
+    const id = args[0], r = num(1, 6), h = num(2, 3), sweep = num(3, 360), dur = num(4, 8);
+    const m2 = handle.registry.get(id);
+    const c = m2 ? objWorldPos(handle, id) : new THREE.Vector3();
+    return u => { const a = (sweep * Math.PI / 180) * u;
+      return c.clone().add(new THREE.Vector3(Math.cos(a) * r, h, Math.sin(a) * r)); };
+  }
+  if (fn === 'path') {
+    const pts = args.map(id => objWorldPos(handle, id));
+    if (!pts.length) return null;
+    const curve = pts.length > 1 ? new THREE.CatmullRomCurve3(pts) : null;
+    return u => curve ? curve.getPoint(u) : pts[0].clone();
+  }
+  if (fn === 'track') return () => objWorldPos(handle, args[0]);
+  if (fn === 'wave') {
+    const base = num(0, 0), amp = num(1, 0.3), period = num(2, 4);
+    return u => new THREE.Vector3(Math.sin(u * Math.PI * 2 / period) * amp, base, 0);
+  }
+  return null;
+}
+
 export function compileCameraPath(handle) {
   const cp = handle.spec.cameraPath;
   if (!cp) return null;
@@ -911,14 +959,19 @@ export function compileCameraPath(handle) {
     const posCurve = kfs.length >= 3 ? new THREE.CatmullRomCurve3(kfs.map(k => k.pos)) : null;
     return { mode: 'keyframes', kfs, dur, posCurve, loop: cp.loop !== false, autoplay: cp.autoplay !== false, shots: [] };
   }
-  const shots = (cp.shots || []).map((s, i) => {
+  const shots = (cp.shots || []).map((raw, i) => {
+    const base = raw.preset && SHOT_LIBRARY[raw.preset] ? SHOT_LIBRARY[raw.preset](raw) : null;
+    const s = base ? { ...base, ...raw } : raw;
     const dur = Math.max(0.5, s.duration ?? 4);
     const fov = s.fov ?? fovBase;
     const ease = EASE[s.ease] || EASE.inOut;
     const fill = s.framing?.fill ?? FILL[s.preset] ?? 0.4;
     const frameId = s.framing?.object || (typeof s.target === 'string' ? s.target : null);
     const dist = frameId ? frameDistance(objSize(handle, frameId), fov, fill) : null;
-    return { ...s, i, dur, fov, ease, fill, dist, caption: s.caption || '' };
+    const _fovFn = compileExpr(s.fov, handle);
+    const _targetFn = compileExpr(s.target, handle);
+    const _posFn = compileExpr(s.pos, handle);
+    return { ...s, i, dur, fov, ease, fill, dist, caption: s.caption || '', _fovFn, _targetFn, _posFn };
   });
   let acc = 0;
   shots.forEach(s => { s.t0 = acc; acc += s.dur; });
@@ -949,7 +1002,8 @@ export function sampleCameraPath(handle, path, t) {
   const u = s.type === 'journey' ? rawU : s.ease(rawU);  // journey meluncur konstan, tanpa akselerasi global
   let sampleCaption = s.caption || '';
   let target = s.target ? objWorldPos(handle, s.target, s.explode != null) : new THREE.Vector3(0, 2, 0);
-  const fov = s.fov;
+  let fov = s.fov;
+  if (s._fovFn) fov = s._fovFn(u);
   let pos;
   if (s.type === 'orbit') {
     const r = s.radius ?? s.dist ?? 6;
@@ -1011,6 +1065,8 @@ export function sampleCameraPath(handle, path, t) {
   } else {
     pos = target.clone().add(new THREE.Vector3(0, 2, 6));
   }
+  if (s._targetFn) target = s._targetFn(u);
+  if (s._posFn) pos = s._posFn(u);
   let explode = null;
   if (Array.isArray(s.explode)) explode = s.explode[0] + (s.explode[1] - s.explode[0]) * u;
   else if (typeof s.explode === 'number') explode = s.explode;

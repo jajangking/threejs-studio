@@ -1,0 +1,45 @@
+{
+  "shots": [
+    {
+      "type": "crane",
+      "duration": 2,
+      "caption": "Kamera mulai tinggi menatap ke bawah, memperlihatkan seluruh area abu-abu dengan dua lingkaran cahaya dan jalur melengkung di dalamnya"
+    },
+    {
+      "type": "dolly",
+      "duration": 2,
+      "caption": "Kamera turun perlahan dan mendekati lingkaran cahaya pertama di sisi kiri, memperlihatkan detail jalur putus-putus"
+    },
+    {
+      "type": "path",
+      "duration": 3,
+      "caption": "Kamera bergerak horizontal dari kiri ke kanan, melintasi permukaan abu-abu sambil mempertahankan jarak menengah dari kedua lingkaran"
+    },
+    {
+      "type": "orbit",
+      "duration": 2,
+      "caption": "Kamera mengitari lingkaran cahaya pertama dengan gerakan melingkar pelan, menampilkan jalur dari sudut berbeda"
+    },
+    {
+      "type": "dolly",
+      "duration": 2,
+      "caption": "Kamera mendekati titik-titik terang di ujung jalur pada lingkaran pertama, memperlihatkan detail yang lebih dekat"
+    },
+    {
+      "type": "crane",
+      "duration": 2,
+      "caption": "Kamera naik dan bergeser ke kanan, memperlihatkan kedua lingkaran dari sudut pandang menengah yang lebih tinggi"
+    },
+    {
+      "type": "orbit",
+      "duration": 2,
+      "caption": "Kamera mengitari lingkaran cahaya kedua dengan gerakan melingkar, menyoroti jalur melengkung di dalamnya"
+    },
+    {
+      "type": "zoom",
+      "duration": 2,
+      "caption": "Kamera zoom keluar menjauh, kembali ke posisi tinggi dan jauh, menampilkan seluruh komposisi dua lingkaran cahaya dari atas"
+    }
+  ],
+  "note": "Delapan shot dimulai dari pandangan crane tinggi, bergerak mendekat dan melintasi dua lingkaran cahaya dengan gerakan dolly dan path horizontal, mengitari masing-masing lingkaran dengan orbit, mendekati detail jalur, lalu kembali ke zoom out lebar. Kamera menekankan pergerakan dari jauh ke dekat dan sebaliknya, dengan ketinggian berubah dari atas ke menengah dan kembali ke atas."
+}

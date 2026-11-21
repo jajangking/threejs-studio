@@ -144,11 +144,45 @@ body.safe-on #safeGuide{display:block}
       <input id="skCaption" placeholder="Tulis narasi untuk shot yang sedang berjalan…">
       <button id="skCaptionSet">Terapkan</button>
     </div>
+    <h4>PUSTAKA SHOT (nama → parameter otomatis)</h4>
+    <div class="sk-caption">
+      <select id="skPreset">
+        <option value="hero-orbit">hero-orbit — putaran 360°</option>
+        <option value="hitchcock">hitchcock / dolly-zoom</option>
+        <option value="whip-reveal">whip-reveal — sapuan cepat</option>
+        <option value="snorricam">snorricam — kamera mengunci subjek</option>
+        <option value="top-down-explode">top-down-explode</option>
+        <option value="macro-detail">macro-detail</option>
+        <option value="crane-reveal">crane-reveal</option>
+        <option value="parallax-walk">parallax-walk</option>
+      </select>
+      <button id="skAddShot">+ Tambah Shot ke Tur</button>
+    </div>
+    <h4>EFEK FILM (stack, urut)</h4>
+    <div class="sk-grid">
+      <button data-fx="vignette">🌑 Vignette</button>
+      <button data-fx="letterbox">▬ Letterbox</button>
+      <button data-fx="motionBlur">💨 Motion Blur</button>
+      <button data-fx="glitch">⚡ Glitch</button>
+    </div>
+    <div class="sk-caption"><label>Color grade</label><select id="skGrade"><option value="">—</option><option value="clean">Clean product</option><option value="teal">Teal-orange</option><option value="noir">Noir</option><option value="warm">Warm</option></select></div>
     <h4>EFFEK KAMERA (produksi)</h4>
     <div class="sk-grid">
       <button id="skDof">🎯 Rack Focus: Mati</button>
     </div>
     <div class="sk-caption"><label>Fokus ke objek</label><select id="skDofTarget"></select><label>Aperture</label><input id="skAperture" type="range" min="0.00002" max="0.0004" step="0.00001" value="0.00012"></div>
+    <h4>SUTRADARA 2 TAHAP (usul → setujui)</h4>
+    <div class="sk-caption">
+      <textarea id="skBrief" rows="2" placeholder="Contoh: tur 4 shot kabel USB — mulai dari konektor, geser menyusuri kawat, rack focus ke PCB, tutup dengan pullback"></textarea>
+      <div class="sk-grid"><button id="skPropose">📋 Usulkan Storyboard</button><button id="skApprove">✅ Setujui & Terapkan</button></div>
+      <span id="skDirectInfo"></span>
+    </div>
+    <h4>CLIP REFERENSI (tiru gerak kamera)</h4>
+    <div class="sk-caption">
+      <input id="skClipFile" type="file" accept="video/*,image/gif">
+      <button id="skClipBtn">🎞️ Analisis Gerak Kamera</button>
+      <span id="skClipInfo"></span>
+    </div>
     <h4>NARASI (TTS per shot)</h4>
     <div class="sk-grid">
       <button id="skTts">🗣️ Buat Narasi</button>

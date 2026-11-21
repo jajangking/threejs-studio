@@ -46,6 +46,104 @@ KNOWN_OBJECT_TYPES = {
 }
 KNOWN_LIGHT_TYPES = {'ambient', 'hemisphere', 'directional', 'point', 'spot'}
 
+# ── Imitasi gerak kamera dari clip referensi (vision pada contact sheet) ──
+CLIP = {}
+
+def heuristic_clip_analysis(src):
+    """Fallback tanpa model: estimasi pan/zoom dari pergeseran piksel antar frame."""
+    W, H = 160, 90
+    raw = subprocess.check_output(['ffmpeg', '-v', 'error', '-i', src, '-vf', 'fps=2,scale=160:90,format=gray',
+                                   '-f', 'rawvideo', '-'], timeout=120)
+    sz = W * H
+    frames = [raw[i * sz:(i + 1) * sz] for i in range(len(raw) // sz)]
+    shifts = []
+    for a, b in zip(frames, frames[1:]):
+        best = (1e9, 0, 0)
+        for dy in range(-6, 7):
+            for dx in range(-6, 7):
+                sad, cnt = 0, 0
+                for y in range(8, H - 8, 3):
+                    for x in range(8, W - 8, 3):
+                        x2, y2 = x + dx, y + dy
+                        if 0 <= x2 < W and 0 <= y2 < H:
+                            sad += abs(a[y * W + x] - b[y2 * W + x2]); cnt += 1
+                if cnt:
+                    sad /= cnt
+                    if sad < best[0]: best = (sad, dx, dy)
+        shifts.append(best)
+    if not shifts:
+        raise RuntimeError('clip terlalu pendek untuk dianalisis')
+    n = len(shifts)
+    adx = sum(s[1] for s in shifts) / n
+    ady = sum(s[2] for s in shifts) / n
+    dur = max(4, min(10, round(n * 1.5)))
+    if abs(adx) >= abs(ady) and abs(adx) >= 1:
+        pts = [[-7, 2, 5], [0, 2, 4], [7, 2, 5]]
+        if adx < 0: pts = pts[::-1]
+        shots = [{'id': 'clip-pan', 'type': 'path', 'points': pts, 'target': [0, 2, 0],
+                  'duration': dur, 'caption': 'Sapuan kamera mengikuti arah klip referensi'}]
+        note = f'Kamera bergeser {"kanan" if adx > 0 else "kiri"} (Δx≈{adx:.1f}px/frame)'
+    elif abs(ady) >= 1:
+        shots = [{'id': 'clip-crane', 'type': 'crane', 'from': [5, 1 if ady < 0 else 6, 5],
+                  'toY': 8 if ady < 0 else 1, 'target': [0, 2, 0], 'duration': dur,
+                  'caption': 'Kamera naik mengikuti klip referensi'}]
+        note = f'Kamera bergerak {"atas" if ady < 0 else "bawah"} (Δy≈{ady:.1f}px/frame)'
+    else:
+        shots = [{'id': 'clip-orbit', 'type': 'orbit', 'target': [0, 2, 0], 'radius': 7,
+                  'height': 3, 'sweep': 180, 'duration': dur, 'caption': 'Putaran kamera mengikuti klip referensi'}]
+        note = f'Pergeseran piksel kecil (Δ≈{adx:.1f},{ady:.1f}) — diartikan sebagai orbit'
+    return {'shots': shots, 'note': note + ' — analisis heuristik (model vision sibuk)',
+            'source': 'heuristic', 'shiftPerFrame': [[round(s[1], 1), round(s[2], 1)] for s in shifts]}
+
+def clip_imitate(job, src):
+    try:
+        d = os.path.join(ROOT, 'clip-reference-' + job)
+        os.makedirs(d, exist_ok=True)
+        frames = []
+        # 8 frame merata dari clip
+        r = subprocess.run(['ffmpeg', '-y', '-i', src, '-vf', 'fps=1,scale=320:-1', '-frames:v', '8',
+                            os.path.join(d, 'f-%02d.png')], capture_output=True, timeout=120)
+        frames = sorted(f for f in os.listdir(d) if f.startswith('f-') and f.endswith('.png'))
+        if not frames:
+            raise RuntimeError('ffmpeg tidak menghasilkan frame dari clip')
+        lst = os.path.join(d, 'list.txt')
+        with open(lst, 'w') as f:
+            for fn in frames:
+                f.write(f"file '{os.path.join(d, fn)}'\n")
+        sheet = os.path.join(d, 'sheet.png')
+        subprocess.run(['ffmpeg', '-y', '-f', 'concat', '-safe', '0', '-i', lst,
+                        '-vf', 'scale=240:135,tile=4x2', '-frames:v', '1', sheet], capture_output=True, timeout=90)
+        img = base64.b64encode(open(sheet, 'rb').read()).decode()
+        q = ('Analisis storyboard 8 frame dari sebuah video. Deskripsikan GERAK KAMERA dalam bahasa Indonesia '
+             'dan keluarkan JSON cameraPath yang menirunya: {"shots":[{"type":"orbit|dolly|zoom|crane|path|journey",'
+             '"duration":detik,"caption":"..."}],"note":"..."}. Perhatikan arah sapuan, kedekatan subjek, '
+             'perubahan ketinggian, dan jumlah shot. Balas HANYA JSON valid.')
+        data = None
+        for vm in VISION_MODELS:
+            try:
+                out = http_json(ROUTER_URL, {'model': vm, 'max_tokens': 900, 'temperature': 0.2,
+                    'messages': [{'role': 'user', 'content': [
+                        {'type': 'text', 'text': q},
+                        {'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,' + img}}]}]}, timeout=120)
+                txt = _message_text((out.get('choices') or [{}])[0].get('message'))
+                data = extract_json_object(txt)
+                if data:
+                    break
+            except Exception:
+                continue
+        if not data:
+            data = heuristic_clip_analysis(src)
+            data['sheet'] = f'/clip-reference-{job}/sheet.png'
+        with open(os.path.join(ROOT, 'clip-analysis.json'), 'w') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        with CLIP_LOCK:
+            CLIP[job] = {'status': 'done', 'analysis': data, 'sheet': f'/clip-reference-{job}/sheet.png'}
+    except Exception as e:
+        with CLIP_LOCK:
+            CLIP[job] = {'status': 'error', 'error': str(e)}
+
+CLIP_LOCK = __import__('threading').Lock()
+
 # ── Storyboard: satu keyframe per shot + shot list CSV ──
 STORY = {}
 STORY_LOCK = __import__('threading').Lock()
@@ -627,6 +725,13 @@ Shot types (tiap shot punya duration detik, ease linear/in/out/inOut, caption te
 - Tiap shot bisa "explode":[0,0.6] — kamera bergerak sambil part meledak perlahan (reveal detail assembly).
 - caption: narasi per shot, mis. "Motor memutar rotor 10 rad/detik" — untuk tur "cara kerja mesin".
 Alternatif keyframes manual: {"keyframes":[{"t":0,"pos":[...],"target":[...],"fov":50,"caption":"..."},...],"duration":10}
+EKSPRESI & PUSTAKA SHOT (boleh dipakai agent, bukan desain):
+- Pustaka bernama: {"preset":"hero-orbit|hitchcock|whip-reveal|snorricam|top-down-explode|macro-detail|crane-reveal|parallax-walk","duration":6,"target":"id"} — framework yang isi parameter profesionalnya.
+- Ekspresi deterministik pada field shot/keyframe: {"fov":"ramp(50,25,ease)","pos":"orbit('id',3,1.5,90,6)","target":"track('id')"};
+  tersedia ramp(a,b,ease|linear), orbit(id,r,h,sweep,dur), path(id1,id2,...), track(id), wave(base,amp,period).
+- Efek film di cameraPath.effects (urutan penting): [{"type":"colorGrade","look":"clean|teal|noir|warm"},
+  {"type":"vignette"},{"type":"letterbox","ratio":0.09},{"type":"motionBlur"},{"type":"glitch","slices":4}].
+- shot bisa "transition":"fade|dissolve|wipe".
 ATURAN: untuk "tunjukkan detail/cara kerja", buat tur 4-6 shot: establish orbit → closeup komponen kunci (framing!)
 → exploded reveal → pull back. Jarak SELALU terukur lewat framing/fill, jangan angka asal.
 Verifikasi shot: render.py --time <detik> menghasilkan screenshot pose shot tsb.
@@ -770,6 +875,10 @@ def build_agent_prompt(user_text, repair=None, selection=None):
                 parts.append(f"- {req.get('label')}: keyword {req.get('keywords')}, minimal {req.get('min')}")
         parts.append('Setiap bagian wajib harus ADA di spec dengan id yang cocok — gerbang semantik akan menolak bila hilang. Detail teknis > dekorasi.')
         parts.append('')
+    clip_an = read_json(os.path.join(ROOT, 'clip-analysis.json'), None)
+    if clip_an:
+        parts += ['=== REFERENSI GERAK KAMERA DARI CLIP (analisis vision — tiru shot-nya) ===',
+                  json.dumps(clip_an, ensure_ascii=False)[:2500], '']
     ref = read_text(os.path.join(ROOT, 'reference-analysis.md'))
     if ref:
         parts += ['=== REFERENSI FOTO USER (analisis vision — bangun scene MENDEKATI referensi ini) ===', ref, '']
@@ -1130,6 +1239,18 @@ def run_agent_job(job_id, user_text, model):
 
         if not _job_active(job_id):
             return  # job sudah dibatalkan/diganti watchdog — jangan tulis apa pun
+        if CHAT.get('proposal_only'):
+            spec_p = result['scene'] or {}
+            proposal = {'brief': user_text, 'cameraPath': spec_p.get('cameraPath') or {},
+                        'reply': str(result.get('reply') or ''), 'model': used_model, 'at': time.time()}
+            with open(os.path.join(ROOT, 'direct-proposal.json'), 'w') as f:
+                json.dump(proposal, f, ensure_ascii=False, indent=2)
+            with LOCK:
+                CHAT['proposal_only'] = False
+            status(f'usul sutradara siap — {len((proposal["cameraPath"].get("shots") or []))} shot, menunggu persetujuan')
+            append_chat_message({'role': 'agent', 'text': '📋 Usul storyboard: ' + proposal['reply'][:400] +
+                                 '\nKlik ✅ Setujui & Terapkan di panel Skills bila setuju.', 'at': time.time(), 'model': used_model})
+            return
         reply = str(result.get('reply') or '').strip() or 'Scene diperbarui.'
         iter_id = next_iteration_id()
         _apply_result(result, iter_id)
@@ -1857,6 +1978,11 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split('?')[0]
+        if path == '/api/clip/state':
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            job = (qs.get('job') or [''])[0]
+            with CLIP_LOCK:
+                return self._send(200, CLIP.get(job, {'status': 'unknown'}))
         if path == '/api/storyboard/state':
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             job = (qs.get('job') or [''])[0]
@@ -1959,6 +2085,48 @@ class Handler(SimpleHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length) or b'{}')
         except Exception as e:
             return self._send(400, {'ok': False, 'error': str(e)})
+        if path == '/api/direct/propose':
+            text = (payload.get('brief') or '').strip()
+            if not text:
+                return self._send(400, {'ok': False, 'error': 'brief kosong'})
+            model = payload.get('model') or CHAT.get('model') or DEFAULT_MODEL
+            with LOCK:
+                CHAT['proposal_only'] = True
+            jid = start_job('[USUL SUTRADARA — jangan terapkan ke scene] ' + text, model)
+            if not jid:
+                with LOCK:
+                    CHAT['proposal_only'] = False
+                return self._send(409, {'ok': False, 'error': 'agent masih sibuk'})
+            return self._send(200, {'ok': True, 'job': jid})
+        if path == '/api/direct/approve':
+            fp = os.path.join(ROOT, 'direct-proposal.json')
+            if not os.path.isfile(fp):
+                return self._send(400, {'ok': False, 'error': 'belum ada usul storyboard'})
+            prop = read_json(fp, {})
+            cp = prop.get('cameraPath') or {}
+            if not cp.get('shots'):
+                return self._send(400, {'ok': False, 'error': 'usulan tidak memuat shot'})
+            spec = read_json(os.path.join(ROOT, 'scene.json'), {})
+            spec['cameraPath'] = {k: v for k, v in cp.items() if k in ('shots', 'keyframes', 'duration', 'loop', 'autoplay', 'effects', 'shake', 'dof')}
+            write_json(os.path.join(ROOT, 'scene.json'), spec)
+            os.remove(fp)
+            status(f'usul sutradara DISETUJUI — {len(cp["shots"])} shot diterapkan ke tur')
+            return self._send(200, {'ok': True, 'shots': len(cp['shots'])})
+        if path == '/api/clip/imitate':
+            data = payload.get('data', '')
+            if ',' in data:
+                data = data.split(',', 1)[1]
+            ext = 'gif' if 'gif' in payload.get('type', '') else 'mp4'
+            job = 'clip-' + datetime.datetime.now().strftime('%H%M%S')
+            src = os.path.join(ROOT, f'clip-upload-{job}.{ext}')
+            try:
+                open(src, 'wb').write(base64.b64decode(data))
+            except Exception:
+                return self._send(400, {'ok': False, 'error': 'data clip tidak valid'})
+            with CLIP_LOCK:
+                CLIP[job] = {'status': 'analyzing'}
+            __import__('threading').Thread(target=clip_imitate, args=(job, src), daemon=True).start()
+            return self._send(200, {'ok': True, 'job': job})
         if path == '/api/storyboard/generate':
             cp = read_json(os.path.join(ROOT, 'scene.json'), {}).get('cameraPath') or {}
             shots = cp.get('shots') or []
@@ -2002,7 +2170,7 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send(400, {'ok': False, 'error': 'cameraPath harus objek'})
             spec = read_json(os.path.join(ROOT, 'scene.json'), {})
             # hanya tulis kunci produksi — sisa spec tidak berubah
-            cp = {k: v for k, v in cp.items() if k in ('shots', 'keyframes', 'duration', 'loop', 'autoplay', 'shake', 'dof')}
+            cp = {k: v for k, v in cp.items() if k in ('shots', 'keyframes', 'duration', 'loop', 'autoplay', 'shake', 'dof', 'effects')}
             spec['cameraPath'] = cp
             write_json(os.path.join(ROOT, 'scene.json'), spec)
             status(f'tur kamera disimpan dari Studio Rekaman ({len(cp.get("shots") or [])} shot)')

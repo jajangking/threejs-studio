@@ -1,0 +1,2 @@
+file '/data/workspace/threejs-studio/clip-reference-clip-193846/f-01.png'
+file '/data/workspace/threejs-studio/clip-reference-clip-193846/f-02.png'
