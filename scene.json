@@ -5,8 +5,8 @@
     "seed": 1,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-11",
-    "saved_at": 1795267601.7194865
+    "iteration": "iter-15",
+    "saved_at": 1795267879.9654431
   },
   "environment": {
     "background": "#0d1322",
@@ -131,12 +131,27 @@
         2.2,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#ffffff",
         "roughness": 0.3,
         "metalness": 0.35,
-        "emissive": "#ff0000",
-        "emissiveIntensity": 2.5
+        "emissive": "#ffb45e",
+        "emissiveIntensity": 4.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
@@ -144,11 +159,10 @@
         "friction": 0.5
       },
       "animate": {
-        "type": "colorCycle",
-        "period": 3,
-        "saturation": 0.9,
-        "lightness": 0.55,
-        "tintBody": true
+        "type": "blink",
+        "period": 0.7,
+        "min": 3.2,
+        "max": 4.9
       }
     },
     {
@@ -165,15 +179,39 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#4f8cff",
         "roughness": 0.42,
-        "metalness": 0.2
+        "metalness": 0.2,
+        "emissive": "#ff8a3d",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.05,
         "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 1.15
       }
     },
     {
@@ -190,15 +228,39 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#3fb96b",
         "roughness": 0.42,
-        "metalness": 0.2
+        "metalness": 0.2,
+        "emissive": "#ffab4d",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.05,
         "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 1.29
       }
     },
     {
@@ -229,8 +291,8 @@
         "color": "#ff1a1a",
         "roughness": 0.15,
         "metalness": 0.1,
-        "emissive": "#ff2200",
-        "emissiveIntensity": 2.5,
+        "emissive": "#ffc95e",
+        "emissiveIntensity": 0.6,
         "opacity": 1,
         "wireframe": false,
         "flatShading": false,
@@ -241,6 +303,13 @@
         "body": "dynamic",
         "restitution": 0.05,
         "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 1.43
       }
     },
     {
@@ -257,15 +326,39 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#e5534b",
         "roughness": 0.42,
-        "metalness": 0.2
+        "metalness": 0.2,
+        "emissive": "#ffe27a",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.05,
         "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 1.57
       }
     },
     {
@@ -282,15 +375,39 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#9b6dd6",
         "roughness": 0.42,
-        "metalness": 0.2
+        "metalness": 0.2,
+        "emissive": "#d8f08a",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.05,
         "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 1.71
       }
     },
     {
@@ -307,15 +424,39 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#4fb8c9",
         "roughness": 0.42,
-        "metalness": 0.2
+        "metalness": 0.2,
+        "emissive": "#9ff0a0",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.05,
         "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 1.85
       }
     },
     {
@@ -332,10 +473,27 @@
         1,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        4
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#3a4152",
         "roughness": 0.35,
-        "metalness": 0.7
+        "metalness": 0.7,
+        "emissive": "#7f8cff",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
@@ -345,11 +503,13 @@
         "linearDamping": 0.5,
         "angularDamping": 0.5
       },
-      "rotation": [
-        0,
-        0,
-        4
-      ]
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 2.45
+      }
     },
     {
       "id": "domino-6",
@@ -365,15 +525,39 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#ff8a65",
         "roughness": 0.42,
-        "metalness": 0.2
+        "metalness": 0.2,
+        "emissive": "#5fe6c0",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.05,
         "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 1.99
       }
     },
     {
@@ -390,15 +574,39 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#81c784",
         "roughness": 0.42,
-        "metalness": 0.2
+        "metalness": 0.2,
+        "emissive": "#3ad4e8",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.05,
         "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 2.13
       }
     },
     {
@@ -415,14 +623,161 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
         "color": "#64b5f6",
         "roughness": 0.42,
-        "metalness": 0.2
+        "metalness": 0.2,
+        "emissive": "#4aa8ff",
+        "emissiveIntensity": 0.6,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
         "restitution": 0.05,
+        "friction": 0.6
+      },
+      "animate": {
+        "type": "blink",
+        "period": 3.6,
+        "min": 0.4,
+        "max": 4.8,
+        "delay": 2.27
+      }
+    },
+    {
+      "id": "ramp-support-1",
+      "name": "Penyangga Ramp 1",
+      "type": "box",
+      "params": {
+        "width": 0.35,
+        "height": 1.51,
+        "depth": 1.2
+      },
+      "position": [
+        -6.0,
+        0.755,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "material": {
+        "color": "#3f475a",
+        "roughness": 0.55,
+        "metalness": 0.3,
+        "emissive": "#000000",
+        "emissiveIntensity": 1,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
+      },
+      "physics": {
+        "body": "fixed",
+        "friction": 0.6
+      }
+    },
+    {
+      "id": "ramp-support-2",
+      "name": "Penyangga Ramp 2",
+      "type": "box",
+      "params": {
+        "width": 0.35,
+        "height": 0.95,
+        "depth": 1.2
+      },
+      "position": [
+        -4.2,
+        0.475,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "material": {
+        "color": "#3f475a",
+        "roughness": 0.55,
+        "metalness": 0.3,
+        "emissive": "#000000",
+        "emissiveIntensity": 1,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
+      },
+      "physics": {
+        "body": "fixed",
+        "friction": 0.6
+      }
+    },
+    {
+      "id": "ramp-support-3",
+      "name": "Penyangga Ramp 3",
+      "type": "box",
+      "params": {
+        "width": 0.35,
+        "height": 0.46,
+        "depth": 1.2
+      },
+      "position": [
+        -2.6,
+        0.23,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "material": {
+        "color": "#3f475a",
+        "roughness": 0.55,
+        "metalness": 0.3,
+        "emissive": "#000000",
+        "emissiveIntensity": 1,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
+      },
+      "physics": {
+        "body": "fixed",
         "friction": 0.6
       }
     }

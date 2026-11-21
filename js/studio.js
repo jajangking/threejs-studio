@@ -332,7 +332,7 @@ function updateVpControls() {
   const el = $('#vpControls'); if (!el) return;
   el.innerHTML = '';
   renderMechControls();
-  const hasAnim = (handle?.animations?.length || 0) > 0;
+  const hasAnim = (handle?.animations?.length || 0) > 0 || !!handle?.physicsWorld;
   if (spec?.power) {
     const b = document.createElement('button');
     b.className = 'vp-ctl' + (powerOn ? ' on' : '');
@@ -345,7 +345,7 @@ function updateVpControls() {
     const b = document.createElement('button');
     b.className = 'vp-ctl';
     b.textContent = animPlaying ? '⏸ Jeda' : '▶ Putar';
-    b.title = 'Jalankan/jeda animasi';
+    b.title = 'Jalankan/jeda animasi & simulasi fisika';
     b.onclick = () => { animPlaying = !animPlaying; updateVpControls(); };
     el.appendChild(b);
   }
