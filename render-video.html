@@ -1,0 +1,62 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+</head><body style="margin:0;background:#000">
+<canvas id="cv"></canvas>
+<pre id="prog" style="color:#8b91a0;font:12px monospace;position:fixed;top:4px;left:4px"></pre>
+<script type="module">
+import * as THREE from 'three';
+import { buildScene, makeRenderer, makeComposer, applyAnimations, stepPhysics, applyExplode, compileCameraPath, sampleCameraPath } from './js/scene-builder.js';
+const q = new URLSearchParams(location.search);
+const job = q.get('job') || 'test';
+const fps = Math.max(6, Math.min(30, parseInt(q.get('fps') || '24')));
+const W = parseInt(q.get('w') || '960'), H = parseInt(q.get('h') || '540');
+const prog = document.getElementById('prog');
+const cv = document.getElementById('cv');
+cv.width = W; cv.height = H;
+try {
+  const spec = await (await fetch('./scene.json?t=' + Date.now())).json();
+  const handle = await buildScene(spec);
+  const renderer = makeRenderer(cv, W, H, { preserveDrawingBuffer: true });
+  const composer = makeComposer(handle, renderer, W, H);
+  const path = compileCameraPath(handle);
+  const dur = parseFloat(q.get('duration') || '') || (path ? path.dur : 10);
+  const total = Math.ceil(dur * fps);
+  let animT = 0;
+  for (let i = 0; i < total; i++) {
+    const t = i / fps;
+    // kamera: path sinematik atau orbit fallback
+    if (path) {
+      const sm = sampleCameraPath(handle, path, t);
+      if (sm) {
+        handle.camera.position.copy(sm.pos); handle.camera.lookAt(sm.target);
+        handle.camera.fov = sm.fov; handle.camera.updateProjectionMatrix();
+        if (sm.explode !== null) applyExplode(handle, sm.explode);
+      }
+    } else {
+      const a = t * 0.3;
+      handle.camera.position.set(Math.cos(a) * 10, 5, Math.sin(a) * 10);
+      handle.camera.lookAt(0, 2.5, 0);
+    }
+    // animasi & fisika sekuensial deterministik
+    animT = t;
+    applyAnimations(handle, animT, spec.power?.default ?? true);
+    if (handle.physicsWorld) {
+      const steps = Math.max(1, Math.round(60 / fps));
+      for (let s = 0; s < steps; s++) stepPhysics(handle, 1 / 60);
+    }
+    if (composer) composer.render(); else renderer.render(handle.scene, handle.camera);
+    const data = cv.toDataURL('image/jpeg', 0.85);
+    await fetch('/api/video/frame', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job, i, data }) });
+    if (i % 10 === 0) prog.textContent = `frame ${i}/${total}`;
+  }
+  await fetch('/api/video/done', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job, frames: total, fps, w: W, h: H }) });
+  prog.textContent = `SELESAI ${total} frame — encoding di server`;
+  document.title = 'VIDEO_DONE';
+} catch (e) {
+  prog.textContent = 'ERROR: ' + e.message;
+  await fetch('/api/video/done', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job, error: String(e.message || e) }) });
+  document.title = 'VIDEO_ERROR';
+}
+</script></body></html>

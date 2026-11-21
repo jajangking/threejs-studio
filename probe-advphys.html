@@ -1,0 +1,54 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+</head><body style="margin:0">
+<pre id="out"></pre>
+<script type="module">
+import { buildScene, stepPhysics, applyExplosion } from './js/scene-builder.js';
+const out = document.getElementById('out');
+try {
+  const spec = {
+    meta: { name: 'probe-fisika-lanjutan' },
+    environment: { background: '#20242c' },
+    physics: { gravity: [0, -9.81, 0] },
+    ground: { size: 30, color: '#3a3f4a' },
+    objects: [
+      { id: 'bandul', type: 'sphere', position: [-3, 1.4, 0], params: { radius: 0.3 }, material: { color: '#c0392b' }, physics: { body: 'dynamic', restitution: 0.4 } },
+      { id: 'tali', type: 'rope', anchor: [-3, 4, 0], length: 2.4, segments: 10, radius: 0.04, color: '#b08d57', attachBody: 'bandul' },
+      { id: 'd1', type: 'box', position: [0, 0.6, 0], params: { width: 0.2, height: 1.2, depth: 0.6 }, material: { color: '#d9a13b' }, physics: { body: 'dynamic' } },
+      { id: 'd2', type: 'box', position: [1, 0.6, 0], params: { width: 0.2, height: 1.2, depth: 0.6 }, material: { color: '#d9a13b' }, physics: { body: 'dynamic' } },
+      { id: 'd3', type: 'box', position: [2, 0.6, 0], params: { width: 0.2, height: 1.2, depth: 0.6 }, material: { color: '#d9a13b' }, physics: { body: 'dynamic' } },
+      { id: 'zona', type: 'trigger', position: [-3, 1.4, 0], params: { radius: 0.9 }, onEnter: { action: 'power' }, cooldown: 5 }
+    ],
+    lights: [{ type: 'ambient', intensity: 0.6 }, { type: 'directional', position: [5, 8, 3], intensity: 1.5 }]
+  };
+  const handle = await buildScene(spec);
+  const res = { errors: handle.errors };
+  const p0 = handle.bodyMap.get('bandul').translation();
+  for (let i = 0; i < 180; i++) stepPhysics(handle, 1 / 60);
+  const p1 = handle.bodyMap.get('bandul').translation();
+  const seg = handle.bodyMap.get('tali-seg5').translation();
+  res.rope = {
+    segments: [...handle.bodyMap.keys()].filter(k => k.startsWith('tali-seg')).length,
+    bandulMoved: +Math.hypot(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z).toFixed(3),
+    segFinite: Number.isFinite(seg.x + seg.y + seg.z),
+    bandulFinite: Number.isFinite(p1.x + p1.y + p1.z)
+  };
+  res.triggerFired = handle.powerTriggered === true;
+  const vBefore = handle.bodyMap.get('d2').linvel();
+  res.explosionAffected = applyExplosion(handle, [1, 0.6, 0], 10, 5);
+  const vAfter = handle.bodyMap.get('d2').linvel();
+  res.explosion = { affected: res.explosionAffected, d2VelBefore: +Math.hypot(vBefore.x, vBefore.y, vBefore.z).toFixed(2), d2VelAfter: +Math.hypot(vAfter.x, vAfter.y, vAfter.z).toFixed(2) };
+  for (let i = 0; i < 60; i++) stepPhysics(handle, 1 / 60);
+  const d1 = handle.bodyMap.get('d1').translation();
+  res.postExplosionFinite = Number.isFinite(d1.x + d1.y + d1.z);
+  // uji ledakan bersih: scene baru, domino diam → impuls harus menaikkan velocity dari 0
+  const h2 = await buildScene(spec);
+  const v0 = h2.bodyMap.get('d2').linvel();
+  const n2 = applyExplosion(h2, [1, 0.6, 0], 10, 5);
+  const v1 = h2.bodyMap.get('d2').linvel();
+  res.cleanExplosion = { affected: n2, velFrom: +Math.hypot(v0.x, v0.y, v0.z).toFixed(2), velTo: +Math.hypot(v1.x, v1.y, v1.z).toFixed(2) };
+  out.textContent = JSON.stringify(res);
+} catch (e) { out.textContent = JSON.stringify({ error: String(e), stack: e.stack }); }
+</script></body></html>

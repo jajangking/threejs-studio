@@ -41,9 +41,12 @@ HERMES_MODELS = ['hermes-4-405b']
 
 KNOWN_OBJECT_TYPES = {
     'box', 'sphere', 'cylinder', 'cone', 'torus', 'torusKnot', 'plane',
-    'capsule', 'icosahedron', 'ring', 'gltf', 'sky', 'stars', 'instances', 'group',
+    'capsule', 'icosahedron', 'ring', 'gltf', 'sky', 'stars', 'instances', 'group', 'rope', 'trigger',
 }
 KNOWN_LIGHT_TYPES = {'ambient', 'hemisphere', 'directional', 'point', 'spot'}
+
+VIDEO = {}  # job -> {status, frames, total, fps, path, error}
+VIDEO_LOCK = __import__('threading').Lock()
 
 CHAT = {
     'running': False,
@@ -461,6 +464,23 @@ BATAS KEMAMPUAN (JUJUR — jangan klaim fitur yang tidak kamu buat):
 - Bila user minta fitur UI baru yang tidak bisa lewat spec: katakan jujur itu perlu perubahan kode studio, bukan spec.
 - Balasanmu akan diverifikasi terhadap diff yang benar-benar diterapkan — jangan menyebut perubahan yang tidak ada di diff.
 
+AUDIO MEKANIKA (WebAudio sintetis, tanpa file): spec.audio {"hum":{"object":"motor","baseFreq":70,"gain":0.12},"impacts":true}
+Tombol 🔊 di viewport/export mengaktifkan: dengung motor spasial (pitch ikut kecepatan, gain ikut power),
+suara benturan fisika (volume ~ kecepatan tumbukan, posisi 3D), klik saklar. Audio mulai setelah gesture user (kebijakan browser).
+
+INTERAKTIVITAS: objek bisa "onClick":{"action":"power"} (toggle saklar), {"action":"impulse","impulse":[x,y,z]},
+{"action":"explode","force":8,"radius":5}, {"action":"toggle"} (sembunyikan). Berlaku di studio & export (klik objek).
+Export juga: Shift+drag angkat body fisika, tombol 🚶 Jalan (WASD first-person).
+
+FISIKA LANJUTAN:
+- rope: {"type":"rope","id":"tali","anchor":[x,y,z],"length":3,"segments":12,"radius":0.04,"color":"#b08d57","attachBody":"bola"}
+  (rantai segmen dinamis + spherical joint; anchorBody=id untuk gantung dari body bergerak)
+- trigger: {"type":"trigger","id":"zona","position":[x,y,z],"params":{"radius":1.5},"onEnter":{"action":"explode","force":8,"radius":4},"cooldown":2}
+  action: explode | impulse {"impulse":[x,y,z]} | power (toggle saklar). Sensor transparan biru.
+- ledakan: spec.explosion {"center":[x,y,z],"force":8,"radius":5} + tombol 💥 di viewport; onClick action 'explode'
+- impuls awal: physics.impulse [x,y,z] pada body
+- drag fisika: SHIFT+klik+geser objek dynamic di viewport (mouse joint)
+
 KAMERA SINEMATIK (cameraPath) — kamu bisa menyutradarai kamera profesional:
 Format: "cameraPath": {"shots":[...], "loop":true, "autoplay":true}
 Shot types (tiap shot punya duration detik, ease linear/in/out/inOut, caption teks narasi, target=id objek ATAU [x,y,z]):
@@ -600,6 +620,9 @@ def build_agent_prompt(user_text, repair=None, selection=None):
     history = history[-6:] if isinstance(history, list) else []
 
     parts = ['=== KONTRAK SCENE SAAT INI ===', contract or '(belum ada)', '']
+    ref = read_text(os.path.join(ROOT, 'reference-analysis.md'))
+    if ref:
+        parts += ['=== REFERENSI FOTO USER (analisis vision — bangun scene MENDEKATI referensi ini) ===', ref, '']
     parts += ['=== SCENE SAAT INI (JSON) ===',
               json.dumps(scene, ensure_ascii=False)[:60000], '']
     if open_fb:
@@ -1283,6 +1306,7 @@ def standalone_html(spec):
 <script type="module">
 import * as THREE from 'three';
 import {{ OrbitControls }} from '{CDN}/examples/jsm/controls/OrbitControls.js';
+import {{ PointerLockControls }} from '{CDN}/examples/jsm/controls/PointerLockControls.js';
 {builder}
 const SPEC = {json.dumps(spec, ensure_ascii=False)};
 const cv = document.getElementById('cv');
@@ -1293,6 +1317,74 @@ const renderer = makeRenderer(cv, innerWidth, innerHeight, {{ exposure: SPEC.env
 handle.camera.aspect = innerWidth / innerHeight; handle.camera.updateProjectionMatrix();
 handle.composer = makeComposer(handle, renderer, innerWidth, innerHeight);
 const controls = new OrbitControls(handle.camera, cv);
+// ── Interaktivitas: onClick objek, shift-drag fisika, mode jalan first-person ──
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let downXY = null, dragPlane = null;
+const dragVec = new THREE.Vector3();
+function findSpec(id) {{ return (SPEC.objects || []).find(x => x.id === id); }}
+function clickAction(o) {{
+  const act = o && o.onClick; if (!act) return;
+  if (act.action === 'power') {{ powerOn = !powerOn; audioClick(handle); }}
+  else if (act.action === 'impulse') {{ const b = handle.bodyMap.get(o.id); if (b && act.impulse) b.applyImpulse({{ x: act.impulse[0], y: act.impulse[1], z: act.impulse[2] }}, true); }}
+  else if (act.action === 'explode') applyExplosion(handle, act.center || o.position || [0, 1, 0], act.force ?? 8, act.radius ?? 5);
+  else if (act.action === 'toggle') {{ const m = handle.registry.get(o.id); if (m) m.visible = !m.visible; }}
+}}
+function pick(e) {{
+  const r = cv.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, handle.camera);
+  const meshes = (SPEC.objects || []).map(o => handle.registry.get(o.id)).filter(m => m && m.visible !== false);
+  const hits = ray.intersectObjects(meshes, true);
+  if (!hits.length) return null;
+  let o = hits[0].object;
+  while (o && !o.userData.specId) o = o.parent;
+  return {{ id: o && o.userData.specId, point: hits[0].point }};
+}}
+cv.addEventListener('pointerdown', e => {{
+  downXY = [e.clientX, e.clientY];
+  if (e.shiftKey && handle.physicsWorld && !cinePlaying && !walkOn) {{
+    const h = pick(e);
+    if (h && h.id && startDrag(handle, h.id, h.point)) {{
+      const cd = new THREE.Vector3(); handle.camera.getWorldDirection(cd);
+      dragPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(cd, h.point);
+      controls.enabled = false;
+    }}
+  }}
+}});
+cv.addEventListener('pointermove', e => {{
+  if (handle.drag && dragPlane) {{
+    const r = cv.getBoundingClientRect();
+    ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ptr, handle.camera);
+    if (ray.ray.intersectPlane(dragPlane, dragVec)) moveDrag(handle, dragVec);
+  }}
+}});
+cv.addEventListener('pointerup', e => {{
+  if (handle.drag) {{ endDrag(handle); dragPlane = null; if (!cinePlaying && !walkOn) controls.enabled = true; downXY = null; return; }}
+  if (!downXY || walkOn) return;
+  const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]);
+  downXY = null;
+  if (moved > 5 || e.button !== 0) return;
+  const h = pick(e);
+  if (h && h.id) clickAction(findSpec(h.id));
+}});
+// Mode jalan first-person (WASD + mouse look, tinggi mata 1.7m)
+const plc = new PointerLockControls(handle.camera, cv);
+let walkOn = false;
+const keys = {{}};
+addEventListener('keydown', e => {{ keys[e.code] = true; }});
+addEventListener('keyup', e => {{ keys[e.code] = false; }});
+const wb = document.createElement('button');
+wb.textContent = '🚶 Jalan';
+wb.style.cssText = 'position:fixed;top:12px;right:110px;background:rgba(22,24,29,.92);border:1px solid #2e333d;color:#cfd3dc;border-radius:8px;padding:6px 12px;font:12px system-ui;cursor:pointer;z-index:9';
+wb.onclick = () => {{ if (!walkOn) plc.lock(); else plc.unlock(); }};
+plc.addEventListener('lock', () => {{ walkOn = true; controls.enabled = false; handle.camera.position.y = 1.7; wb.textContent = '🚶 ESC keluar'; }});
+plc.addEventListener('unlock', () => {{ walkOn = false; if (!cinePlaying) controls.enabled = true; wb.textContent = '🚶 Jalan'; }});
+document.body.appendChild(wb);
+const hint = document.createElement('div');
+hint.textContent = 'Klik objek = aksi · Shift+drag = angkat fisika · 🚶 WASD jalan';
+hint.style.cssText = 'position:fixed;bottom:44px;left:12px;color:#6b7280;font:10px system-ui;z-index:8';
+document.body.appendChild(hint);
 controls.enableDamping = true; controls.target.copy(handle.target);
 addEventListener('resize', () => {{
   renderer.setSize(innerWidth, innerHeight, false);
@@ -1376,6 +1468,13 @@ const secOpts = {{ enabled: false, axis: 'x', pos: 0, flip: false }};
   cp.onclick = () => {{ secOpts.caps = !secOpts.caps; cp.textContent = (secOpts.caps ? '☑' : '☐') + ' Caps'; cp.className = secOpts.caps ? 'on' : ''; if (secOpts.enabled) setSection(handle, renderer, secOpts); }};
   r4.appendChild(cp); bedah.appendChild(r4);
 }}
+// Audio mekanika
+let audioOn = false;
+const ab = document.createElement('button');
+ab.textContent = '🔇 Suara';
+ab.style.cssText = 'position:fixed;top:12px;right:12px;background:rgba(22,24,29,.92);border:1px solid #2e333d;color:#cfd3dc;border-radius:8px;padding:6px 12px;font:12px system-ui;cursor:pointer;z-index:9';
+ab.onclick = () => {{ audioOn = !audioOn; if (audioOn) {{ const a = makeAudio(handle); if (a) a.ctx.resume(); }} ab.textContent = audioOn ? '🔊 Suara' : '🔇 Suara'; }};
+document.body.appendChild(ab);
 // Caption + tombol sinematik
 const cineCap = document.createElement('div');
 cineCap.style.cssText = 'position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:rgba(10,12,16,.85);border:1px solid #2e333d;color:#e8eaef;padding:7px 18px;border-radius:8px;font:13px system-ui;display:none;max-width:70%;text-align:center;z-index:9';
@@ -1422,6 +1521,14 @@ if (handle.physicsWorld) {{
 }}
 renderer.setAnimationLoop(() => {{
   const dt = Math.min(clock.getDelta(), 0.1);
+  if (walkOn) {{
+    const sp = 3.5 * dt;
+    if (keys['KeyW']) plc.moveForward(sp);
+    if (keys['KeyS']) plc.moveForward(-sp);
+    if (keys['KeyA']) plc.moveRight(-sp);
+    if (keys['KeyD']) plc.moveRight(sp);
+    handle.camera.position.y = 1.7;
+  }}
   if (cinePlaying && cinePath) {{
     controls.enabled = false;
     cineT += dt;
@@ -1446,6 +1553,11 @@ renderer.setAnimationLoop(() => {{
   applyAnimations(handle, animT, powerOn);
   if (!cinePlaying && (explodeF > 0 || lastExplodeF > 0)) {{ applyExplode(handle, explodeF); lastExplodeF = explodeF; }}
   if (handle.capSystem) syncCaps(handle);
+  if (audioOn && handle.audio) {{
+    const spin = (handle.animations || []).find(a => a.anim.type === 'spin');
+    const spd = spin ? ((handle.overrides?.[spin.id]?.speed ?? spin.anim.speed ?? 10) / 10) : 1;
+    updateAudio(handle, powerOn, spd);
+  }}
   if (playing && document.activeElement !== tlSlider) {{ tlSlider.value = (animT % 10).toFixed(2); tlTime.textContent = (animT % 10).toFixed(1) + 's'; }}
   controls.update();
   if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
@@ -1498,6 +1610,25 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send(200, state())
         if path == '/api/health':
             return self._send(200, {'ok': True})
+        if path == '/api/video/state':
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            job = (qs.get('job') or [''])[0]
+            with VIDEO_LOCK:
+                return self._send(200, VIDEO.get(job, {'status': 'unknown'}))
+        if path == '/api/video/file':
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            job = re.sub(r'[^a-z0-9-]', '', (qs.get('job') or [''])[0])
+            fp = os.path.join(ROOT, 'videos', job + '.mp4')
+            if not os.path.isfile(fp):
+                return self._send(404, {'error': 'video belum ada'})
+            data = open(fp, 'rb').read()
+            self.send_response(200)
+            self.send_header('Content-Type', 'video/mp4')
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Content-Disposition', f'attachment; filename="{job}.mp4"')
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if path == '/api/chat/state':
             return self._send(200, chat_state())
         if path == '/api/backends':
@@ -1543,6 +1674,8 @@ class Handler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
+        if path == '/rekaman':
+            self.path = '/rekaman.html'
         return super().do_GET()
 
     def do_POST(self):
@@ -1552,6 +1685,106 @@ class Handler(SimpleHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length) or b'{}')
         except Exception as e:
             return self._send(400, {'ok': False, 'error': str(e)})
+        if path == '/api/reference':
+            data = payload.get('data', '')
+            if ',' in data:
+                data = data.split(',', 1)[1]
+            try:
+                raw = base64.b64decode(data)
+            except Exception:
+                return self._send(400, {'ok': False, 'error': 'base64 tidak valid'})
+            with open(os.path.join(ROOT, 'reference.jpg'), 'wb') as f:
+                f.write(raw)
+            q = ('Kamu analis rekonstruksi 3D. Foto ini akan dibangun ulang sebagai scene Three.js oleh agent builder. '
+               'Deskripsikan SANGAT konkret dalam bahasa Indonesia: '
+               '(1) objek utama & fungsinya; (2) daftar komponen dengan bentuk primitif (box/sphere/cylinder/cone/torus/group) '
+               'dan dimensi relatif dalam meter; (3) warna hex & material (metal/plastik/kaca/kain); '
+               '(4) tata letak posisi antar komponen (koordinat perkiraan, objek utama di origin); '
+               '(5) bagian yang bergerak & cara geraknya (putar/osilasi/engsel). '
+               'Jangan basa-basi — langsung daftar terstruktur yang bisa dieksekusi agent 3D.')
+            analysis = None
+            for vm in VISION_MODELS:
+                try:
+                    r = http_json(ROUTER_URL, {
+                        'model': vm, 'max_tokens': 1200, 'temperature': 0.2,
+                        'messages': [{'role': 'user', 'content': [
+                            {'type': 'text', 'text': q},
+                            {'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + data}},
+                        ]}],
+                    }, timeout=120)
+                    t = _message_text((r.get('choices') or [{}])[0].get('message'))
+                    if t and len(t) > 80:
+                        analysis = t
+                        break
+                except Exception:
+                    continue
+            if analysis:
+                with open(os.path.join(ROOT, 'reference-analysis.md'), 'w') as f:
+                    f.write(analysis)
+            return self._send(200, {'ok': True, 'analyzed': bool(analysis), 'analysis': (analysis or '')[:800]})
+        if path == '/api/reference/clear':
+            for fn in ('reference.jpg', 'reference-analysis.md'):
+                try:
+                    os.remove(os.path.join(ROOT, fn))
+                except OSError:
+                    pass
+            return self._send(200, {'ok': True})
+        if path == '/api/video/start':
+            job = 'vid-' + datetime.datetime.now().strftime('%H%M%S')
+            fps = max(6, min(30, int(payload.get('fps', 24))))
+            w = max(320, min(1920, int(payload.get('w', 960))))
+            h = max(180, min(1080, int(payload.get('h', 540))))
+            spec = read_json(os.path.join(ROOT, 'scene.json'), {})
+            cp = spec.get('cameraPath') or {}
+            dur = float(payload.get('duration') or 0)
+            if not dur:
+                shots = cp.get('shots') or []
+                dur = sum(s.get('duration', 4) for s in shots) if shots else float(cp.get('duration') or 10)
+            dur = max(2, min(60, dur))
+            os.makedirs(os.path.join(ROOT, 'videos', 'frames', job), exist_ok=True)
+            with VIDEO_LOCK:
+                VIDEO[job] = {'status': 'rendering', 'frames': 0, 'total': int(dur * fps), 'fps': fps, 'w': w, 'h': h, 'duration': dur}
+            return self._send(200, {'ok': True, 'job': job, 'url': f'/render-video.html?job={job}&fps={fps}&w={w}&h={h}&duration={dur}', 'total': int(dur * fps)})
+        if path == '/api/video/frame':
+            job = re.sub(r'[^a-z0-9-]', '', payload.get('job', ''))
+            i = int(payload.get('i', 0))
+            data = payload.get('data', '')
+            if ',' in data:
+                data = data.split(',', 1)[1]
+            fp = os.path.join(ROOT, 'videos', 'frames', job, f'{i:05d}.jpg')
+            os.makedirs(os.path.dirname(fp), exist_ok=True)
+            with open(fp, 'wb') as f:
+                f.write(base64.b64decode(data))
+            with VIDEO_LOCK:
+                if job in VIDEO:
+                    VIDEO[job]['frames'] = i + 1
+            return self._send(200, {'ok': True})
+        if path == '/api/video/done':
+            job = re.sub(r'[^a-z0-9-]', '', payload.get('job', ''))
+            if payload.get('error'):
+                with VIDEO_LOCK:
+                    VIDEO[job] = {**VIDEO.get(job, {}), 'status': 'error', 'error': payload['error']}
+                return self._send(200, {'ok': True})
+            frames = int(payload.get('frames', 0))
+            fps = int(payload.get('fps', 24))
+            with VIDEO_LOCK:
+                VIDEO[job] = {**VIDEO.get(job, {}), 'status': 'encoding', 'frames': frames, 'fps': fps}
+            def encode():
+                out = os.path.join(ROOT, 'videos', job + '.mp4')
+                cmd = ['ffmpeg', '-y', '-framerate', str(fps), '-i', os.path.join(ROOT, 'videos', 'frames', job, '%05d.jpg'),
+                       '-c:v', 'libx264', '-preset', 'fast', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]
+                try:
+                    r = subprocess.run(cmd, capture_output=True, timeout=600)
+                    with VIDEO_LOCK:
+                        if r.returncode == 0 and os.path.isfile(out):
+                            VIDEO[job] = {**VIDEO[job], 'status': 'done', 'path': out, 'size': os.path.getsize(out)}
+                        else:
+                            VIDEO[job] = {**VIDEO[job], 'status': 'error', 'error': r.stderr.decode()[-300:]}
+                except Exception as e:
+                    with VIDEO_LOCK:
+                        VIDEO[job] = {**VIDEO[job], 'status': 'error', 'error': str(e)}
+            __import__('threading').Thread(target=encode, daemon=True).start()
+            return self._send(200, {'ok': True, 'status': 'encoding'})
         if path == '/api/chat/cancel':
             with LOCK:
                 was = bool(CHAT.get('running'))

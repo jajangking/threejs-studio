@@ -186,8 +186,8 @@ export async function buildScene(spec, opts = {}) {
     scene.add(ground);
     registry.set('__ground', ground);
     if (physicsWorld) {
-      const gb = physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(0, (g.y ?? 0) - 0.05, 0));
-      physicsWorld.createCollider(RAPIER.ColliderDesc.cuboid((g.size ?? 60) / 2, 0.05, (g.size ?? 60) / 2).setFriction(0.8), gb);
+      const gb = physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(0, (g.y ?? 0) - 0.25, 0));
+      physicsWorld.createCollider(RAPIER.ColliderDesc.cuboid((g.size ?? 60) / 2, 0.25, (g.size ?? 60) / 2).setFriction(0.8).setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS), gb);
     }
   }
 
@@ -209,6 +209,7 @@ export async function buildScene(spec, opts = {}) {
   const gltfLoader = new GLTFLoader();
   const animations = [];
   async function buildOne(o, parent) {
+    if (o.type === 'rope' || o.type === 'trigger') return; // dibangun post-pass fisika
     try {
       let mesh;
       if (o.type === 'group') {
@@ -318,10 +319,13 @@ export async function buildScene(spec, opts = {}) {
           desc.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w });
           if (ph.linvel) desc.setLinvel(ph.linvel[0], ph.linvel[1], ph.linvel[2]);
           if (ph.angvel) desc.setAngvel(ph.angvel[0], ph.angvel[1], ph.angvel[2]);
-          if (kind === 'dynamic') { desc.setLinearDamping(ph.linearDamping ?? 0.05); desc.setAngularDamping(ph.angularDamping ?? 0.05); }
+          if (kind === 'dynamic') { desc.setLinearDamping(ph.linearDamping ?? 0.05); desc.setAngularDamping(ph.angularDamping ?? 0.05); desc.setCcdEnabled(true); }
           const body = physicsWorld.createRigidBody(desc);
-          physicsWorld.createCollider(colliderFor(o, mesh), body);
+          const cd = colliderFor(o, mesh);
+          cd.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+          physicsWorld.createCollider(cd, body);
           body.userData = { init: { p: mesh.position.clone(), q: mesh.quaternion.clone() }, nanCount: 0 };
+          if (ph.impulse) body.applyImpulse({ x: ph.impulse[0], y: ph.impulse[1], z: ph.impulse[2] }, true);
           bodyMap.set(o.id, body);
         }
       }
@@ -345,6 +349,67 @@ export async function buildScene(spec, opts = {}) {
     } catch (e) { errors.push(`joint ${j.body1}-${j.body2}: ${e.message}`); }
   }
 
+  // ── Fisika lanjutan: rope (rantai segmen + spherical joint) & trigger (sensor) ──
+  const triggers = [];
+  for (const o of spec.objects || []) {
+    if (o.type === 'rope' && physicsWorld) {
+      try {
+        const segs = Math.max(3, Math.min(30, o.segments ?? 12));
+        const len = o.length ?? 3, segLen = len / segs, r = o.radius ?? 0.04;
+        let ax, ay, az, prevBody;
+        if (o.anchorBody && bodyMap.has(o.anchorBody)) {
+          const t = bodyMap.get(o.anchorBody).translation();
+          ax = t.x; ay = t.y; az = t.z; prevBody = bodyMap.get(o.anchorBody);
+        } else {
+          const a = o.anchor || [0, 4, 0];
+          ax = a[0]; ay = a[1]; az = a[2];
+          prevBody = physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(ax, ay, az));
+        }
+        const group = new THREE.Group(); group.name = o.id;
+        const mat = new THREE.MeshStandardMaterial({ color: o.color || '#b08d57', roughness: 0.85 });
+        const geo = new THREE.CylinderGeometry(r, r, segLen, 8);
+        for (let i = 0; i < segs; i++) {
+          const cy = ay - segLen * (i + 0.5);
+          const body = physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(ax, cy, az).setLinearDamping(0.1).setAngularDamping(0.1));
+          physicsWorld.createCollider(RAPIER.ColliderDesc.capsule(Math.max(0.01, segLen / 2 - r), r).setDensity(0.6), body);
+          body.userData = { init: { p: new THREE.Vector3(ax, cy, az), q: new THREE.Quaternion() }, nanCount: 0 };
+          const a1 = i === 0 && !o.anchorBody ? { x: 0, y: 0, z: 0 } : { x: 0, y: -segLen / 2, z: 0 };
+          physicsWorld.createImpulseJoint(RAPIER.JointData.spherical(a1, { x: 0, y: segLen / 2, z: 0 }), prevBody, body, true);
+          const m = new THREE.Mesh(geo, mat);
+          m.position.set(ax, cy, az);
+          m.castShadow = true;
+          group.add(m);
+          const sid = `${o.id}-seg${i}`;
+          registry.set(sid, m);
+          bodyMap.set(sid, body);
+          prevBody = body;
+        }
+        if (o.attachBody && bodyMap.has(o.attachBody)) {
+          physicsWorld.createImpulseJoint(RAPIER.JointData.spherical({ x: 0, y: -segLen / 2, z: 0 }, { x: 0, y: 0, z: 0 }), prevBody, bodyMap.get(o.attachBody), true);
+        }
+        scene.add(group);
+        registry.set(o.id, group);
+      } catch (e) { errors.push(`rope ${o.id}: ${e.message}`); }
+    }
+    if (o.type === 'trigger' && physicsWorld) {
+      try {
+        const p = o.position || [0, 0.5, 0];
+        const body = physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(p[0], p[1], p[2]));
+        const pr = o.params || {};
+        const cd = pr.radius != null ? RAPIER.ColliderDesc.ball(pr.radius)
+          : RAPIER.ColliderDesc.cuboid((pr.width ?? 2) / 2, (pr.height ?? 1) / 2, (pr.depth ?? 2) / 2);
+        const col = physicsWorld.createCollider(cd.setSensor(true), body);
+        // visualisasi zona (transparan, tidak menghalangi)
+        const vg = pr.radius != null ? new THREE.SphereGeometry(pr.radius, 16, 12) : new THREE.BoxGeometry(pr.width ?? 2, pr.height ?? 1, pr.depth ?? 2);
+        const vm = new THREE.Mesh(vg, new THREE.MeshBasicMaterial({ color: o.color || '#4f8cff', transparent: true, opacity: 0.12, depthWrite: false }));
+        vm.position.set(p[0], p[1], p[2]);
+        scene.add(vm);
+        registry.set(o.id, vm);
+        triggers.push({ collider: col, spec: o, lastFire: -999 });
+      } catch (e) { errors.push(`trigger ${o.id}: ${e.message}`); }
+    }
+  }
+
   // Kontrol interaktif (slider/toggle) — nilai liveOverrides di atas spec
   const overrides = {};
   for (const c of spec.controls || []) {
@@ -353,7 +418,7 @@ export async function buildScene(spec, opts = {}) {
     if (c.type === 'toggle') overrides[c.target].enabled = c.default ?? true;
     else overrides[c.target][c.param || 'speed'] = c.default ?? c.min ?? 0;
   }
-  return { scene, camera, target, registry, errors, spec, animations, overrides, physicsWorld, bodyMap };
+  return { scene, camera, target, registry, errors, spec, animations, overrides, physicsWorld, bodyMap, triggers, drag: null, powerTriggered: false };
 }
 
 // Renderer dengan pengaturan warna & tone mapping yang BENAR (anti warna pucat).
@@ -535,7 +600,38 @@ export function stepPhysics(handle, dt = 1 / 60) {
   const w = handle.physicsWorld;
   if (!w) return;
   w.timestep = dt;
-  w.step();
+  const aq = handle.audio?.enabled ? handle.audio.eventQueue : undefined;
+  w.step(aq);
+  if (aq) {
+    aq.drainCollisionEvents((h1, h2, started) => {
+      handle.audio.collisionEvents = (handle.audio.collisionEvents || 0) + 1;
+      if (!started) return;
+      try {
+        const c1 = w.getCollider(h1), c2 = w.getCollider(h2);
+        const b1 = c1?.parent(), b2 = c2?.parent();
+        const dyn = (b1 && b1.isDynamic()) ? b1 : (b2 && b2.isDynamic()) ? b2 : null;
+        if (!dyn) return;
+        const v = dyn.linvel();
+        const strength = Math.hypot(v.x, v.y, v.z);
+        if (strength < 0.8) return;
+        const t = dyn.translation();
+        audioImpact(handle, { x: t.x, y: t.y, z: t.z }, strength);
+      } catch (e) { /* collider sudah dihapus */ }
+    });
+  }
+  handle.physTime = (handle.physTime || 0) + dt;
+  for (const tr of handle.triggers || []) {
+    const o = tr.spec, act = o.onEnter || {};
+    w.intersectionPairsWith(tr.collider, (other) => {
+      const b = other.parent();
+      if (!b || !b.isDynamic || !b.isDynamic()) return;
+      if (handle.physTime - tr.lastFire < (o.cooldown ?? 2)) return;
+      tr.lastFire = handle.physTime;
+      if (act.action === 'impulse' && act.impulse) b.applyImpulse({ x: act.impulse[0], y: act.impulse[1], z: act.impulse[2] }, true);
+      else if (act.action === 'explode') applyExplosion(handle, o.position || [0, 0.5, 0], act.force ?? 8, act.radius ?? 4);
+      else if (act.action === 'power') handle.powerTriggered = true;
+    });
+  }
   for (const [id, body] of handle.bodyMap) {
     const m = handle.registry.get(id);
     if (!m) continue;
@@ -618,6 +714,112 @@ export function resetPhysics(handle) {
     const m = handle.registry.get(id);
     if (m) { m.position.copy(init.p); m.quaternion.copy(init.q); }
   }
+}
+
+// ── Ledakan radial: impuls ke semua body dynamic dalam radius (falloff linear) ──
+export function applyExplosion(handle, center, force = 8, radius = 4) {
+  if (!handle.physicsWorld) return 0;
+  const c = Array.isArray(center) ? new THREE.Vector3(...center) : center;
+  let n = 0;
+  for (const [id, body] of handle.bodyMap) {
+    if (!body.isDynamic || !body.isDynamic()) continue;
+    const t = body.translation();
+    const d = new THREE.Vector3(t.x - c.x, t.y - c.y, t.z - c.z);
+    const dist = d.length();
+    if (dist > radius) continue;
+    d.normalize().multiplyScalar(force * (1 - dist / radius) + force * 0.15);
+    d.y += force * 0.25 * (1 - dist / radius);
+    body.applyImpulse({ x: d.x, y: d.y, z: d.z }, true);
+    n++;
+  }
+  return n;
+}
+
+// ── Drag fisika dengan mouse (joint ke body kinematic cursor) ──
+export function startDrag(handle, id, point) {
+  const body = handle.bodyMap?.get(id);
+  if (!body || !body.isDynamic()) return false;
+  endDrag(handle);
+  const cursor = handle.physicsWorld.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(point.x, point.y, point.z));
+  const local = body.toLocalPoint({ x: point.x, y: point.y, z: point.z });
+  const Iq = { x: 0, y: 0, z: 0, w: 1 };
+  const joint = handle.physicsWorld.createImpulseJoint(RAPIER.JointData.fixed(local, Iq, { x: 0, y: 0, z: 0 }, Iq), body, cursor, true);
+  handle.drag = { cursor, joint, body, id };
+  return true;
+}
+export function moveDrag(handle, point) {
+  if (handle.drag) handle.drag.cursor.setNextKinematicTranslation({ x: point.x, y: point.y, z: point.z });
+}
+export function endDrag(handle) {
+  if (!handle.drag) return;
+  try {
+    handle.physicsWorld.removeImpulseJoint(handle.drag.joint, true);
+    handle.physicsWorld.removeRigidBody(handle.drag.cursor);
+  } catch (e) { /* sudah terhapus */ }
+  handle.drag = null;
+}
+
+// ─────────────────────────── AUDIO MEKANIKA (WebAudio sintetis) ───────────────────────────
+export function makeAudio(handle) {
+  if (handle.audio) return handle.audio;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  const ctx = new AC();
+  const master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination);
+  const humOsc = ctx.createOscillator(); humOsc.type = 'sawtooth'; humOsc.frequency.value = 70;
+  const humFilter = ctx.createBiquadFilter(); humFilter.type = 'lowpass'; humFilter.frequency.value = 240;
+  const humGain = ctx.createGain(); humGain.gain.value = 0;
+  const humPanner = ctx.createPanner(); humPanner.panningModel = 'HRTF'; humPanner.distanceModel = 'inverse'; humPanner.refDistance = 2;
+  humOsc.connect(humFilter); humFilter.connect(humGain); humGain.connect(humPanner); humPanner.connect(master);
+  humOsc.start();
+  handle.audio = { ctx, master, humOsc, humGain, humPanner, enabled: true, lastImpact: -1, impactCount: 0, eventQueue: new RAPIER.EventQueue(true) };
+  return handle.audio;
+}
+export function updateAudio(handle, powerOn, speed = 1) {
+  const a = handle.audio; if (!a) return;
+  const au = handle.spec.audio || {};
+  const m = handle.registry.get(au.hum?.object || 'motor');
+  if (m) {
+    m.updateWorldMatrix(true, false);
+    const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld);
+    a.humPanner.setPosition(p.x, p.y, p.z);
+  }
+  const t = a.ctx.currentTime;
+  a.humGain.gain.setTargetAtTime(powerOn ? (au.hum?.gain ?? 0.12) : 0, t, 0.15);
+  a.humOsc.frequency.setTargetAtTime((au.hum?.baseFreq ?? 70) * (0.6 + Math.max(0.2, speed) * 0.4), t, 0.2);
+  const cam = handle.camera, l = a.ctx.listener;
+  const fwd = new THREE.Vector3(); cam.getWorldDirection(fwd);
+  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(cam.quaternion);
+  if (l.positionX) {
+    l.positionX.value = cam.position.x; l.positionY.value = cam.position.y; l.positionZ.value = cam.position.z;
+    l.forwardX.value = fwd.x; l.forwardY.value = fwd.y; l.forwardZ.value = fwd.z;
+    l.upX.value = up.x; l.upY.value = up.y; l.upZ.value = up.z;
+  } else { l.setPosition(cam.position.x, cam.position.y, cam.position.z); l.setOrientation(fwd.x, fwd.y, fwd.z, up.x, up.y, up.z); }
+}
+export function audioImpact(handle, pos, strength) {
+  const a = handle.audio; if (!a || !a.enabled) return;
+  const now = a.ctx.currentTime;
+  if (now - a.lastImpact < 0.05) return;
+  a.lastImpact = now; a.impactCount++;
+  const dur = 0.09;
+  const buf = a.ctx.createBuffer(1, Math.floor(a.ctx.sampleRate * dur), a.ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+  const src = a.ctx.createBufferSource(); src.buffer = buf;
+  const g = a.ctx.createGain(); g.gain.value = Math.min(0.5, 0.06 + strength * 0.015);
+  const f = a.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 350 + Math.min(2000, strength * 60);
+  const p = a.ctx.createPanner(); p.panningModel = 'HRTF'; p.distanceModel = 'inverse'; p.refDistance = 2;
+  p.setPosition(pos.x, pos.y, pos.z);
+  src.connect(f); f.connect(g); g.connect(p); p.connect(a.master);
+  src.start();
+}
+export function audioClick(handle) {
+  const a = handle.audio; if (!a || !a.enabled) return;
+  const t = a.ctx.currentTime;
+  const o = a.ctx.createOscillator(); o.type = 'square';
+  o.frequency.setValueAtTime(880, t); o.frequency.exponentialRampToValueAtTime(220, t + 0.06);
+  const g = a.ctx.createGain(); g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+  o.connect(g); g.connect(a.master); o.start(t); o.stop(t + 0.08);
 }
 
 // ─────────────────────────── KAMERA SINEMATIK ───────────────────────────

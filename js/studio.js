@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { TransformControls } from '../vendor/TransformControls.js';
 import { GLTFExporter } from '../vendor/GLTFExporter.js';
-import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels, syncCaps, resetPhysics, compileCameraPath, sampleCameraPath } from './scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels, syncCaps, resetPhysics, compileCameraPath, sampleCameraPath, applyExplosion, startDrag, moveDrag, endDrag, makeAudio, updateAudio, audioClick } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
 const deg = THREE.MathUtils.degToRad, rad2deg = THREE.MathUtils.radToDeg;
@@ -20,6 +20,7 @@ let explodeFactor = 0, lastExplode = 0, xrayOn = false, isolateOn = false, label
 let sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false, caps: true };
 let measureMode = false, measurePts = [], measureGroup = null;
 let cinePath = null, cinePlaying = false, cineT = 0, cineExplode = null;
+let audioOn = false;
 const clock = new THREE.Clock();
 
 // ── responsif: drawer mobile ──
@@ -115,27 +116,9 @@ function animate() {
     lastExplode = explodeFactor;
   }
   if (handle?.capSystem) syncCaps(handle);
-  if (cinePlaying && cinePath && handle) {
-    cineT += dt;
-    const s = sampleCameraPath(handle, cinePath, cineT);
-    if (s) {
-      handle.camera.position.copy(s.pos);
-      handle.camera.lookAt(s.target);
-      if (Math.abs(handle.camera.fov - s.fov) > 0.01) { handle.camera.fov = s.fov; handle.camera.updateProjectionMatrix(); }
-      orbit.target.copy(s.target);
-      if (s.explode !== null) { cineExplode = s.explode; applyExplode(handle, s.explode); lastExplode = s.explode; }
-      const cap = $('#cineCaption');
-      if (cap) { cap.textContent = s.caption || ''; cap.style.display = s.caption ? 'block' : 'none'; }
-      const si = $('#cineShotInfo');
-      if (si && s.shot) si.textContent = `${s.shot.type} #${s.shot.i + 1}${s.shot.dist ? ' · jarak ' + s.shot.dist.toFixed(1) + 'm · fill ' + Math.round(s.shot.fill * 100) + '%' : ''}`;
-      document.querySelectorAll('.cine-chip').forEach((c, i) => c.classList.toggle('on', i === s.shotIndex));
-    }
-  }
-  const tl = $('#tlSlider');
-  if (tl && document.activeElement !== tl) {
-    if (cinePlaying && cinePath) { tl.value = (cineT % cinePath.dur).toFixed(2); $('#tlTime').textContent = (cineT % cinePath.dur).toFixed(1) + 's'; }
-    else if (animPlaying) { tl.value = (animT % 10).toFixed(2); $('#tlTime').textContent = (animT % 10).toFixed(1) + 's'; }
-  }
+  if (handle?.powerTriggered) { handle.powerTriggered = false; powerOn = !powerOn; updateVpControls(); audioClick(handle); toast('⚡ Trigger: power berubah'); }
+
+  // produksi (tur/timeline/audio) ada di Studio Rekaman (/rekaman)
   orbit.update();
   const cam = handle?.camera || bootCam;
   const sc = handle?.scene || bootScene;
@@ -166,11 +149,11 @@ async function rebuild(newSpec, announce) {
   renderer.clippingPlanes = [];
   measureMode = false; measurePts = [];
   if (measureGroup) { handle?.scene.remove(measureGroup); measureGroup = null; }
+  if (audioOn) { const a = makeAudio(handle); if (a) a.ctx.resume(); }
   cinePath = compileCameraPath(handle);
   cineT = 0; cineExplode = null;
-  cinePlaying = !!(cinePath && cinePath.autoplay);
-  orbit.enabled = !cinePlaying;
-  renderTimeline(); renderCinePanel();
+  cinePlaying = false;  // tur sinematik = wilayah Studio Rekaman
+  orbit.enabled = true;
   updateVpControls(); renderBedahPanel();
   orbit.object = handle.camera;
   orbit.target.copy(handle.target);
@@ -334,6 +317,38 @@ function renderInspector() {
     if (env.ground) g.appendChild(row('Ground', inp('color', env.ground.color || '#1a1e26', '', v => { env.ground.color = v; handle.registry.get('__ground')?.material.color.set(v); markDirty(); })));
     el.appendChild(g);
   }
+}
+
+// ── foto referensi → scene ──
+$('#btnRef').onclick = () => $('#refFile').click();
+$('#refFile').onchange = async () => {
+  const f = $('#refFile').files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    toast('Menganalisis foto dengan vision…');
+    try {
+      const r = await fetch('/api/reference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: reader.result, name: f.name }) }).then(x => x.json());
+      const th = $('#refThumb');
+      th.style.display = 'flex';
+      th.innerHTML = `<img src="${reader.result}"><span>${r.analyzed ? 'Referensi aktif — agent akan membangun mendekati foto ini' : 'Foto tersimpan (analisis vision tidak tersedia — agent lihat deskripsi manual)'}</span><button title="Hapus referensi">✕</button>`;
+      th.querySelector('button').onclick = async () => { await fetch('/api/reference/clear', { method: 'POST' }); th.style.display = 'none'; th.innerHTML = ''; toast('Referensi dihapus'); };
+      toast(r.analyzed ? 'Foto dianalisis — kirim prompt untuk membangun' : 'Foto tersimpan');
+    } catch (e) { toast('Upload gagal: ' + e.message); }
+  };
+  reader.readAsDataURL(f);
+};
+
+// ── aksi klik objek (spec.onClick) ──
+function doClickAction(o) {
+  const act = o?.onClick;
+  if (!act || !handle) return false;
+  if (act.action === 'power') { powerOn = !powerOn; audioClick(handle); updateVpControls(); toast(powerOn ? '⚡ Nyala' : '⏻ Mati'); }
+  else if (act.action === 'impulse') { const b = handle.bodyMap?.get(o.id); if (b && act.impulse) b.applyImpulse({ x: act.impulse[0], y: act.impulse[1], z: act.impulse[2] }, true); }
+  else if (act.action === 'explode') { const n = applyExplosion(handle, act.center || o.position || [0, 1, 0], act.force ?? 8, act.radius ?? 5); toast(`💥 ${n} body terdorong`); }
+  else if (act.action === 'toggle') { const m = handle.registry.get(o.id); if (m) m.visible = !m.visible; }
+  else return false;
+  return true;
 }
 
 // ── panel kamera sinematik ──
@@ -572,7 +587,7 @@ function updateVpControls() {
     b.className = 'vp-ctl' + (powerOn ? ' on' : '');
     b.textContent = (powerOn ? '⏻ ' : '⭘ ') + (spec.power.label || 'Nyala');
     b.title = 'Saklar daya mekanika';
-    b.onclick = () => { powerOn = !powerOn; updateVpControls(); };
+    b.onclick = () => { powerOn = !powerOn; audioClick(handle); updateVpControls(); };
     el.appendChild(b);
   }
   if (hasAnim) {
@@ -590,13 +605,53 @@ function updateVpControls() {
     b.title = 'Kembalikan semua rigid body ke posisi awal';
     b.onclick = () => rebuild(spec, 'Fisika di-reset ke keadaan awal');
     el.appendChild(b);
+    const ex = document.createElement('button');
+    ex.className = 'vp-ctl';
+    ex.textContent = '💥 Ledakan';
+    ex.title = 'Impuls radial ke semua body dynamic (pusat & force dari spec.explosion)';
+    ex.onclick = () => {
+      const e = spec.explosion || {};
+      const n = applyExplosion(handle, e.center || [0, 1, 0], e.force ?? 8, e.radius ?? 5);
+      toast(`💥 ${n} body terdorong`);
+    };
+    el.appendChild(ex);
   }
 }
 
 // ── picking ──
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
-canvas.addEventListener('pointerdown', e => { downPos = [e.clientX, e.clientY]; });
+let dragPlane = null;
+const dragVec = new THREE.Vector3();
+canvas.addEventListener('pointerdown', e => {
+  downPos = [e.clientX, e.clientY];
+  if (e.shiftKey && handle?.physicsWorld && !cinePlaying) {
+    const r = canvas.getBoundingClientRect();
+    ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ptr, handle.camera);
+    const meshes = (spec.objects || []).map(o => handle.registry.get(o.id)).filter(m => m && m.visible !== false);
+    const hits = ray.intersectObjects(meshes, true);
+    if (hits.length) {
+      let o = hits[0].object;
+      while (o && !o.userData.specId) o = o.parent;
+      const id = o?.userData.specId;
+      if (id && startDrag(handle, id, hits[0].point)) {
+        const camDir = new THREE.Vector3(); handle.camera.getWorldDirection(camDir);
+        dragPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(camDir, hits[0].point);
+        orbit.enabled = false;
+        toast('Drag fisika aktif — lepas untuk melepas');
+      }
+    }
+  }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!handle?.drag || !dragPlane) return;
+  const r = canvas.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, handle.camera);
+  if (ray.ray.intersectPlane(dragPlane, dragVec)) moveDrag(handle, dragVec);
+});
 canvas.addEventListener('pointerup', e => {
+  if (handle?.drag) { endDrag(handle); dragPlane = null; if (!cinePlaying) orbit.enabled = true; downPos = null; return; }
   if (!downPos || dragging || !handle) return;
   const moved = Math.hypot(e.clientX - downPos[0], e.clientY - downPos[1]);
   downPos = null;
@@ -615,7 +670,12 @@ canvas.addEventListener('pointerup', e => {
   if (hits.length) {
     let o = hits[0].object;
     while (o && !o.userData.specId) o = o.parent;
-    select(o?.userData.specId || null);
+    const id = o?.userData.specId || null;
+    select(id);
+    if (id) {
+      const so = (spec.objects || []).find(x => x.id === id);
+      if (so?.onClick) doClickAction(so);
+    }
   } else select(null);
 });
 
@@ -1133,6 +1193,32 @@ $('#btnExpHtml').onclick = () => { location.href = '/api/export?format=html'; to
 $('#btnExpZip').onclick = () => { location.href = '/api/export?format=zip'; toast('Mengunduh ZIP lengkap…'); };
 $('#btnExpJson').onclick = () => { location.href = '/api/export?format=json'; toast('Mengunduh scene.json…'); };
 $('#btnExpBom').onclick = () => { location.href = '/api/export?format=bom'; toast('Mengunduh BOM daftar part…'); };
+const _btnExpVideo = $('#btnExpVideo');
+if (_btnExpVideo) _btnExpVideo.onclick = async () => {
+  try {
+    const r = await fetch('/api/video/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fps: 24, w: 960, h: 540 }) }).then(x => x.json());
+    if (!r.ok) return toast('Gagal memulai video: ' + (r.error || '?'));
+    let p = $('#videoProgress');
+    if (!p) { p = document.createElement('div'); p.id = 'videoProgress'; p.style.cssText = 'position:fixed;top:52px;left:50%;transform:translateX(-50%);background:rgba(22,24,29,.95);border:1px solid var(--accent);color:var(--text);padding:8px 16px;border-radius:8px;z-index:99;font-size:12px'; document.body.appendChild(p); }
+    p.textContent = `🎬 Render 0/${r.total} frame…`;
+    const f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;width:288px;height:162px;right:10px;bottom:10px;z-index:98;border:1px solid var(--border);border-radius:8px;opacity:.9';
+    f.src = r.url;
+    document.body.appendChild(f);
+    const poll = setInterval(async () => {
+      try {
+        const s = await fetch('/api/video/state?job=' + r.job).then(x => x.json());
+        if (s.status === 'rendering') p.textContent = `🎬 Render ${s.frames}/${s.total} frame…`;
+        else if (s.status === 'encoding') p.textContent = '🎬 Encoding MP4 (ffmpeg)…';
+        else if (s.status === 'done') {
+          clearInterval(poll); f.remove();
+          p.innerHTML = `🎬 Video siap (${(s.size / 1048576).toFixed(1)} MB) — <a href="/api/video/file?job=${r.job}" style="color:var(--accent)">unduh MP4</a> <button onclick="this.parentNode.remove()" style="margin-left:8px;cursor:pointer">✕</button>`;
+          toast('Video MP4 selesai!');
+        } else if (s.status === 'error') { clearInterval(poll); f.remove(); p.textContent = '🎬 Gagal: ' + (s.error || '?'); }
+      } catch (e) { /* polling sementara gagal — coba lagi */ }
+    }, 2500);
+  } catch (e) { toast('Video gagal: ' + e.message); }
+};
 $('#btnExpGlb').onclick = async () => {
   if (!spec) { toast('Scene belum dimuat'); return; }
   toast('Menyiapkan GLB…');

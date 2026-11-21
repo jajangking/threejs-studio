@@ -318,6 +318,9 @@
         "roughness": 0.4,
         "emissive": "#ff6b4a",
         "emissiveIntensity": 0.6
+      },
+      "onClick": {
+        "action": "power"
       }
     },
     {
@@ -349,6 +352,9 @@
         "roughness": 0.4,
         "emissive": "#ffd166",
         "emissiveIntensity": 0.5
+      },
+      "onClick": {
+        "action": "power"
       }
     },
     {
@@ -380,6 +386,9 @@
         "roughness": 0.4,
         "emissive": "#4ade80",
         "emissiveIntensity": 0.5
+      },
+      "onClick": {
+        "action": "power"
       }
     },
     {
@@ -5301,5 +5310,12 @@
         "caption": "Satu rantai mekanisme: motor → rotor → bilah → osilasi"
       }
     ]
+  },
+  "audio": {
+    "hum": {
+      "object": "motor",
+      "baseFreq": 70,
+      "gain": 0.12
+    }
   }
 }

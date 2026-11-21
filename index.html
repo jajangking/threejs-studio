@@ -20,6 +20,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 #topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;
   background:var(--panel);border-bottom:1px solid var(--border);position:relative;z-index:70}
 #topbar .logo{font-weight:700;color:var(--accent);letter-spacing:.5px;white-space:nowrap}
+#linkRekaman{font-size:11px;color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:3px 9px;white-space:nowrap}
+#linkRekaman:hover{border-color:var(--accent);color:var(--accent)}
 #sceneName{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #iterBadge{font-family:var(--mono);font-size:11px;background:var(--panel2);border:1px solid var(--border);
   padding:2px 8px;border-radius:10px;color:var(--dim);white-space:nowrap}
@@ -204,6 +206,9 @@ button:disabled{opacity:.4;cursor:default}
 #chatStatus.show{display:flex}
 #chatStatus .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #chatComposer{flex:none;border-top:1px solid var(--border);padding:8px;background:var(--panel2)}
+#refThumb{display:none;align-items:center;gap:8px;margin-bottom:6px;font-size:11px;color:var(--dim)}
+#refThumb img{width:52px;height:39px;object-fit:cover;border-radius:5px;border:1px solid var(--border)}
+#refThumb button{background:none;border:none;color:var(--bad);cursor:pointer;font-size:12px}
 #chatTarget{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--accent);background:rgba(79,140,255,.08);border:1px solid rgba(79,140,255,.35);border-radius:6px;padding:5px 10px;margin-bottom:6px}
 #chatTarget:empty{display:none}
 #chatTarget button{background:none;border:none;color:var(--dim);cursor:pointer;font-size:12px;padding:0 2px;margin-left:auto}
@@ -310,7 +315,8 @@ button:disabled{opacity:.4;cursor:default}
 <div id="app">
   <div id="topbar">
     <button id="btnDrawerOutliner" title="Buka outliner" aria-label="Buka outliner">☰</button>
-    <span class="logo">⬢ THREEJS STUDIO</span>
+    <span class="logo">⬢ STUDIO DESIGN</span>
+    <a href="/rekaman" id="linkRekaman" title="Studio Rekaman — kamera sinematik, timeline, video MP4, audio">🎬 Rekaman</a>
     <span id="sceneName">memuat…</span>
     <span id="iterBadge">—</span>
     <span id="syncDot" title="status sinkronisasi dengan agent"></span>
@@ -399,10 +405,13 @@ button:disabled{opacity:.4;cursor:default}
           <div id="chatLog"><div class="chat-empty">Belum ada percakapan.<br>Tulis permintaan seperti <b>“tambahkan gedung merah”</b> atau <b>“buat scene hutan siang”</b>.</div></div>
           <div id="chatStatus"><span class="spinner"></span><span class="txt"></span></div>
           <div id="chatComposer">
+            <div id="refThumb"></div>
             <div id="chatTarget"></div>
             <textarea id="chatText" placeholder="Perintah untuk agent… (Enter kirim, Shift+Enter baris baru)" rows="2"></textarea>
             <div class="chat-controls">
               <select id="chatModel" title="Pilih model / backend"></select>
+              <button id="btnRef" title="Upload foto referensi — agent bangun scene mendekati foto">📷</button>
+              <input type="file" id="refFile" accept="image/*" style="display:none">
               <button id="btnChatRefresh" title="Muat ulang daftar backend">↻</button>
               <button id="btnChatSend" class="primary" title="Kirim ke agent">Kirim ➤</button>
             </div>
