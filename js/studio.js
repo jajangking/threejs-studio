@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { TransformControls } from '../vendor/TransformControls.js';
 import { GLTFExporter } from '../vendor/GLTFExporter.js';
-import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics } from './scene-builder.js';
+import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
 const deg = THREE.MathUtils.degToRad, rad2deg = THREE.MathUtils.radToDeg;
@@ -16,6 +16,8 @@ let selectedId = null, dirty = false, lastMtime = 0, serverState = null;
 let iterations = [], cmpSel = [], consoleErrors = 0, liveReport = null;
 let dragging = false, downPos = null;
 let animT = 0, animPlaying = true, powerOn = true, physAcc = 0;
+let explodeFactor = 0, lastExplode = 0, xrayOn = false, isolateOn = false, labelsOn = false;
+let sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false };
 const clock = new THREE.Clock();
 
 // ── responsif: drawer mobile ──
@@ -97,7 +99,7 @@ let frames = 0, statT = 0;
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.1);
-  if (handle?.physicsWorld && animPlaying) {
+  if (handle?.physicsWorld && animPlaying && explodeFactor === 0) {
     physAcc += dt;
     let n = 0;
     while (physAcc >= 1 / 60 && n < 4) { stepPhysics(handle, 1 / 60); physAcc -= 1 / 60; n++; }
@@ -105,6 +107,10 @@ function animate() {
   if (handle?.animations?.length) {
     if (animPlaying) animT += dt;
     applyAnimations(handle, animT, powerOn);
+  }
+  if (handle && (explodeFactor > 0 || lastExplode > 0)) {
+    applyExplode(handle, explodeFactor);
+    lastExplode = explodeFactor;
   }
   orbit.update();
   const cam = handle?.camera || bootCam;
@@ -131,7 +137,10 @@ async function rebuild(newSpec, announce) {
   handle.camera.updateProjectionMatrix();
   handle.composer = makeComposer(handle, renderer, wrap.clientWidth, Math.max(1, wrap.clientHeight));
   animT = 0; animPlaying = true; powerOn = spec.power?.default ?? true; physAcc = 0;
-  updateVpControls();
+  explodeFactor = 0; lastExplode = 0; xrayOn = false; isolateOn = false; labelsOn = false;
+  sectionOpts = { enabled: false, axis: 'x', pos: 0, flip: false };
+  renderer.clippingPlanes = [];
+  updateVpControls(); renderBedahPanel();
   orbit.object = handle.camera;
   orbit.target.copy(handle.target);
   orbit.update();
@@ -188,6 +197,8 @@ function select(id) {
   const m = handle?.registry.get(id);
   if (m && m.isMesh) gizmo.attach(m); else gizmo.detach();
   renderOutliner(); renderInspector(); updateChatTarget();
+  if (xrayOn && handle) setXray(handle, true, id);
+  if (isolateOn && handle) setIsolate(handle, true, id);
   if (mqMobile.matches && id) closeDrawers();  // pilih objek -> kembali ke viewport
 }
 
@@ -292,6 +303,77 @@ function renderInspector() {
     if (env.ground) g.appendChild(row('Ground', inp('color', env.ground.color || '#1a1e26', '', v => { env.ground.color = v; handle.registry.get('__ground')?.material.color.set(v); markDirty(); })));
     el.appendChild(g);
   }
+}
+
+// ── panel bedah assembly (exploded/section/xray/isolate/label) ──
+function renderBedahPanel() {
+  const el = $('#vpBedah'); if (!el) return;
+  el.innerHTML = '';
+  if (!handle) return;
+  const head = document.createElement('div'); head.className = 'bedah-head';
+  head.innerHTML = '<b>🔬 Bedah</b>';
+  const col = document.createElement('button'); col.textContent = '▾'; col.className = 'bedah-col';
+  col.onclick = () => { el.classList.toggle('collapsed'); col.textContent = el.classList.contains('collapsed') ? '▸' : '▾'; };
+  head.appendChild(col); el.appendChild(head);
+  const body = document.createElement('div'); body.className = 'bedah-body';
+
+  // Explode
+  const r1 = document.createElement('div'); r1.className = 'mech-row';
+  const l1 = document.createElement('span'); l1.className = 'mech-label'; l1.textContent = 'Exploded';
+  const s1 = document.createElement('input'); s1.type = 'range'; s1.min = 0; s1.max = 1; s1.step = 0.01; s1.value = explodeFactor;
+  const v1 = document.createElement('span'); v1.className = 'mech-val'; v1.textContent = Math.round(explodeFactor * 100) + '%';
+  s1.oninput = () => { explodeFactor = parseFloat(s1.value); v1.textContent = Math.round(explodeFactor * 100) + '%'; };
+  r1.append(l1, s1, v1); body.appendChild(r1);
+
+  // Section
+  const r2 = document.createElement('div'); r2.className = 'mech-row';
+  const t2 = document.createElement('button');
+  const paintT2 = () => { t2.textContent = (sectionOpts.enabled ? '☑' : '☐') + ' Section'; t2.classList.toggle('on', sectionOpts.enabled); };
+  t2.onclick = () => { sectionOpts.enabled = !sectionOpts.enabled; setSection(handle, renderer, sectionOpts); paintT2(); };
+  paintT2();
+  const ax = document.createElement('select');
+  ['x', 'y', 'z'].forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a.toUpperCase(); ax.appendChild(o); });
+  ax.value = sectionOpts.axis;
+  ax.onchange = () => { sectionOpts.axis = ax.value; setSection(handle, renderer, sectionOpts); };
+  const fl = document.createElement('button'); fl.textContent = '⇄'; fl.title = 'Balik arah potong';
+  fl.onclick = () => { sectionOpts.flip = !sectionOpts.flip; setSection(handle, renderer, sectionOpts); };
+  r2.append(t2, ax, fl); body.appendChild(r2);
+  const r3 = document.createElement('div'); r3.className = 'mech-row';
+  const l3 = document.createElement('span'); l3.className = 'mech-label'; l3.textContent = 'Posisi potong';
+  const s3 = document.createElement('input'); s3.type = 'range';
+  const box = new THREE.Box3();
+  handle.scene.traverse(o => { if (o.isMesh && !o.userData?.isSky && o.name !== '__ground') box.expandByObject(o); });
+  const axi = { x: 0, y: 1, z: 2 }[sectionOpts.axis];
+  s3.min = box.isEmpty() ? -5 : Math.floor(box.min.getComponent(axi) - 1);
+  s3.max = box.isEmpty() ? 5 : Math.ceil(box.max.getComponent(axi) + 1);
+  s3.step = 0.05; s3.value = sectionOpts.pos;
+  const v3 = document.createElement('span'); v3.className = 'mech-val'; v3.textContent = (+sectionOpts.pos).toFixed(1);
+  s3.oninput = () => { sectionOpts.pos = parseFloat(s3.value); v3.textContent = sectionOpts.pos.toFixed(1); setSection(handle, renderer, sectionOpts); };
+  ax.addEventListener('change', () => {
+    const i2 = { x: 0, y: 1, z: 2 }[sectionOpts.axis];
+    s3.min = Math.floor(box.min.getComponent(i2) - 1); s3.max = Math.ceil(box.max.getComponent(i2) + 1);
+    sectionOpts.pos = (box.min.getComponent(i2) + box.max.getComponent(i2)) / 2;
+    s3.value = sectionOpts.pos; v3.textContent = sectionOpts.pos.toFixed(1);
+    setSection(handle, renderer, sectionOpts);
+  });
+  r3.append(l3, s3, v3); body.appendChild(r3);
+
+  // Toggle: xray / isolate / label
+  const r4 = document.createElement('div'); r4.className = 'mech-row bedah-toggles';
+  const mk = (label, get, set) => {
+    const b = document.createElement('button');
+    const paint = () => { b.textContent = (get() ? '☑ ' : '☐ ') + label; b.classList.toggle('on', get()); };
+    b.onclick = () => { set(!get()); paint(); };
+    paint(); return b;
+  };
+  r4.appendChild(mk('X-ray', () => xrayOn, v => { xrayOn = v; setXray(handle, v, selectedId); }));
+  r4.appendChild(mk('Isolasi', () => isolateOn, v => {
+    if (v && !selectedId) { toast('Pilih part dulu untuk isolasi'); return; }
+    isolateOn = v; setIsolate(handle, v, selectedId);
+  }));
+  r4.appendChild(mk('Label', () => labelsOn, v => { labelsOn = v; makeLabels(handle).visible = v; }));
+  body.appendChild(r4);
+  el.appendChild(body);
 }
 
 // ── kontrol mekanika di viewport ──
@@ -825,6 +907,7 @@ window.__studioDebug = {
   get playing() { return animPlaying; },
   step(dt) { animT += dt; applyAnimations(handle, animT, powerOn); if (handle?.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera); },
   stepPhys(n = 60) { for (let i = 0; i < n; i++) stepPhysics(handle, 1 / 60); },
+  explode(f) { explodeFactor = f; lastExplode = f; applyExplode(handle, f); },
   bodyPos(id) { const b = handle?.bodyMap?.get(id); if (!b) return null; const t = b.translation(); return [t.x, t.y, t.z]; },
   setPower(v) { powerOn = v; updateVpControls(); },
 };

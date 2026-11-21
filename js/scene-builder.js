@@ -299,6 +299,7 @@ export async function buildScene(spec, opts = {}) {
       mesh.userData.specId = o.id;
       if (o.sky) mesh.userData.isSky = true;  // elemen langit/dekorasi jauh (awan dll)
       if (mesh.material) mesh.userData.baseEmissive = mesh.material.emissiveIntensity ?? 1;
+      mesh.userData.basePos = mesh.position.clone();
       parent.add(mesh);
       registry.set(o.id, mesh);
       if (o.animate) animations.push({ id: o.id, obj: mesh, anim: o.animate,
@@ -596,6 +597,124 @@ export function applyAnimations(handle, t, powerOn = true) {
     const o = handle.registry.get(id);
     if (o?.material?.emissive) o.material.emissiveIntensity = powerOn ? (o.userData.baseEmissive ?? 1) : (o.userData.baseEmissive ?? 1) * 0.06;
   }
+}
+
+// ─────────────────────────── TOOLKIT BEDAH ASSEMBLY ───────────────────────────
+// Semua fitur view — tidak mengubah spec. Dipakai studio DAN export HTML.
+
+// Exploded view hierarkis: root menjauh dari pusat assembly, children menjauh dari pusat group.
+// Offset aditif (kurangi offset lama, tambah baru) — aman composing dengan fisika/animasi.
+export function applyExplode(handle, factor) {
+  const roots = (handle.spec.objects || []).map(o => handle.registry.get(o.id)).filter(Boolean);
+  const box = new THREE.Box3();
+  for (const m of roots) { if (m.userData?.isSky || m.name === '__ground') continue; box.expandByObject(m); }
+  if (box.isEmpty()) return;
+  const center = box.getCenter(new THREE.Vector3());
+  const radius = Math.max(0.5, box.getSize(new THREE.Vector3()).length() * 0.28);
+  const off = (m, c, r, idx) => {
+    const base = m.userData.basePos;
+    if (!base) return;
+    const dir = base.clone().sub(c);
+    if (dir.lengthSq() < 1e-6) { const a = idx * 2.39996; dir.set(Math.cos(a), 0.35, Math.sin(a)); }
+    dir.normalize();
+    const prev = m.userData.explodeOff || new THREE.Vector3();
+    m.position.sub(prev);
+    const next = dir.multiplyScalar(factor * r);
+    m.position.add(next);
+    m.userData.explodeOff = next;
+  };
+  roots.forEach((m, i) => {
+    if (m.userData?.isSky || m.name === '__ground') return;
+    off(m, center, radius, i);
+    if (m.type === 'Group' && m.children.length) {
+      const lc = new THREE.Vector3();
+      m.children.forEach(ch => lc.add(ch.userData.basePos || ch.position));
+      lc.divideScalar(m.children.length);
+      const lr = Math.max(0.3, m.children.reduce((acc, ch) => Math.max(acc, (ch.userData.basePos || ch.position).distanceTo(lc)), 0)) * 1.2;
+      m.children.forEach((ch, j) => off(ch, lc, lr, j));
+    }
+  });
+}
+
+// Section / cutaway: clipping plane global (semua material terpotong, lihat isi dalam)
+export function setSection(handle, renderer, opts) {
+  if (!opts || !opts.enabled) { renderer.clippingPlanes = []; return; }
+  const n = { x: [-1, 0, 0], y: [0, -1, 0], z: [0, 0, -1] }[opts.axis || 'x'];
+  const normal = new THREE.Vector3(...n).multiplyScalar(opts.flip ? -1 : 1);
+  renderer.clippingPlanes = [new THREE.Plane(normal, (opts.pos ?? 0) * (opts.flip ? -1 : 1))];
+}
+
+// X-ray: semua part transpar kecuali yang dipilih (lihat internals di sekitar part)
+export function setXray(handle, enabled, exceptId) {
+  handle.scene.traverse(m => {
+    if (!m.isMesh || m.userData?.isSky || m.name === '__ground') return;
+    if (enabled) {
+      if (!m.userData.xrayOrig) m.userData.xrayOrig = { t: m.material.transparent, o: m.material.opacity, d: m.material.depthWrite };
+      const keep = exceptId && (m.userData.specId === exceptId || isDescendantOf(m, handle.registry.get(exceptId)));
+      m.material.transparent = true;
+      m.material.opacity = keep ? (m.userData.xrayOrig.o ?? 1) : 0.18;
+      m.material.depthWrite = !!keep;
+    } else if (m.userData.xrayOrig) {
+      m.material.transparent = m.userData.xrayOrig.t;
+      m.material.opacity = m.userData.xrayOrig.o;
+      m.material.depthWrite = m.userData.xrayOrig.d;
+      delete m.userData.xrayOrig;
+    }
+    m.material.needsUpdate = true;
+  });
+}
+function isDescendantOf(m, root) {
+  if (!root) return false;
+  let p = m.parent;
+  while (p) { if (p === root) return true; p = p.parent; }
+  return false;
+}
+
+// Isolate: sembunyikan semua kecuali part terpilih (solo view)
+export function setIsolate(handle, enabled, id) {
+  const roots = (handle.spec.objects || []).map(o => handle.registry.get(o.id)).filter(Boolean);
+  if (enabled && id) {
+    let target = handle.registry.get(id);
+    while (target && target.parent && target.parent !== handle.scene) target = target.parent;
+    for (const m of roots) {
+      if (m.userData.isolateOrig === undefined) m.userData.isolateOrig = m.visible;
+      m.visible = (m === target);
+    }
+  } else {
+    for (const m of roots) {
+      if (m.userData.isolateOrig !== undefined) { m.visible = m.userData.isolateOrig; delete m.userData.isolateOrig; }
+    }
+  }
+}
+
+// Label nama part (sprite teks di atas tiap objek root)
+export function makeLabels(handle) {
+  if (handle.labelGroup) return handle.labelGroup;
+  const g = new THREE.Group();
+  g.name = '__labels';
+  for (const o of handle.spec.objects || []) {
+    const m = handle.registry.get(o.id);
+    if (!m || m.userData?.isSky) continue;
+    const box = new THREE.Box3().setFromObject(m);
+    if (box.isEmpty()) continue;
+    const c = box.getCenter(new THREE.Vector3());
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 96;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = 'rgba(15,17,22,0.82)';
+    ctx.beginPath(); ctx.roundRect(4, 4, 504, 88, 16); ctx.fill();
+    ctx.font = '600 44px system-ui'; ctx.fillStyle = '#cfd3dc'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText((o.name || o.id).slice(0, 28), 256, 50);
+    const tex = new THREE.CanvasTexture(cv);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    sp.scale.set(1.6, 0.3, 1);
+    sp.position.set(c.x, box.max.y + 0.35, c.z);
+    sp.renderOrder = 999;
+    g.add(sp);
+  }
+  g.visible = false;
+  handle.scene.add(g);
+  handle.labelGroup = g;
+  return g;
 }
 
 export function disposeHandle(handle) {

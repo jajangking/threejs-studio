@@ -453,7 +453,8 @@ MODE DIFF (DEFAULT — cepat, output kecil, jangan tulis ulang scene penuh):
 BATAS KEMAMPUAN (JUJUR — jangan klaim fitur yang tidak kamu buat):
 - Kamu HANYA mengubah SPEC scene (objek/lampu/kamera/animasi/fisika/kontrol). Kamu TIDAK bisa mengubah kode UI studio.
 - Fitur UI yang SUDAH BUILT-IN (jangan klaim "menambahkan" ini): tombol ⏸ Jeda/▶ Putar (membekukan animasi & fisika),
-  ↺ Reset fisika, gizmo W/E/R, inspector, saklar power (dari spec.power), slider/toggle (dari spec.controls).
+  ↺ Reset fisika, gizmo W/E/R, inspector, saklar power (dari spec.power), slider/toggle (dari spec.controls),
+  panel 🔬 Bedah: exploded view hierarkis (slider), section/cutaway (sumbu X/Y/Z + posisi potong), X-ray, Isolasi part, Label nama.
 - Bila user minta fitur yang sudah built-in (mis. "jeda fisika"): jawab bahwa tombolnya sudah ada di viewport dan cara pakainya.
 - Bila user minta fitur UI baru yang tidak bisa lewat spec: katakan jujur itu perlu perubahan kode studio, bukan spec.
 - Balasanmu akan diverifikasi terhadap diff yang benar-benar diterapkan — jangan menyebut perubahan yang tidak ada di diff.
@@ -1236,6 +1237,7 @@ def standalone_html(spec):
 <script type="importmap">{{"imports":{{"three":"{CDN}/build/three.module.js"}}}}</script>
 </head><body>
 <canvas id="cv"></canvas><div id="info"><b>{title}</b> · drag: orbit · scroll: zoom · export Three.js Studio</div>
+<div id="bedah"></div>
 <div id="mech"></div>
 <div id="ctl"></div>
 <style>#ctl{{position:fixed;bottom:12px;right:12px;display:flex;gap:6px}}
@@ -1248,7 +1250,15 @@ def standalone_html(spec):
 #mech input[type=range]{{flex:1;accent-color:#4f8cff;min-width:70px}}
 #mech .val{{font-family:monospace;color:#cfd3dc;width:34px;text-align:right}}
 #mech button{{background:#232730;border:1px solid #2e333d;color:#8b91a0;border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;width:100%;text-align:left}}
-#mech button.on{{border-color:#3fb96b;color:#7ee2a8}}</style>
+#mech button.on{{border-color:#3fb96b;color:#7ee2a8}}
+#bedah{{position:fixed;top:12px;left:12px;background:rgba(22,24,29,.9);border:1px solid #2e333d;border-radius:8px;padding:8px 12px;max-width:270px;font:11px system-ui;color:#8b91a0;display:flex;flex-direction:column;gap:6px}}
+#bedah .row{{display:flex;align-items:center;gap:8px}}
+#bedah .lab{{width:86px;flex:none}}
+#bedah input[type=range]{{flex:1;accent-color:#4f8cff;min-width:60px}}
+#bedah .val{{font-family:monospace;color:#cfd3dc;width:38px;text-align:right}}
+#bedah button{{background:#232730;border:1px solid #2e333d;color:#8b91a0;border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer}}
+#bedah button.on{{border-color:#3fb96b;color:#7ee2a8}}
+#bedah select{{background:#16181d;border:1px solid #2e333d;color:#cfd3dc;border-radius:4px;padding:2px 4px}}</style>
 <script type="module">
 import * as THREE from 'three';
 import {{ OrbitControls }} from '{CDN}/examples/jsm/controls/OrbitControls.js';
@@ -1308,6 +1318,38 @@ for (const c of SPEC.controls || []) {{
   }}
   mech.appendChild(row);
 }}
+// Panel bedah assembly
+const bedah = document.getElementById('bedah');
+let explodeF = 0, lastExplodeF = 0, xrayOn = false;
+const secOpts = {{ enabled: false, axis: 'x', pos: 0, flip: false }};
+{{
+  const head = document.createElement('div'); head.innerHTML = '<b style="color:#cfd3dc">🔬 Bedah</b>'; bedah.appendChild(head);
+  const r1 = document.createElement('div'); r1.className = 'row';
+  r1.innerHTML = '<span class="lab">Exploded</span>';
+  const s1 = document.createElement('input'); s1.type = 'range'; s1.min = 0; s1.max = 1; s1.step = 0.01; s1.value = 0;
+  const v1 = document.createElement('span'); v1.className = 'val'; v1.textContent = '0%';
+  s1.oninput = () => {{ explodeF = parseFloat(s1.value); v1.textContent = Math.round(explodeF * 100) + '%'; }};
+  r1.append(s1, v1); bedah.appendChild(r1);
+  const r2 = document.createElement('div'); r2.className = 'row';
+  const t2 = document.createElement('button'); t2.textContent = '☐ Section';
+  t2.onclick = () => {{ secOpts.enabled = !secOpts.enabled; t2.textContent = (secOpts.enabled ? '☑' : '☐') + ' Section'; t2.className = secOpts.enabled ? 'on' : ''; setSection(handle, renderer, secOpts); }};
+  const ax = document.createElement('select');
+  ['x','y','z'].forEach(a => {{ const o = document.createElement('option'); o.value = a; o.textContent = a.toUpperCase(); ax.appendChild(o); }});
+  ax.onchange = () => {{ secOpts.axis = ax.value; setSection(handle, renderer, secOpts); }};
+  const fl = document.createElement('button'); fl.textContent = '⇄'; fl.title = 'Balik arah potong';
+  fl.onclick = () => {{ secOpts.flip = !secOpts.flip; setSection(handle, renderer, secOpts); }};
+  r2.append(t2, ax, fl); bedah.appendChild(r2);
+  const r3 = document.createElement('div'); r3.className = 'row';
+  r3.innerHTML = '<span class="lab">Posisi potong</span>';
+  const s3 = document.createElement('input'); s3.type = 'range'; s3.min = -10; s3.max = 10; s3.step = 0.05; s3.value = 0;
+  const v3 = document.createElement('span'); v3.className = 'val'; v3.textContent = '0.0';
+  s3.oninput = () => {{ secOpts.pos = parseFloat(s3.value); v3.textContent = secOpts.pos.toFixed(1); setSection(handle, renderer, secOpts); }};
+  r3.append(s3, v3); bedah.appendChild(r3);
+  const r4 = document.createElement('div'); r4.className = 'row';
+  const xr = document.createElement('button'); xr.textContent = '☐ X-ray';
+  xr.onclick = () => {{ xrayOn = !xrayOn; xr.textContent = (xrayOn ? '☑' : '☐') + ' X-ray'; xr.className = xrayOn ? 'on' : ''; setXray(handle, xrayOn, null); }};
+  r4.appendChild(xr); bedah.appendChild(r4);
+}}
 let physAcc = 0;
 if (handle.physicsWorld) {{
   const b = document.createElement('button');
@@ -1319,13 +1361,14 @@ renderer.setAnimationLoop(() => {{
   const dt = Math.min(clock.getDelta(), 0.1);
   if (playing) {{
     animT += dt;
-    if (handle.physicsWorld) {{
+    if (handle.physicsWorld && explodeF === 0) {{
       physAcc += dt;
       let n = 0;
       while (physAcc >= 1 / 60 && n < 4) {{ stepPhysics(handle, 1 / 60); physAcc -= 1 / 60; n++; }}
     }}
   }}
   applyAnimations(handle, animT, powerOn);
+  if (explodeF > 0 || lastExplodeF > 0) {{ applyExplode(handle, explodeF); lastExplodeF = explodeF; }}
   controls.update();
   if (handle.composer) handle.composer.render(); else renderer.render(handle.scene, handle.camera);
 }});
