@@ -557,7 +557,7 @@ Tulis JSON PADAT (satu baris, tanpa indentasi/spasi berlebih) agar tidak terpoto
 Jawab selalu dalam Bahasa Indonesia untuk field "reply" dan "contract"."""
 
 
-def build_agent_prompt(user_text, repair=None):
+def build_agent_prompt(user_text, repair=None, selection=None):
     scene = read_json(os.path.join(ROOT, 'scene.json'), {})
     contract = read_text(os.path.join(ROOT, 'contract.md'))
     fb = read_json(os.path.join(ROOT, 'feedback.json'), [])
@@ -580,6 +580,29 @@ def build_agent_prompt(user_text, repair=None):
         parts.append('')
     if repair:
         parts += ['=== PERBAIKAN DIPERLUKAN (SMOKE TEST GAGAL) ===', repair, '']
+    if selection:
+        # Objek yang sedang dipilih user di viewport — permintaan mengacu ke sini
+        found = None
+        def find_obj(lst):
+            for o in lst:
+                if isinstance(o, dict):
+                    if o.get('id') == selection:
+                        return o
+                    if isinstance(o.get('children'), list):
+                        r = find_obj(o['children'])
+                        if r: return r
+            return None
+        found = find_obj(scene.get('objects') or [])
+        if found is None:
+            found = next((l for l in (scene.get('lights') or []) if l.get('id') == selection), None)
+        if found is None and selection in ('__camera', '__env'):
+            found = scene.get('camera') if selection == '__camera' else scene.get('environment')
+        parts.append('=== OBJEK TERPILIH USER (TARGET PERMINTAAN) ===')
+        parts.append(f'id: {selection}')
+        parts.append(json.dumps(found, ensure_ascii=False) if found else '(id tidak ditemukan di scene)')
+        parts.append('Permintaan user MENGACU ke objek ini. Edit dengan upsert id yang SAMA PERSIS; '
+                     'jangan ubah objek lain kecuali diminta. Bila objek di dalam group, pertahankan struktur group-nya.')
+        parts.append('')
     parts.append('=== PERMINTAAN USER ===')
     parts.append(user_text)
     parts.append('')
@@ -588,6 +611,7 @@ def build_agent_prompt(user_text, repair=None):
 
 
 def ask_llm(model, user_text, repair=None, max_tokens=20000):
+    selection = CHAT.get('selection')
     """model: 'router:<id>' | 'opencode:<id>' | 'hermes:<id>' | '<id>' (router).
 
     Catatan: id router seperti 'qwen/qwen4-max:free' mengandung ':' sehingga
@@ -598,7 +622,7 @@ def ask_llm(model, user_text, repair=None, max_tokens=20000):
         if model.startswith(known + ':'):
             backend, mid = known, model[len(known) + 1:]
             break
-    prompt = build_agent_prompt(user_text, repair)
+    prompt = build_agent_prompt(user_text, repair, selection)
     if backend == 'opencode':
         status(f'memanggil opencode:{mid} (bisa 1-3 menit, harap tunggu)…')
         return call_opencode(mid, SYSTEM_PROMPT + '\n\n' + prompt)
@@ -926,7 +950,7 @@ def run_agent_job(job_id, user_text, model):
                 CHAT['running'] = False
 
 
-def start_job(text, model):
+def start_job(text, model, selection=None):
     with CHAT_LOCK:
         with LOCK:
             if CHAT['running']:
@@ -935,7 +959,7 @@ def start_job(text, model):
             CHAT.update({
                 'running': True, 'job_id': job_id, 'model': model,
                 'started_at': time.time(), 'status_lines': [],
-                'error': None, 'last_iteration': None,
+                'error': None, 'last_iteration': None, 'selection': selection,
             })
         append_chat_message({'role': 'user', 'text': text, 'at': time.time(),
                              'iteration': None, 'model': model})
@@ -1429,11 +1453,12 @@ class Handler(SimpleHTTPRequestHandler):
         if path == '/api/chat':
             text = (payload.get('text') or '').strip()
             model = (payload.get('model') or '').strip() or DEFAULT_MODEL
+            selection = (payload.get('selection') or '').strip() or None
             if not text:
                 return self._send(400, {'ok': False, 'error': 'teks permintaan kosong'})
             if len(text) > 4000:
                 return self._send(400, {'ok': False, 'error': 'teks terlalu panjang (maks 4000)'})
-            job_id = start_job(text, model)
+            job_id = start_job(text, model, selection)
             if job_id is None:
                 return self._send(409, {'ok': False, 'error': 'masih ada job agent berjalan'})
             return self._send(200, {'ok': True, 'job_id': job_id, 'model': model})

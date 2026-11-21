@@ -187,8 +187,21 @@ function select(id) {
   selectedId = id;
   const m = handle?.registry.get(id);
   if (m && m.isMesh) gizmo.attach(m); else gizmo.detach();
-  renderOutliner(); renderInspector();
+  renderOutliner(); renderInspector(); updateChatTarget();
   if (mqMobile.matches && id) closeDrawers();  // pilih objek -> kembali ke viewport
+}
+
+function updateChatTarget() {
+  const el = $('#chatTarget'); if (!el) return;
+  el.innerHTML = '';
+  if (!selectedId) return;
+  const o = (spec?.objects || []).find(x => x.id === selectedId);
+  const span = document.createElement('span');
+  span.textContent = '🎯 Target agent: ' + selectedId + (o?.name && o.name !== selectedId ? ' (' + o.name + ')' : '');
+  const x = document.createElement('button');
+  x.textContent = '✕'; x.title = 'Lepas target (agent bebas memilih)';
+  x.onclick = () => select(null);
+  el.appendChild(span); el.appendChild(x);
 }
 
 // ── inspector ──
@@ -221,6 +234,12 @@ function renderInspector() {
   const el = $('#inspBody'); el.innerHTML = '';
   if (!spec) return;
   if (!selectedId) { el.innerHTML = '<div class="insp-empty">Pilih objek di outliner atau viewport.<br><br>Klik dua kartu di tab Iterasi untuk membandingkan hasil agent.</div>'; return; }
+  const agentBtn = document.createElement('button');
+  agentBtn.textContent = '🤖 Edit bagian ini via Agent';
+  agentBtn.style.cssText = 'width:100%;margin-bottom:10px;padding:8px';
+  agentBtn.title = 'Buka tab Agent dengan objek ini sebagai target';
+  agentBtn.onclick = () => { openTab('agent'); setTimeout(() => $('#chatText').focus(), 350); };
+  el.appendChild(agentBtn);
   const obj = spec.objects?.find(o => o.id === selectedId);
   const li = (spec.lights || []).findIndex(l => (l.id || '') === selectedId);
   const light = li >= 0 ? spec.lights[li] : null;
@@ -721,7 +740,7 @@ async function sendChat() {
   try {
     const res = await fetch('/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, model }),
+      body: JSON.stringify({ text, model, selection: selectedId || null }),
     });
     const j = await res.json().catch(() => ({}));
     if (res.ok && j.ok) {

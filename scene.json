@@ -3,26 +3,34 @@
     "name": "Demo Fisika Rapier",
     "concept": "Ramp + bola menggelinding menjatuhkan 6 domino + lengan bermotor (joint revolute Rapier). Gravitasi nyata, tumbukan, joint.",
     "seed": 1,
-    "spec_version": 1
+    "spec_version": 1,
+    "last_edit": "agent",
+    "iteration": "iter-07",
+    "saved_at": 1795266711.0966291
   },
   "environment": {
-    "background": "#141821",
+    "background": "#0d1322",
     "ground": {
       "size": 30,
-      "color": "#2a2f3a",
-      "roughness": 0.9
+      "color": "#222836",
+      "roughness": 0.95
     },
-    "exposure": 1.1
+    "exposure": 1.15,
+    "fog": {
+      "color": "#0d1322",
+      "near": 14,
+      "far": 45
+    }
   },
   "camera": {
     "position": [
-      1,
-      4,
-      11
+      0.5,
+      3,
+      8.5
     ],
     "target": [
       -0.5,
-      1,
+      0.8,
       0
     ],
     "fov": 50
@@ -69,15 +77,15 @@
     {
       "id": "hemi",
       "type": "hemisphere",
-      "color": "#8899bb",
-      "groundColor": "#222233",
-      "intensity": 0.8
+      "color": "#9db4e0",
+      "groundColor": "#1e2230",
+      "intensity": 0.9
     },
     {
       "id": "key",
       "type": "directional",
-      "color": "#fff2d8",
-      "intensity": 2.5,
+      "color": "#fff1d6",
+      "intensity": 2.8,
       "position": [
         6,
         10,
@@ -85,6 +93,18 @@
       ],
       "castShadow": true,
       "shadowExtent": 15
+    },
+    {
+      "id": "fill",
+      "type": "directional",
+      "color": "#ffc98a",
+      "intensity": 1.0,
+      "position": [
+        -6,
+        6,
+        -4
+      ],
+      "castShadow": false
     }
   ],
   "objects": [
@@ -107,9 +127,22 @@
         0,
         -18
       ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
-        "color": "#4a5266",
-        "roughness": 0.6
+        "color": "#49536a",
+        "roughness": 0.45,
+        "metalness": 0.35,
+        "emissive": "#000000",
+        "emissiveIntensity": 1,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "fixed",
@@ -130,8 +163,8 @@
       ],
       "material": {
         "color": "#e5534b",
-        "roughness": 0.35,
-        "metalness": 0.2
+        "roughness": 0.28,
+        "metalness": 0.35
       },
       "physics": {
         "body": "dynamic",
@@ -155,7 +188,8 @@
       ],
       "material": {
         "color": "#4f8cff",
-        "roughness": 0.5
+        "roughness": 0.42,
+        "metalness": 0.2
       },
       "physics": {
         "body": "dynamic",
@@ -179,7 +213,8 @@
       ],
       "material": {
         "color": "#3fb96b",
-        "roughness": 0.5
+        "roughness": 0.42,
+        "metalness": 0.2
       },
       "physics": {
         "body": "dynamic",
@@ -201,9 +236,27 @@
         0.5,
         0
       ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
       "material": {
-        "color": "#d9a13b",
-        "roughness": 0.5
+        "color": "#ff1a1a",
+        "roughness": 0.15,
+        "metalness": 0.1,
+        "emissive": "#ff2200",
+        "emissiveIntensity": 12,
+        "opacity": 1,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": false
       },
       "physics": {
         "body": "dynamic",
@@ -227,7 +280,8 @@
       ],
       "material": {
         "color": "#e5534b",
-        "roughness": 0.5
+        "roughness": 0.42,
+        "metalness": 0.2
       },
       "physics": {
         "body": "dynamic",
@@ -251,7 +305,8 @@
       ],
       "material": {
         "color": "#9b6dd6",
-        "roughness": 0.5
+        "roughness": 0.42,
+        "metalness": 0.2
       },
       "physics": {
         "body": "dynamic",
@@ -275,7 +330,8 @@
       ],
       "material": {
         "color": "#4fb8c9",
-        "roughness": 0.5
+        "roughness": 0.42,
+        "metalness": 0.2
       },
       "physics": {
         "body": "dynamic",
@@ -299,11 +355,19 @@
       ],
       "material": {
         "color": "#3a4152",
-        "roughness": 0.4,
-        "metalness": 0.6
+        "roughness": 0.35,
+        "metalness": 0.7
       },
       "physics": {
-        "body": "fixed"
+        "body": "dynamic",
+        "restitution": 0.2,
+        "friction": 0.5,
+        "density": 1.2,
+        "angvel": [
+          0,
+          0,
+          -0.5
+        ]
       }
     },
     {
@@ -322,13 +386,95 @@
       ],
       "material": {
         "color": "#f1c40f",
-        "roughness": 0.4,
-        "metalness": 0.3
+        "roughness": 0.35,
+        "metalness": 0.4
       },
       "physics": {
         "body": "dynamic",
         "angularDamping": 0.01
       }
+    },
+    {
+      "id": "domino-6",
+      "name": "Domino 7",
+      "type": "box",
+      "params": {
+        "width": 0.12,
+        "height": 1,
+        "depth": 0.5
+      },
+      "position": [
+        2.7,
+        0.5,
+        0
+      ],
+      "material": {
+        "color": "#ff8a65",
+        "roughness": 0.42,
+        "metalness": 0.2
+      },
+      "physics": {
+        "body": "dynamic",
+        "restitution": 0.05,
+        "friction": 0.6
+      }
+    },
+    {
+      "id": "domino-7",
+      "name": "Domino 8",
+      "type": "box",
+      "params": {
+        "width": 0.12,
+        "height": 1,
+        "depth": 0.5
+      },
+      "position": [
+        3.35,
+        0.5,
+        0
+      ],
+      "material": {
+        "color": "#81c784",
+        "roughness": 0.42,
+        "metalness": 0.2
+      },
+      "physics": {
+        "body": "dynamic",
+        "restitution": 0.05,
+        "friction": 0.6
+      }
+    },
+    {
+      "id": "domino-8",
+      "name": "Domino 9",
+      "type": "box",
+      "params": {
+        "width": 0.12,
+        "height": 1,
+        "depth": 0.5
+      },
+      "position": [
+        4.0,
+        0.5,
+        0
+      ],
+      "material": {
+        "color": "#64b5f6",
+        "roughness": 0.42,
+        "metalness": 0.2
+      },
+      "physics": {
+        "body": "dynamic",
+        "restitution": 0.05,
+        "friction": 0.6
+      }
     }
-  ]
+  ],
+  "post": {
+    "bloom": {
+      "strength": 0.9,
+      "radius": 0.7,
+      "threshold": 0.4
+    }
+  }
 }
