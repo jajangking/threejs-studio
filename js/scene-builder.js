@@ -331,7 +331,7 @@ export async function buildScene(spec, opts = {}) {
   // Joint antar body (revolute/spherical/fixed, opsional motor)
   for (const j of spec.joints || []) {
     const b1 = bodyMap.get(j.body1), b2 = bodyMap.get(j.body2);
-    if (!b1 || !b2) { errors.push(`joint ${j.body1}-${j.body2}: body tidak ditemukan`); continue; }
+    if (!b1 || !b2) { console.warn(`[physics] joint ${j.body1}-${j.body2} dilewati: body tidak ada (auto-prune)`); continue; }
     const v = a => ({ x: a[0], y: a[1], z: a[2] });
     const Iq = { x: 0, y: 0, z: 0, w: 1 };
     let jd;

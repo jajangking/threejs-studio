@@ -443,6 +443,7 @@ MODE DIFF (DEFAULT — cepat, output kecil, jangan tulis ulang scene penuh):
    "upserts":[{...objek lengkap: id, type, params, position, rotation, scale, material...}],
    "remove_ids":["id-objek-lama"],
    "lights":[...HANYA bila berubah; array lampu lengkap...],
+   "joints":[...HANYA bila berubah; array joint lengkap...],
    "camera":{...HANYA bila berubah...},
    "environment":{...HANYA bila berubah...},
    "post":{...HANYA bila berubah...}
@@ -465,6 +466,8 @@ ATURAN DIFF:
 - Bila scene saat ini KOSONG (projek baru, objects=[]), kamu WAJIB menyertakan "contract" lengkap
   (konsep, objek wajib, palet hex, kamera, lighting, acceptance criteria) — kontrak tidak boleh tetap stub.
 - id objek lama dipertahankan persis; hapus hanya yang diminta user atau yang rusak.
+- Hapus objek fisika: joint yang merujuknya DI-PRUNE OTOMATIS oleh server (tidak perlu kirim joints).
+  Untuk mengubah joint secara eksplisit, kirim array "joints" lengkap di diff.
 - MEMINDAH/MENGUBAH objek = upsert dengan id yang SAMA PERSIS untuk semua part-nya (mis. mobil: badan+kabin+4 roda+lampu). JANGAN membuat id baru/varian untuk objek yang sudah ada (duplikat visual!).
 
 SCHEMA SPEC (semua field):
@@ -774,6 +777,14 @@ def apply_diff(current, diff):
     spec['objects'] = objs
     if isinstance(diff.get('lights'), list):
         spec['lights'] = diff['lights']
+    if isinstance(diff.get('joints'), list):
+        spec['joints'] = diff['joints']
+    # Auto-prune: joint yang merujuk body terhapus/tidak ada dibuang otomatis
+    # (hapus objek fisika tidak boleh meninggalkan joint yatim -> build error)
+    if isinstance(spec.get('joints'), list):
+        ids = {o.get('id') for o in objs}
+        spec['joints'] = [j for j in spec['joints']
+                          if isinstance(j, dict) and j.get('body1') in ids and j.get('body2') in ids]
     for key in ('camera', 'environment', 'post', 'meta'):
         if isinstance(diff.get(key), dict):
             spec[key] = {**(spec.get(key) or {}), **diff[key]}
