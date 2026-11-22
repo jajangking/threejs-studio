@@ -44,6 +44,7 @@ OPENCODE_FALLBACK_MODELS = ['big-pickle', 'deepseek-v4.1-flash-free', 'minimax-m
 HERMES_MODELS = ['hermes-4-405b']
 
 KNOWN_OBJECT_TYPES = {
+    'assembly',  # alias lama → dinormalisasi jadi group oleh apply_diff & builder
     'box', 'sphere', 'cylinder', 'cone', 'torus', 'torusKnot', 'plane',
     'capsule', 'icosahedron', 'ring', 'gltf', 'sky', 'stars', 'instances', 'group', 'rope', 'trigger',
 }
@@ -980,6 +981,8 @@ SATU PROMPT UNTUK MODEL BERLAPIS (jam, mesin, motor, konektor, dll):
 - Wajib sertakan: "assembly":{"mode":"layered","axis":"z","layers":[{"id":"depan","offset":1.2},{"id":"tengah","offset":0.4},{"id":"dalam","offset":-0.4},{"id":"belakang","offset":-1.2}]}
   (offset dalam meter, searah sumbu; objek luar offset positif, objek dalam negatif).
 - Setiap objek (termasuk roda gigi/jarum/komponen internal) WAJIB punya field "layer" yang sama dengan id layer.
+- PERINGATAN SKEMA: "assembly" adalah FIELD ROOT, BUKAN nilai "type" pada objek. DILARANG menulis {"type":"assembly"}. Container/wadah mekanik WAJIB {"type":"group","children":[...]}.
+- Tipe objek yang DIKENAL: box, sphere, cylinder, cone, torus, torusKnot, plane, capsule, icosahedron, ring, gltf, sky, stars, instances, group, rope, trigger. JANGAN mengarang tipe lain — tipe asing DITOLAK validator.
 - Wajib ada shot dengan "explode":[0,0.8] di cameraPath supaya kedalaman terlihat langsung saat diputar.
 - Benda non-lapis seperti kabel tetap boleh radial (tanpa assembly) — itu sudah didukung.
 
@@ -1423,6 +1426,14 @@ def apply_diff(current, diff):
             status('mode produksi: perubahan design pada diff dibuang (objects/lights/camera dll.)')
         diff = filtered
     spec = json.loads(json.dumps(current))
+    def norm_types(lst):
+        for x in lst or []:
+            if not isinstance(x, dict): continue
+            if x.get('type') == 'assembly':
+                x['type'] = 'group'
+            norm_types(x.get('children'))
+    norm_types(spec.get('objects'))
+    norm_types(diff.get('upserts'))
     objs = spec.get('objects') or []
     removes = set(diff.get('remove_ids') or [])
     def prune(lst):
@@ -1492,6 +1503,8 @@ langkah berpikir: {"thought":"alasan singkat","action":"nama_alat","args":{...}}
 selesai: {"thought":"ringkasan","action":"final","reply":"...","contract":"...","diff":{...}}
 Alat (pilih maksimal 6 langkah, WAJIB pakai alat sebelum final):
 - inspect_scene {} — daftar objek beserta id/type/layer, lampu, assembly.
+- schema {} — daftar tipe objek yang diizinkan + field root spec + contoh struktur. Pakai ini bila ragu.
+- validate_diff {"diff":{...}} — uji kering diff (apply + validate_spec + semantic) SEBELUM final; pakai untuk menangkap tipe/id salah.
 - read_contract {} — kontrak scene saat ini.
 - knowledge {"topic":"..."} — referensi teknis & bagian wajib dari knowledge card.
 - web_research {"topic":"..."} — cari 4 halaman web (judul + URL) untuk fakta teknis.
@@ -1542,6 +1555,21 @@ def loop_tool(name, args, spec, user_text):
                             for c in cards)[:4500]
     if name == 'web_research':
         return '\n'.join(f'{i+1}. {u}' for i, u in enumerate(loop_bing(str(args.get('topic') or user_text)))) or 'tidak ada hasil'
+    if name == 'schema':
+        return json.dumps({'types': sorted(KNOWN_OBJECT_TYPES),
+            'root_fields': ['objects','lights','camera','environment','post','assembly','physics','joints','dynamicCables','cameraPath','power','controls','extensions'],
+            'note': 'assembly adalah FIELD ROOT {mode,axis,layers}, BUKAN tipe objek. Container = group dengan children.'}, ensure_ascii=False)
+    if name == 'validate_diff':
+        d = args.get('diff')
+        if not isinstance(d, dict): return json.dumps({'ok': False, 'errors': ['diff belum diberikan']})
+        try:
+            cand = apply_diff(spec, d)[0]
+            errs = validate_spec(cand)
+            sem = semantic_check(cand, user_text)
+            return json.dumps({'ok': not errs, 'errors': errs[:8],
+                               'semantic': ({'score': sem['score'], 'ok': sem['ok'], 'missing': sem['missing']} if sem else None)}, ensure_ascii=False)
+        except Exception as e:
+            return json.dumps({'ok': False, 'errors': [str(e)[:200]]}, ensure_ascii=False)
     if name == 'hermes_task':
         return hermes_task(args.get('prompt') or user_text, args.get('kind') or 'research')
     if name == 'create_capability':
@@ -1738,10 +1766,24 @@ def agent_loop(job_id, model, user_text):
         action = str(obj.get('action') or '').lower()
         status(f'🧠 loop {step}/{MAX_STEPS} — {thought}')
         if action == 'final':
-            status('✅ loop selesai — validasi hasil akhir…')
             obj.pop('thought', None); obj.pop('action', None); obj.pop('args', None)
+            cand, cerrs = None, []
+            try:
+                if isinstance(obj.get('diff'), dict):
+                    cand = apply_diff(spec, obj['diff'])[0]
+                    cerrs = validate_spec(cand)
+                elif isinstance(obj.get('scene'), dict):
+                    cand, cerrs = obj['scene'], validate_spec(obj['scene'])
+            except Exception as e:
+                cerrs = [str(e)[:200]]
+            if cerrs:
+                status(f'⚠️ loop {step}/{MAX_STEPS} — final ditolak preflight: {cerrs[0][:130]}')
+                msgs.append({'role': 'user', 'content': 'Diff final DITOLAK validator: ' + '; '.join(cerrs[:5]) +
+                             '. Perbaiki lalu balas JSON final lagi.'})
+                continue
+            status('✅ loop selesai — preflight schema lolos')
             return json.dumps(obj, ensure_ascii=False), use
-        allowed = ['inspect_scene', 'read_contract', 'knowledge', 'web_research', 'semantic', 'preview', 'vision', 'create_capability']
+        allowed = ['inspect_scene', 'read_contract', 'knowledge', 'web_research', 'semantic', 'preview', 'vision', 'create_capability', 'schema', 'validate_diff']
         if CHAT.get('hermes_bridge'): allowed.append('hermes_task')
         if action not in allowed:
             msgs.append({'role': 'user', 'content': f'Alat {action} tidak ada. Pilih dari: {", ".join(allowed)}.'})

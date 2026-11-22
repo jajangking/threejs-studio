@@ -1,0 +1,29 @@
+{
+  "id": "rem-angin-truk",
+  "title": "Rem angin truk — sistem suplai, chamber, S-cam & drum",
+  "keywords": ["rem angin", "air brake", "truk rem", "s-cam", "brake chamber", "slack adjuster", "rem truck", "sistem rem udara"],
+  "requiresAssembly": true,
+  "minLayers": 4,
+  "facts": "Rem angin truk sebenarnya tiga sistem: service (injak pedal), parking, dan emergency [1]. Kompresor digerakkan mesin mengisi tangki; governor menghentikan pengisian pada ≈125 psi (cut-out) dan menyalakan lagi ≈100 psi (cut-in), umumnya sistem bekerja 100-120 psi [1][2]. Tangki terdekat kompresor disebut tangki basah ('wet tank') karena di situlah uap air mengembun; tiap tangki punya drain valve, check valve mencegah udara balik, dan safety/pop-off valve biasanya terbuka ≈150 psi [1][2]. Saat pedal (foot valve) ditekan, udara masuk brake chamber di tiap roda, mendorong pushrod → slack adjuster → memutar S-cam; S-cam mendesak dua brake shoe menjauh sehingga kampas menekan bagian dalam drum [1][3]. Parking/emergency memakai spring brake: udara menahan per, bila tegangan udara turun ke 20-45 psi per akan mengunci rem [1][3]. Peringatan tekanan rendah wajib menyala sebelum 55 psi [1]. Ada jeda 'brake lag' 0,5 detik atau lebih karena udara harus mengalir dari tangki ke chamber [1]. Body WAJIB punya komponen: kompresor + governor, tangki basah/kering + drain + check + safety valve, foot valve, brake chamber (diaphragm + pushrod + per), slack adjuster, S-cam + shaft + bearing, dua brake shoe + kampas + per kembali, drum, serta jalur udara. Komponen dalam boleh disembunyikan saat rapat (internalOnly) tetapi wajib ada & ber-layer untuk mode bedah.",
+  "required_parts": [
+    {"key": "kompresor", "label": "Kompresor udara + puli", "keywords": ["kompresor", "compressor", "puli", "pulley"], "min": 1},
+    {"key": "governor", "label": "Governor cut-in/cut-out", "keywords": ["governor", "pengatur"], "min": 1},
+    {"key": "tangki", "label": "Tangki udara basah & kering", "keywords": ["tangki", "tank", "reservoir", "wet", "dry"], "min": 2},
+    {"key": "drain", "label": "Drain valve", "keywords": ["drain", "kuras"], "min": 1},
+    {"key": "check", "label": "Check valve", "keywords": ["check-valve", "checkvalve", "sekat"], "min": 1},
+    {"key": "safety", "label": "Safety / pop-off valve", "keywords": ["safety", "popoff", "pop-off"], "min": 1},
+    {"key": "foot", "label": "Foot valve / pedal rem", "keywords": ["foot-valve", "pedal", "injakan"], "min": 1},
+    {"key": "chamber", "label": "Brake chamber + diafragma + pushrod", "keywords": ["chamber", "diafragma", "diaphragm", "pushrod"], "min": 3},
+    {"key": "slack", "label": "Slack adjuster", "keywords": ["slack", "adjuster", "lengan"], "min": 1},
+    {"key": "scam", "label": "S-cam + poros + bearing", "keywords": ["s-cam", "scam", "cam", "poros-cam"], "min": 3},
+    {"key": "shoe", "label": "Dua brake shoe + kampas", "keywords": ["shoe", "sepatu", "kampas", "lining"], "min": 2},
+    {"key": "drum", "label": "Brake drum", "keywords": ["drum", "tromol"], "min": 1},
+    {"key": "return", "label": "Per kembali shoe", "keywords": ["per-kembali", "return-spring", "spring"], "min": 2},
+    {"key": "gauge", "label": "Gauge tekanan + warning lamp", "keywords": ["gauge", "manometer", "warning", "lampu"], "min": 1}
+  ],
+  "sources": [
+    {"n": 1, "url": "https://www.oregon.gov/odot/dmv/pages/online_cdl_manual_2/section_5.aspx", "title": "Oregon CDL Manual Section 5 - Air Brakes"},
+    {"n": 2, "url": "https://www.ccjdigital.com/maintenance/article/15290514/the-anatomy-of-a-trucks-air-brake-system", "title": "CCJ - Anatomy of a truck's air brake system"},
+    {"n": 3, "url": "https://accelerated.com/air-brakes-for-truck-drivers/", "title": "Air Brakes for Truck Drivers (berbasis CDL manual & 49 CFR)"}
+  ]
+}

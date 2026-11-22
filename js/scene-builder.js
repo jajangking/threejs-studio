@@ -158,6 +158,12 @@ function makeLight(l) {
 // Bangun scene dari spec. Mengembalikan handle untuk studio & renderer.
 export async function buildScene(spec, opts = {}) {
   const errors = [];
+  // Alias skema: agent kadang menulis type "assembly" untuk wadah — normalisasi ke group.
+  const fixTypes = (list) => { for (const o of list || []) {
+    if (o && o.type === 'assembly') o.type = 'group';
+    if (o && Array.isArray(o.children)) fixTypes(o.children);
+  }};
+  fixTypes(spec.objects);
   const scene = new THREE.Scene();
   const registry = new Map(); // id -> Object3D
 
