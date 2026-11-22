@@ -40,6 +40,7 @@ def main():
         sys.exit(1)
 
     m = re.search(r'<img id="shot"[^>]*src="data:image/png;base64,([^"]+)"', dom)
+    m2 = re.search(r'<img id="shotDetail"[^>]*src="data:image/png;base64,([^"]+)"', dom)
     r = re.search(r'<pre id="report">(.*?)</pre>', dom, re.S)
     outdir = os.path.join(ROOT, 'iterations', a.iter_id)
     os.makedirs(outdir, exist_ok=True)
@@ -50,6 +51,9 @@ def main():
             f.write(base64.b64decode(m.group(1)))
     else:
         report.setdefault('errors', []).append('screenshot tidak ditemukan di DOM')
+    if m2:
+        with open(os.path.join(outdir, a.name + '-detail.png'), 'wb') as f:
+            f.write(base64.b64decode(m2.group(1)))
 
     with open(os.path.join(outdir, ('checklist' if a.name == 'shot' else a.name + '-checklist') + '.json'), 'w', encoding='utf-8') as f:
         json.dump(report, f, ensure_ascii=False, indent=2)

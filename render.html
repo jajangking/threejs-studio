@@ -11,6 +11,7 @@
 <body>
 <canvas id="cv"></canvas>
 <img id="shot" alt="">
+<img id="shotDetail" alt="">
 <pre id="report">{}</pre>
 <script type="module">
 import { buildScene, loadExtensions, makeRenderer, makeComposer, smokeCheck, applyAnimations, stepPhysics, applyExplode, compileCameraPath, sampleCameraPath } from './js/scene-builder.js';
@@ -67,6 +68,16 @@ try {
   // beberapa frame ekstra agar shadow map & material stabil
   for (let i = 0; i < 3; i++) handle.composer ? handle.composer.render() : renderer.render(handle.scene, handle.camera);
   document.getElementById('shot').src = cv.toDataURL('image/png');
+  if (params.get('focus') === 'both' && !isNaN(exParam) && exParam > 0) {
+    const ax = spec.assembly?.axis || 'z';
+    if (ax === 'z') handle.camera.position.set(2.6, 1.7, 2.0);
+    else if (ax === 'x') handle.camera.position.set(2.0, 1.7, 2.6);
+    else handle.camera.position.set(2.4, 3.4, 2.4);
+    handle.camera.lookAt(0, 1.0, 0);
+    handle.camera.updateProjectionMatrix();
+    for (let i = 0; i < 3; i++) handle.composer ? handle.composer.render() : renderer.render(handle.scene, handle.camera);
+    document.getElementById('shotDetail').src = cv.toDataURL('image/png');
+  }
   Object.assign(report, { ok: true, specName: spec.meta?.name, smoke });
 } catch (e) {
   report.errors.push(String(e && e.stack || e));

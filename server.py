@@ -1316,12 +1316,42 @@ VISION_QUESTION = (
     'KRITIK: <satu kalimat perbaikan paling berdampak, bahasa Indonesia>')
 
 
+VISION_CACHE = {}
+
+def vision_image(path, max_w=640):
+    """Kirim gambar 640px ke vision — lebih cepat & murah, cukup untuk penilaian."""
+    try:
+        p = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-vf', f'scale={max_w}:-1',
+                            '-f', 'image2pipe', '-vcodec', 'png', '-'],
+                           cwd=ROOT, capture_output=True, timeout=30)
+        if p.returncode == 0 and p.stdout:
+            return p.stdout
+    except Exception:
+        pass
+    return open(path, 'rb').read()
+
+def vision_cached(kind, imgs, question, fn):
+    key = hashlib.sha256((kind + '|' + question + '|' + '|'.join(hashlib.sha256(b).hexdigest() for b in imgs)).encode()).hexdigest()
+    if key in VISION_CACHE:
+        status(f'⚡ vision cache hit ({kind})')
+        return dict(VISION_CACHE[key])
+    out = fn()
+    if out:
+        VISION_CACHE[key] = dict(out)
+    return out
+
+
 def vision_gate(iter_id):
     """Nilai shot.png dengan model vision. Return {pass, avg, scores, critique} atau None bila unavailable."""
     shot = os.path.join(ROOT, 'iterations', iter_id, 'shot.png')
     if not os.path.exists(shot):
         return None
-    img = base64.b64encode(open(shot, 'rb').read()).decode()
+    img_bytes = vision_image(shot)
+    ck = 'v:' + hashlib.sha256(img_bytes).hexdigest()
+    if ck in VISION_CACHE:
+        status('⚡ vision cache hit (estetika)')
+        return dict(VISION_CACHE[ck])
+    img = base64.b64encode(img_bytes).decode()
     for vm in VISION_MODELS:
         try:
             status(f'vision: mencoba {vm} (maks 35 detik)…')
@@ -1341,9 +1371,11 @@ def vision_gate(iter_id):
             scores = {k: int(v) for k, v in zip(['komposisi', 'detail', 'material', 'cahaya', 'atmosfer'], ms.groups())}
             avg = sum(scores.values()) / 5
             verdict_ok = (mv.group(1) == 'LAYAK FINAL') if mv else (avg >= 7)
-            return {'pass': bool(verdict_ok and avg >= 6.0), 'avg': avg,
-                    'scores': ', '.join(f'{k}={v}' for k, v in scores.items()),
-                    'critique': (mk.group(1).strip() if mk else text[-200:])}
+            out = {'pass': bool(verdict_ok and avg >= 6.0), 'avg': avg,
+                   'scores': ', '.join(f'{k}={v}' for k, v in scores.items()),
+                   'critique': (mk.group(1).strip() if mk else text[-200:])}
+            VISION_CACHE[ck] = dict(out)
+            return out
         except Exception:
             continue
     return None
@@ -1378,13 +1410,10 @@ def bedah_gate(iter_id, factor=0.8):
     """Render versi exploded lalu minta vision menilai isi dalamnya. None bila vision unavailable."""
     outdir = os.path.join(ROOT, 'iterations', iter_id)
     paths = [os.path.join(outdir, n) for n in ('bedah.png', 'bedah-detail.png')]
-    for idx, name in enumerate(('bedah', 'bedah-detail')):
-        if os.path.exists(paths[idx]):
-            continue
+    if not all(os.path.exists(p) for p in paths):
         cmd = ['python3', 'scripts/render.py', iter_id, '--explode', str(factor),
-               '--name', name, '--notes', 'gerbang bedah', '--w', '960', '--h', '540']
-        if idx == 1:
-            cmd += ['--focus', 'module']
+               '--name', 'bedah', '--focus', 'both', '--notes', 'gerbang bedah',
+               '--w', '960', '--h', '540']
         try:
             subprocess.run(cmd, cwd=ROOT, capture_output=True, timeout=180)
         except Exception:
@@ -1392,7 +1421,12 @@ def bedah_gate(iter_id, factor=0.8):
     if not all(os.path.exists(p) for p in paths):
         return None
     spec = read_json(os.path.join(ROOT, 'scene.json'), {})
-    imgs = [base64.b64encode(open(p, 'rb').read()).decode() for p in paths]
+    rawimgs = [vision_image(p) for p in paths]
+    ck = 'b:' + hashlib.sha256(b'|'.join(hashlib.sha256(b).hexdigest().encode() for b in rawimgs)).hexdigest()
+    if ck in VISION_CACHE:
+        status('⚡ vision cache hit (bedah)')
+        return dict(VISION_CACHE[ck])
+    imgs = [base64.b64encode(b).decode() for b in rawimgs]
     for vm in VISION_MODELS:
         try:
             status(f'vision: mencoba {vm} (maks 35 detik)…')
@@ -1413,9 +1447,11 @@ def bedah_gate(iter_id, factor=0.8):
             scores = {k: int(v) for k, v in zip(keys, ms.groups())}
             avg = sum(scores.values()) / 4
             verdict_ok = (mv.group(1) == 'BEDAH LAYAK') if mv else (avg >= 7)
-            return {'pass': bool(verdict_ok and avg >= 6.0), 'avg': avg,
-                    'scores': ', '.join(f'{k}={v}' for k, v in scores.items()),
-                    'critique': (mk.group(1).strip() if mk else text[-200:])}
+            out = {'pass': bool(verdict_ok and avg >= 6.0), 'avg': avg,
+                   'scores': ', '.join(f'{k}={v}' for k, v in scores.items()),
+                   'critique': (mk.group(1).strip() if mk else text[-200:])}
+            VISION_CACHE[ck] = dict(out)
+            return out
         except Exception:
             continue
     return None
@@ -1755,6 +1791,7 @@ def agent_loop(job_id, model, user_text):
         {'role': 'user', 'content': 'PERMINTAAN USER: ' + user_text + sel_ctx},
     ]
     last_diff = None
+    stable_sig, stable_n = None, 0
     bad_json = 0
     deadline = time.time() + 600  # pengaman 10 menit, bukan pemotong kerja normal
     MAX_STEPS = 25  # tidak memotong pekerjaan; hanya pengaman anti-muter
@@ -1825,6 +1862,15 @@ def agent_loop(job_id, model, user_text):
         res = loop_tool(action, obj.get('args'), spec, user_text)
         if action in ('semantic', 'preview', 'vision') and isinstance((obj.get('args') or {}).get('diff'), dict):
             last_diff = obj['args']['diff']
+            sig = json.dumps(last_diff, sort_keys=True, ensure_ascii=False)
+            stable_n = stable_n + 1 if sig == stable_sig else 1
+            stable_sig = sig
+            res_s = str(res)
+            good = ('lolos=True' in res_s or 'pass=True' in res_s or 'skor=' in res_s)
+            if stable_n >= 2 and step >= 2 and good:
+                status('⚡ diff stabil 2 langkah & lolos validasi — finalisasi lebih awal')
+                return json.dumps({'reply': 'Diff stabil dan tervalidasi; loop diakhiri lebih awal.',
+                                   'diff': last_diff}, ensure_ascii=False), use
         status(f'👀 loop {step}/{MAX_STEPS} — hasil {action}: {str(res)[:120]}')
         msgs.append({'role': 'assistant', 'content': json.dumps(obj, ensure_ascii=False)})
         msgs.append({'role': 'user', 'content': 'HASIL ALAT ' + action + ': ' + str(res)[:1500] +
