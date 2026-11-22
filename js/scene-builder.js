@@ -433,6 +433,9 @@ export async function buildScene(spec, opts = {}) {
         emissiveIntensity: c.emissiveIntensity ?? 0, metalness: 0.2, roughness: 0.4,
       }));
       m2.name = c.id; m2.userData.specId = c.id;
+      // Kabel dinamis menghubungkan komponen internal — sembunyikan saat rapat
+      // supaya tidak menjulur di luar gagang; muncul saat applyExplode(factor>0).
+      m2.userData.internalOnly = true; m2.visible = false;
       scene.add(m2); registry.set(c.id, m2);
       handle.dynamicCables.push({ spec: c, mesh: m2 });
     } catch (e) { errors.push(`dynamicCable ${c.id}: ${e.message}`); }
