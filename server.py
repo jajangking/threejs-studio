@@ -715,35 +715,43 @@ def _opencode_post(path, payload, timeout=120):
     return http_json(OPENCODE_URL + path, payload, headers=_opencode_auth(), timeout=timeout)
 
 
-def call_opencode(model, prompt_text):
-    """OpenCode HTTP v2: buat session -> prompt -> tunggu idle -> baca pesan assistant."""
+def opencode_new_session():
     sid_resp = _opencode_post('/api/session', {'title': 'studio-agent'}, timeout=15)
     sid = (sid_resp.get('data') or {}).get('id') or sid_resp.get('id')
     if not sid:
         raise RuntimeError('opencode: gagal membuat session')
+    return sid
+
+def opencode_turn(sid, model, prompt_text, thinking='🧠 berpikir… model menyusun spec 3D (sesi aktif, bisa 1-3 menit)'):
+    """Satu giliran dalam session yang SAMA — dipakai agent_loop untuk multi-turn."""
     _opencode_post(f'/api/session/{sid}/prompt', {
         'text': prompt_text,
         'model': {'providerID': 'opencode', 'modelID': model},
         'resume': True,
     }, timeout=30)
-    status('🧠 berpikir… model menyusun spec 3D (sesi aktif, bisa 1-3 menit)')
+    status(thinking)
     _opencode_post(f'/api/experimental/session/{sid}/wait', {}, timeout=330)
     status('✍️ model merespons — membaca & memvalidasi jawaban…')
     msgs = _opencode_get(f'/api/session/{sid}/message', timeout=20)
     items = msgs.get('data', msgs) if isinstance(msgs, dict) else msgs
     if isinstance(items, dict):
         items = items.get('messages', [])
-    texts = []
+    last = ''
     for item in items or []:
         if not isinstance(item, dict) or item.get('type') != 'assistant':
             continue
-        for part in item.get('content') or []:
-            if isinstance(part, dict) and part.get('type') == 'text' and part.get('text'):
-                texts.append(part['text'])
-    text = '\n'.join(texts).strip()
-    if not text:
+        parts = [p.get('text') for p in (item.get('content') or [])
+                 if isinstance(p, dict) and p.get('type') == 'text' and p.get('text')]
+        if parts:
+            last = '\n'.join(parts)
+    if not last.strip():
         raise RuntimeError('opencode: respons assistant kosong (cek kuota / model)')
-    return text, model
+    return last.strip()
+
+def call_opencode(model, prompt_text):
+    """OpenCode HTTP v2: buat session -> prompt -> tunggu idle -> baca pesan TERAKHIR."""
+    sid = opencode_new_session()
+    return opencode_turn(sid, model, prompt_text), model
 
 
 def _hermes_key():
@@ -1628,7 +1636,18 @@ def hermes_task(prompt, kind='research'):
 def agent_loop(job_id, model, user_text):
     """Agentic loop: pikir → panggil alat → amati → ulang, lalu final. Default OFF."""
     spec = read_json(os.path.join(ROOT, 'scene.json'), {})
-    use = model if not str(model).startswith(('opencode:', 'hermes:')) else 'tencent/hy4-flash:free'
+    use, op_sid = model, None
+    if str(model).startswith('opencode:'):
+        mid = model.split(':', 1)[1]
+        try:
+            op_sid = opencode_new_session()
+            status(f'🧠 MODE LOOP — sesi opencode persisten {str(op_sid)[:8]} · model {model}')
+        except Exception as e:
+            if not CHAT.get('fallback_enabled', True): raise
+            use = 'tencent/hy4-flash:free'
+            status('⚠️ sesi opencode gagal — fallback ke ' + use + ': ' + str(e)[:80])
+    elif str(model).startswith('hermes:'):
+        use = 'tencent/hy4-flash:free'
     status(f'🧠 MODE LOOP aktif — model {use}, berjalan sampai final (maks 25 langkah pengaman)')
     extra = ''
     if CHAT.get('hermes_bridge'):
@@ -1648,8 +1667,20 @@ def agent_loop(job_id, model, user_text):
         if step >= 3 and step % 4 == 0:
             msgs.append({'role': 'user', 'content': 'Pengingat: kamu BOLEH langsung final kapan saja bila diff sudah valid — tidak perlu menunggu sempurna.'})
         status(f'🧠 loop {step}/{MAX_STEPS} — berpikir…')
-        raw = call_router(use, msgs, max_tokens=2500)
-        txt = raw[0] if isinstance(raw, tuple) else raw
+        if op_sid:
+            q = (LOOP_SYSTEM + extra + '\n\n' + SYSTEM_PROMPT[:3500] +
+                 '\n\nPERMINTAAN USER: ' + user_text) if step == 1 else msgs[-1]['content']
+            try:
+                txt = opencode_turn(op_sid, mid, q, f'🧠 loop {step}/{MAX_STEPS} — opencode berpikir…')
+            except Exception as e:
+                if not CHAT.get('fallback_enabled', True): raise
+                status('⚠️ opencode gagal di tengah loop — pindah ke router: ' + str(e)[:80])
+                op_sid, use = None, 'tencent/hy4-flash:free'
+                raw = call_router(use, msgs, max_tokens=2500)
+                txt = raw[0] if isinstance(raw, tuple) else raw
+        else:
+            raw = call_router(use, msgs, max_tokens=2500)
+            txt = raw[0] if isinstance(raw, tuple) else raw
         obj = extract_json_object(txt)
         if not isinstance(obj, dict):
             msgs.append({'role': 'user', 'content': 'Jawaban bukan JSON. Balas JSON sesuai protokol.'})
@@ -1681,8 +1712,11 @@ def agent_loop(job_id, model, user_text):
     # tidak ada diff sama sekali: minta satu langkah final eksplisit, lalu pakai apa adanya
     msgs.append({'role': 'user', 'content': 'Balas JSON final sekarang dengan diff minimal yang valid (boleh kosong upserts bila scene sudah benar).'})
     try:
-        raw = call_router(use, msgs, max_tokens=2500)
-        txt = raw[0] if isinstance(raw, tuple) else raw
+        if op_sid:
+            txt = opencode_turn(op_sid, mid, 'Balas JSON final sekarang dengan diff minimal yang valid.')
+        else:
+            raw = call_router(use, msgs, max_tokens=2500)
+            txt = raw[0] if isinstance(raw, tuple) else raw
         obj = extract_json_object(txt) or {}
         obj.pop('thought', None); obj.pop('action', None); obj.pop('args', None)
         if isinstance(obj.get('diff'), dict):
