@@ -1172,6 +1172,14 @@ def _render(iter_id, notes):
         return {'ok': False, 'smoke': {'pass': False, 'checks': []},
                 'errors': ['render timeout']}
     rep = read_json(os.path.join(ROOT, 'iterations', iter_id, 'checklist.json'), {})
+    verrs = validate_spec(read_json(os.path.join(ROOT, 'scene.json'), {}))
+    if verrs:
+        status('⚠️ spec tidak valid — render ditandai GAGAL: ' + verrs[0][:120])
+        rep['errors'] = list(rep.get('errors') or []) + verrs[:6]
+        rep['ok'] = False
+        if isinstance(rep.get('smoke'), dict): rep['smoke']['pass'] = False
+        with open(os.path.join(ROOT, 'iterations', iter_id, 'checklist.json'), 'w') as f:
+            json.dump(rep, f, ensure_ascii=False, indent=2)
     checks = (rep.get('smoke') or {}).get('checks', []) if isinstance(rep, dict) else []
     npass = sum(1 for c in checks if c.get('pass'))
     smoke_pass = bool(isinstance(rep, dict) and rep.get('ok')
@@ -1240,6 +1248,16 @@ def semantic_check(spec, text):
                 walk(o)
             mn = req.get('min', 1)
             found[req['key']] = {'label': req.get('label', req['key']), 'count': n, 'min': mn, 'ok': n >= mn}
+        ids = []
+        def collect_id(lst):
+            for x in lst or []:
+                if isinstance(x, dict):
+                    if x.get('id'): ids.append(x['id'])
+                    collect_id(x.get('children'))
+        collect_id(spec.get('objects'))
+        dup = sorted({i for i in ids if ids.count(i) > 1})
+        found['uniqueness'] = {'label': 'ID objek unik (root + children)', 'count': len(ids) - len(dup),
+                               'min': len(ids), 'ok': not dup}
         if card.get('requiresAssembly'):
             asm = spec.get('assembly') or {}
             layers = asm.get('layers') or []
@@ -1482,6 +1500,21 @@ def apply_diff(current, diff):
             spec[key] = {**(spec.get(key) or {}), **diff[key]}
     if isinstance(diff.get('dynamicCables'), list):
         spec['dynamicCables'] = diff['dynamicCables']
+    # ID WAJIB unik secara global (root + children) — duplikat merusak registry.
+    seen = set()
+    def dedupe(lst):
+        out = []
+        for x in lst or []:
+            if not isinstance(x, dict): continue
+            i = x.get('id')
+            if i in seen:
+                status(f'⚠️ id duplikat "{i}" dibuang otomatis')
+                continue
+            if i: seen.add(i)
+            if isinstance(x.get('children'), list): x['children'] = dedupe(x['children'])
+            out.append(x)
+        return out
+    spec['objects'] = dedupe(spec.get('objects'))
     return spec, n_up, len(removes)
 
 

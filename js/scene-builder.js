@@ -441,7 +441,9 @@ export async function buildScene(spec, opts = {}) {
       m2.name = c.id; m2.userData.specId = c.id;
       // Kabel dinamis menghubungkan komponen internal — sembunyikan saat rapat
       // supaya tidak menjulur di luar gagang; muncul saat applyExplode(factor>0).
-      m2.userData.internalOnly = true; m2.visible = false;
+      m2.userData.internalOnly = !c.external;
+      m2.userData.externalCable = !!c.external;
+      m2.visible = !!c.external;
       scene.add(m2); registry.set(c.id, m2);
       handle.dynamicCables.push({ spec: c, mesh: m2 });
     } catch (e) { errors.push(`dynamicCable ${c.id}: ${e.message}`); }
@@ -1145,7 +1147,8 @@ function updateDynamicCables(handle) {
 export function applyExplode(handle, factor) {
   // Bagian internalOnly hanya muncul saat scene dibuka (factor > 0).
   handle.scene.traverse(m => {
-    if (m.userData?.internalOnly && m.userData?.hideOnExplode) m.visible = false; // internal & digantikan kabel dinamis — selalu sembunyi
+    if (m.userData?.externalCable) m.visible = true;
+    else if (m.userData?.internalOnly && m.userData?.hideOnExplode) m.visible = false; // internal & digantikan kabel dinamis — selalu sembunyi
     else if (m.userData?.hideOnExplode) m.visible = factor <= 0.02;
     else if (m.userData?.internalOnly) m.visible = factor > 0.02;
   });
