@@ -384,6 +384,7 @@ CHAT = {
     'last_iteration': None,
     'fallback_enabled': True,
     'loop_mode': False,
+    'hermes_bridge': False,
 }
 try:
     _st = json.load(open(os.path.join(ROOT, 'settings.json')))
@@ -392,6 +393,8 @@ try:
             CHAT['fallback_enabled'] = bool(_st['fallback_enabled'])
         if 'loop_mode' in _st:
             CHAT['loop_mode'] = bool(_st['loop_mode'])
+        if 'hermes_bridge' in _st:
+            CHAT['hermes_bridge'] = bool(_st['hermes_bridge'])
 except Exception:
     pass
 CHAT_STATUS_MAX = 80
@@ -481,6 +484,7 @@ def chat_state():
             'running': running,
             'loop_mode': bool(CHAT.get('loop_mode')),
             'fallback_enabled': bool(CHAT.get('fallback_enabled', True)),
+            'hermes_bridge': bool(CHAT.get('hermes_bridge')),
             'job_id': CHAT['job_id'],
             'status_lines': list(CHAT['status_lines'][-CHAT_STATUS_MAX:]),
             'messages': msgs if isinstance(msgs, list) else [],
@@ -1510,6 +1514,8 @@ def loop_tool(name, args, spec, user_text):
                             for c in cards)[:4500]
     if name == 'web_research':
         return '\n'.join(f'{i+1}. {u}' for i, u in enumerate(loop_bing(str(args.get('topic') or user_text)))) or 'tidak ada hasil'
+    if name == 'hermes_task':
+        return hermes_task(args.get('prompt') or user_text, args.get('kind') or 'research')
     if name in ('semantic', 'preview', 'vision'):
         d = args.get('diff')
         if not isinstance(d, dict): return 'diff belum diberikan'
@@ -1539,13 +1545,52 @@ def loop_tool(name, args, spec, user_text):
         return brief
     return f'alat {name} tidak dikenal'
 
+HERMES_CLI = '/data/home/.local/bin/hermes'
+HERMES_TOOLSETS = 'web,vision,skills,file'  # tanpa terminal — bridge tidak boleh menjalankan shell
+
+def scrub_secret(text):
+    t = str(text or '')
+    pats = [
+        r'sk-[A-Za-z0-9_\-]{8,}', r'(?i)bearer\s+[A-Za-z0-9._\-]{12,}',
+        r'(?i)(API_SERVER_KEY|OPENAI_API_KEY|OPENROUTER_API_KEY|GH[OPRS]?_TOKEN|password|api[_-]?key)\s*[:=]\s*\S+',
+    ]
+    for p in pats:
+        t = re.sub(p, '[REDACTED]', t)
+    return t
+
+def hermes_task(prompt, kind='research'):
+    """Subagent Hermes dengan tool whitelist — hasil disaring sebelum masuk context agent."""
+    if not CHAT.get('hermes_bridge'):
+        return 'Hermes Bridge NONAKTIF — aktifkan toggle 🤝 Hermes dulu'
+    guard = ('Tugas subagent untuk Three.js Studio. Gunakan tool yang diizinkan untuk mencari Fakta '
+             'terverifikasi (web/skills/file), sertakan URL sumber. DILARANG menjalankan perintah shell, '
+             'mengubah file project threejs-studio, memanggil /api/chat, me-restart server, atau '
+             'menampilkan kunci/token/kata sandi. Kembalikan ringkasan padat saja.\n\n')
+    q = guard + scrub_secret(str(prompt))[:3000]
+    cmd = [HERMES_CLI, 'chat', '-Q', '--oneshot', '--yolo', '-t', HERMES_TOOLSETS,
+           '--run-budget', '100', '-q', q]
+    try:
+        r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=130)
+        out = scrub_secret(r.stdout or r.stderr or '')
+        return out.strip()[:5000] or 'Hermes tidak menghasilkan jawaban'
+    except subprocess.TimeoutExpired:
+        return 'Hermes Bridge timeout (130 detik)'
+    except Exception as e:
+        return 'Hermes Bridge gagal: ' + scrub_secret(str(e))[:200]
+
+
 def agent_loop(job_id, model, user_text):
     """Agentic loop: pikir → panggil alat → amati → ulang, lalu final. Default OFF."""
     spec = read_json(os.path.join(ROOT, 'scene.json'), {})
     use = model if not str(model).startswith(('opencode:', 'hermes:')) else 'tencent/hy4-flash:free'
     status(f'🧠 MODE LOOP aktif — model {use}, berjalan sampai final (maks 25 langkah pengaman)')
+    extra = ''
+    if CHAT.get('hermes_bridge'):
+        extra = ('\nAlat tambahan: hermes_task {"prompt":"..."} — minta agen Hermes melakukan '
+                 'riset web/file dengan toolnya; jawabannya dipakai sebagai bukti. Jangan minta '
+                 'Hermes mengubah scene atau memanggil server studio.\n')
     msgs = [
-        {'role': 'system', 'content': LOOP_SYSTEM + '\n\n' + SYSTEM_PROMPT[:3500]},
+        {'role': 'system', 'content': LOOP_SYSTEM + extra + '\n\n' + SYSTEM_PROMPT[:3500]},
         {'role': 'user', 'content': 'PERMINTAAN USER: ' + user_text},
     ]
     last_diff = None
@@ -1570,8 +1615,10 @@ def agent_loop(job_id, model, user_text):
             status('✅ loop selesai — validasi hasil akhir…')
             obj.pop('thought', None); obj.pop('action', None); obj.pop('args', None)
             return json.dumps(obj, ensure_ascii=False), use
-        if action not in ('inspect_scene', 'read_contract', 'knowledge', 'web_research', 'semantic', 'preview', 'vision'):
-            msgs.append({'role': 'user', 'content': f'Alat {action} tidak ada. Pilih dari: inspect_scene, read_contract, knowledge, web_research, semantic, preview, vision.'})
+        allowed = ['inspect_scene', 'read_contract', 'knowledge', 'web_research', 'semantic', 'preview', 'vision']
+        if CHAT.get('hermes_bridge'): allowed.append('hermes_task')
+        if action not in allowed:
+            msgs.append({'role': 'user', 'content': f'Alat {action} tidak ada. Pilih dari: {", ".join(allowed)}.'})
             continue
         status(f'🔧 loop {step}/{MAX_STEPS} — memanggil {action}…')
         res = loop_tool(action, obj.get('args'), spec, user_text)
@@ -2626,6 +2673,18 @@ class Handler(SimpleHTTPRequestHandler):
             r = bedah_gate('bedah-check', float(payload.get('factor') or 0.8))
             return self._send(200, {'ok': True, 'result': r,
                                     'images': ['/iterations/bedah-check/bedah.png', '/iterations/bedah-check/bedah-detail.png']})
+        if path == '/api/agent/hermes':
+            with LOCK:
+                CHAT['hermes_bridge'] = bool(payload.get('enabled'))
+                on = CHAT['hermes_bridge']
+            try:
+                stt = read_json(os.path.join(ROOT, 'settings.json'), {}) or {}
+                if not isinstance(stt, dict): stt = {}
+                stt['hermes_bridge'] = on
+                write_json(os.path.join(ROOT, 'settings.json'), stt)
+            except Exception:
+                pass
+            return self._send(200, {'ok': True, 'hermes_bridge': on})
         if path == '/api/agent/fallback':
             with LOCK:
                 CHAT['fallback_enabled'] = bool(payload.get('enabled'))

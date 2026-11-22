@@ -1082,6 +1082,7 @@ async function pollChat() {
     const st = await (await fetch('/api/chat/state?t=' + Date.now())).json();
     chatStatusLines = st.status_lines || [];
     if (typeof st.fallback_enabled === 'boolean' && $('#fallbackMode')) $('#fallbackMode').checked = st.fallback_enabled;
+    if (typeof st.hermes_bridge === 'boolean' && $('#hermesMode')) $('#hermesMode').checked = st.hermes_bridge;
     renderServerStatus(chatStatusLines);
     chatRunning = !!st.running;
     renderChat(st.messages || []);
@@ -1322,6 +1323,13 @@ $('#btnProjNew').onclick = () => {
 $('#btnExpHtml').onclick = () => { location.href = '/api/export?format=html'; toast('Mengunduh HTML mandiri…'); };
 $('#btnExpZip').onclick = () => { location.href = '/api/export?format=zip'; toast('Mengunduh ZIP lengkap…'); };
 $('#btnExpJson').onclick = () => { location.href = '/api/export?format=json'; toast('Mengunduh scene.json…'); };
+$('#hermesMode').onchange = async (e) => {
+  try {
+    const r = await fetch('/api/agent/hermes', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: e.target.checked }) }).then(x => x.json());
+    toast(r.hermes_bridge ? '🤝 Hermes Bridge ON — alat hermes_task tersedia di Mode Loop' : 'Hermes Bridge OFF');
+  } catch (err) { toast('Gagal: ' + err.message); }
+};
 $('#fallbackMode').onchange = async (e) => {
   try {
     const r = await fetch('/api/agent/fallback', { method: 'POST', headers: { 'Content-Type': 'application/json' },
