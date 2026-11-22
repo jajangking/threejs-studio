@@ -297,7 +297,8 @@ export async function buildScene(spec, opts = {}) {
         if (Array.isArray(o.scale)) mesh.scale.fromArray(o.scale);
         else mesh.scale.setScalar(o.scale);
       }
-      mesh.visible = o.visible ?? true;
+      mesh.visible = (o.visible ?? true) && !o.internalOnly;
+      mesh.userData.internalOnly = !!o.internalOnly;
       mesh.userData.specId = o.id;
       if (o.sky) mesh.userData.isSky = true;  // elemen langit/dekorasi jauh (awan dll)
       if (mesh.material) mesh.userData.baseEmissive = mesh.material.emissiveIntensity ?? 1;
@@ -1079,6 +1080,8 @@ export function sampleCameraPath(handle, path, t) {
 // Exploded view hierarkis: root menjauh dari pusat assembly, children menjauh dari pusat group.
 // Offset aditif (kurangi offset lama, tambah baru) — aman composing dengan fisika/animasi.
 export function applyExplode(handle, factor) {
+  // Bagian internalOnly hanya muncul saat scene dibuka (factor > 0).
+  handle.scene.traverse(m => { if (m.userData?.internalOnly) m.visible = factor > 0.02; });
   const roots = (handle.spec.objects || []).map(o => handle.registry.get(o.id)).filter(Boolean);
   // Mode LAYERED: benda berlapis (jam, mesin, konektor) harus terbuka SEPANJANG SUMBU,
   // bukan radial — kalau tidak, penutup depan & roda gigi sama-sama di pusat dan tak terpisah.

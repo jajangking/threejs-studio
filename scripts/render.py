@@ -67,7 +67,7 @@ def main():
             print(f"  ✗ {c['id']}: {c.get('detail','')}")
     for e in report.get('errors', []):
         print(f"  ERROR: {e}")
-    print(f"hasil: {outdir}/shot.png")
+    print(f"hasil: {outdir}/{a.name}.png")
     sys.exit(0 if report.get('ok') and smoke.get('pass') else 2)
 
 if __name__ == '__main__':

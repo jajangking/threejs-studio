@@ -25,3 +25,14 @@ Hemisphere #7f95c7 0,6; directional key #fff4e0 2,2 + shadow; fill #6fa8ff 0,8; 
 
 ## Acceptance criteria
 A. Smoke 8/8 lolos. B. Kepala bulat, jala biru menyala, tombol onClick mematikan daya. C. Setiap ujung kabel menempel ke komponen yang dimaksud, tanpa id duplikat. D. Shot explode menyingkap baterai/otak/trafo beserta jalurnya.
+
+## Detail internal (edit manual, 55 komponen dalam group raket)
+Modul dalam ditandai `internalOnly:true` — TIDAK terlihat saat scene rapat, otomatis muncul saat `applyExplode(factor>0.02)`. Jangan hapus flag ini.
+- Dua cincin frame torus (depan layer `depan` offset 1,7; belakang layer `tengah` offset 0,35) + 4 tiang penyambung.
+- Jala melingkar (instances) layer `jala`.
+- Modul: PCB 0,26×0,018×0,30 + IC + kristal + jejak tembaga (8) + baut (4) + resistor (6) + sirip pendingin (6).
+- Daya: baterai Li-ion Ø0,15×0,34 + terminal + jembatan dioda.
+- Tegangan tinggi: trafo torus + inti ferit + kumparan (6) + kapasitor + kapasitor besar.
+- Harness 17 segmen kabel merah/hitam/oranye/abu menghubungkan baterai → saklar → PCB → trafo → jala; karet kabel (2).
+- Penyangga modul (4) mengikat komponen ke poros gagang.
+Gerbang bedah: `SKOR` rata-rata ≥6 & VERDICT BEDAH LAYAK; smoke 8/8 harus tetap lolos.
