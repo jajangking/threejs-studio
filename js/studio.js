@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { TransformControls } from '../vendor/TransformControls.js';
 import { GLTFExporter } from '../vendor/GLTFExporter.js';
-import { buildScene, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels, syncCaps, resetPhysics, compileCameraPath, sampleCameraPath, applyExplosion, startDrag, moveDrag, endDrag, makeAudio, updateAudio, audioClick } from './scene-builder.js';
+import { buildScene, loadExtensions, makeRenderer, makeComposer, frameCamera, smokeCheck, disposeHandle, applyAnimations, stepPhysics, applyExplode, setSection, setXray, setIsolate, makeLabels, syncCaps, resetPhysics, compileCameraPath, sampleCameraPath, applyExplosion, startDrag, moveDrag, endDrag, makeAudio, updateAudio, audioClick } from './scene-builder.js';
 
 const $ = s => document.querySelector(s);
 const deg = THREE.MathUtils.degToRad, rad2deg = THREE.MathUtils.radToDeg;
@@ -179,7 +179,7 @@ animate();
 async function rebuild(newSpec, announce) {
   if (handle) { gizmo.detach(); disposeHandle(handle); }
   spec = newSpec;
-  handle = await buildScene(spec);
+  handle = await buildScene(spec, { extensions: await loadExtensions(spec) });
   handle.scene.add(grid);
   handle.scene.add(gizmo);
   handle.camera.aspect = wrap.clientWidth / Math.max(1, wrap.clientHeight);

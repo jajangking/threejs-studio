@@ -1,5 +1,5 @@
 {
   "fallback_enabled": false,
   "loop_mode": true,
-  "hermes_bridge": false
+  "hermes_bridge": true
 }

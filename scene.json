@@ -5,8 +5,8 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-06",
-    "saved_at": 1795324037.0469303
+    "iteration": "iter-10",
+    "saved_at": 1795332080.696997
   },
   "environment": {
     "background": "#0b1018",
@@ -28,9 +28,9 @@
   },
   "camera": {
     "position": [
-      3.8,
-      2.5,
-      6.2
+      3.1,
+      2.15,
+      5.0
     ],
     "target": [
       0,
@@ -44,14 +44,14 @@
           "type": "crane",
           "duration": 2.5,
           "from": [
-            3.8,
-            2.5,
-            6.2
+            3.1,
+            2.15,
+            5.0
           ],
           "to": [
-            2.8,
-            3.2,
-            5.2
+            2.5,
+            2.95,
+            4.4
           ],
           "target": [
             0,
@@ -62,8 +62,8 @@
         {
           "type": "orbit",
           "duration": 3.5,
-          "radius": 5.2,
-          "height": 2.6,
+          "radius": 4.4,
+          "height": 2.4,
           "target": [
             0,
             1.45,
@@ -88,9 +88,9 @@
           "type": "dolly",
           "duration": 2.5,
           "to": [
-            2.8,
-            2.1,
-            4.6
+            2.4,
+            1.9,
+            4.1
           ],
           "target": [
             0,
@@ -102,6 +102,48 @@
       "loop": true,
       "autoplay": true
     }
+  },
+  "assembly": {
+    "mode": "layered",
+    "axis": "z",
+    "layers": [
+      {
+        "id": "depan",
+        "offset": 1.8
+      },
+      {
+        "id": "jala",
+        "offset": 0.9
+      },
+      {
+        "id": "otak",
+        "offset": 0.35
+      },
+      {
+        "id": "tengah",
+        "offset": 0
+      },
+      {
+        "id": "pegangan",
+        "offset": 0
+      },
+      {
+        "id": "dalam",
+        "offset": -0.5
+      },
+      {
+        "id": "baterai",
+        "offset": -1.2
+      },
+      {
+        "id": "kabel",
+        "offset": -1.6
+      },
+      {
+        "id": "belakang",
+        "offset": -2.6
+      }
+    ]
   },
   "lights": [
     {
@@ -915,7 +957,7 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "otak",
           "material": {
             "color": "#1b5e3c",
             "metalness": 0.2,
@@ -949,7 +991,7 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "otak",
           "material": {
             "color": "#0d0f14",
             "metalness": 0.4,
@@ -983,7 +1025,7 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "otak",
           "material": {
             "color": "#b0b8c2",
             "metalness": 0.8,
@@ -995,152 +1037,17 @@
           "internalOnly": true
         },
         {
-          "id": "batre-liion",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.075,
-            "radiusBottom": 0.075,
-            "height": 0.34
-          },
-          "position": [
-            0.17,
-            0.8,
-            -0.02
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#263356",
-            "metalness": 0.7,
-            "roughness": 0.35,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "trafo-boost",
-          "type": "torus",
-          "params": {
-            "radius": 0.075,
-            "tube": 0.03
-          },
-          "position": [
-            -0.02,
-            0.97,
-            0.13
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#c8793a",
-            "metalness": 0.85,
-            "roughness": 0.3,
-            "emissive": "#4a1c00",
-            "emissiveIntensity": 0.5,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "inti-ferit",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.03,
-            "radiusBottom": 0.03,
-            "height": 0.12
-          },
-          "position": [
-            -0.02,
-            0.97,
-            0.13
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#2b2b33",
-            "metalness": 0.2,
-            "roughness": 0.8,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kapasitor",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.045,
-            "radiusBottom": 0.045,
-            "height": 0.15
-          },
-          "position": [
-            0.1,
-            0.95,
-            0.13
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#1e4fa8",
-            "metalness": 0.3,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "jembatan-dioda",
+          "id": "kristal-oscilator",
           "type": "box",
           "params": {
-            "width": 0.08,
-            "height": 0.02,
-            "depth": 0.06
+            "width": 0.04,
+            "height": 0.018,
+            "depth": 0.025
           },
           "position": [
-            -0.13,
-            0.86,
-            0.13
+            -0.05,
+            1.09,
+            0.1
           ],
           "rotation": [
             0,
@@ -1152,11 +1059,11 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "otak",
           "material": {
-            "color": "#16181f",
-            "metalness": 0.3,
-            "roughness": 0.55,
+            "color": "#b9c4cf",
+            "metalness": 0.7,
+            "roughness": 0.3,
             "emissive": "#000000",
             "emissiveIntensity": 1,
             "opacity": 1
@@ -1164,585 +1071,7 @@
           "internalOnly": true
         },
         {
-          "id": "kabel-plus-baterai-1",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.1166
-          },
-          "position": [
-            0.17,
-            1.01,
-            0.03
-          ],
-          "rotation": [
-            59.03624346792646,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#e53935",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-plus-baterai-2",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.1594
-          },
-          "position": [
-            0.095,
-            1.03,
-            0.10500000000000001
-          ],
-          "rotation": [
-            0,
-            0,
-            97.59464336859145
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#e53935",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-plus-baterai-3",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.1418
-          },
-          "position": [
-            0.01,
-            0.95,
-            0.135
-          ],
-          "rotation": [
-            0,
-            0,
-            171.86989764584405
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#e53935",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-minus-baterai-1",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.1375
-          },
-          "position": [
-            0.11000000000000001,
-            0.645,
-            -0.05
-          ],
-          "rotation": [
-            0,
-            0,
-            75.96375653207352
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#15171d",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-minus-baterai-2",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.2685
-          },
-          "position": [
-            -0.04,
-            0.755,
-            -0.05
-          ],
-          "rotation": [
-            0,
-            0,
-            43.45184230102204
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#15171d",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-minus-baterai-3",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.1204
-          },
-          "position": [
-            -0.13,
-            0.855,
-            0.04
-          ],
-          "rotation": [
-            85.23635830927383,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#15171d",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-pcb-ic-1",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.006,
-            "radiusBottom": 0.006,
-            "height": 0.1025
-          },
-          "position": [
-            -0.1,
-            1.06,
-            0.125
-          ],
-          "rotation": [
-            0,
-            0,
-            -78.69006752597979
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#c8793a",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-pcb-ic-2",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.006,
-            "radiusBottom": 0.006,
-            "height": 0.0762
-          },
-          "position": [
-            -0.035,
-            1.0350000000000001,
-            0.13
-          ],
-          "rotation": [
-            0,
-            0,
-            -156.80140948635184
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#c8793a",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-pcb-trafo-1",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.007,
-            "radiusBottom": 0.007,
-            "height": 0.0632
-          },
-          "position": [
-            -0.12,
-            0.99,
-            0.13
-          ],
-          "rotation": [
-            0,
-            0,
-            -108.43494882292204
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#c8793a",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-pcb-trafo-2",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.007,
-            "radiusBottom": 0.007,
-            "height": 0.0768
-          },
-          "position": [
-            -0.055,
-            0.975,
-            0.14500000000000002
-          ],
-          "rotation": [
-            0,
-            0,
-            -98.13010235415598
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#c8793a",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-tegangan-1",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.1526
-          },
-          "position": [
-            0.019999999999999997,
-            1.0350000000000001,
-            0.16
-          ],
-          "rotation": [
-            0,
-            0,
-            -31.60750224624888
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#ffb45e",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-tegangan-2",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.2563
-          },
-          "position": [
-            0.04,
-            1.225,
-            0.14
-          ],
-          "rotation": [
-            0,
-            0,
-            9.09027692082232
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#ffb45e",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-tegangan-3",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.3718
-          },
-          "position": [
-            0.01,
-            1.5350000000000001,
-            0.105
-          ],
-          "rotation": [
-            0,
-            0,
-            3.094058058917112
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#ffb45e",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-tegangan-4",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.2617
-          },
-          "position": [
-            0.0,
-            1.85,
-            0.075
-          ],
-          "rotation": [
-            -6.5819446551780105,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "baterai",
-          "material": {
-            "color": "#ffb45e",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-ground-1",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.007,
-            "radiusBottom": 0.007,
-            "height": 0.1833
-          },
-          "position": [
-            0.12000000000000001,
-            1.02,
-            0.09
-          ],
-          "rotation": [
-            0,
-            0,
-            -14.036243467926468
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "jala",
-          "material": {
-            "color": "#8b95a5",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-ground-2",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.007,
-            "radiusBottom": 0.007,
-            "height": 0.3288
-          },
-          "position": [
-            0.095,
-            1.25,
-            0.0
-          ],
-          "rotation": [
-            0,
-            0,
-            16.699244233993632
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "jala",
-          "material": {
-            "color": "#8b95a5",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kabel-ground-3",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.007,
-            "radiusBottom": 0.007,
-            "height": 0.5144
-          },
-          "position": [
-            0.025,
-            1.65,
-            -0.10500000000000001
-          ],
-          "rotation": [
-            -12.407418527400745,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "jala",
-          "material": {
-            "color": "#8b95a5",
-            "metalness": 0.15,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "jejak-tembaga",
+          "id": " jejak-tembaga",
           "type": "instances",
           "params": {},
           "position": [
@@ -1760,7 +1089,7 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "otak",
           "geometry": {
             "type": "box",
             "params": {
@@ -1938,7 +1267,7 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "otak",
           "geometry": {
             "type": "cylinder",
             "params": {
@@ -2030,149 +1359,6 @@
           "internalOnly": true
         },
         {
-          "id": "kumparan-koil",
-          "type": "instances",
-          "params": {},
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "geometry": {
-            "type": "torus",
-            "params": {
-              "radius": 0.06,
-              "tube": 0.006
-            }
-          },
-          "instances": {
-            "transforms": [
-              {
-                "position": [
-                  -0.02,
-                  0.97,
-                  0.113
-                ],
-                "rotation": [
-                  90,
-                  0,
-                  0
-                ],
-                "scale": [
-                  1,
-                  1,
-                  1
-                ]
-              },
-              {
-                "position": [
-                  -0.02,
-                  0.97,
-                  0.12
-                ],
-                "rotation": [
-                  90,
-                  0,
-                  0
-                ],
-                "scale": [
-                  1,
-                  1,
-                  1
-                ]
-              },
-              {
-                "position": [
-                  -0.02,
-                  0.97,
-                  0.127
-                ],
-                "rotation": [
-                  90,
-                  0,
-                  0
-                ],
-                "scale": [
-                  1,
-                  1,
-                  1
-                ]
-              },
-              {
-                "position": [
-                  -0.02,
-                  0.97,
-                  0.134
-                ],
-                "rotation": [
-                  90,
-                  0,
-                  0
-                ],
-                "scale": [
-                  1,
-                  1,
-                  1
-                ]
-              },
-              {
-                "position": [
-                  -0.02,
-                  0.97,
-                  0.141
-                ],
-                "rotation": [
-                  90,
-                  0,
-                  0
-                ],
-                "scale": [
-                  1,
-                  1,
-                  1
-                ]
-              },
-              {
-                "position": [
-                  -0.02,
-                  0.97,
-                  0.148
-                ],
-                "rotation": [
-                  90,
-                  0,
-                  0
-                ],
-                "scale": [
-                  1,
-                  1,
-                  1
-                ]
-              }
-            ]
-          },
-          "material": {
-            "color": "#d98a44",
-            "metalness": 0.85,
-            "roughness": 0.28,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
           "id": "sirip-pendingin",
           "type": "instances",
           "params": {},
@@ -2191,7 +1377,7 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "otak",
           "geometry": {
             "type": "box",
             "params": {
@@ -2335,7 +1521,7 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "otak",
           "geometry": {
             "type": "cylinder",
             "params": {
@@ -2461,6 +1647,594 @@
           "internalOnly": true
         },
         {
+          "id": "penyangga-pcb",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.18
+          },
+          "position": [
+            -0.075,
+            1.03,
+            0.02
+          ],
+          "rotation": [
+            0,
+            0,
+            90
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "material": {
+            "color": "#8892a0",
+            "metalness": 0.8,
+            "roughness": 0.35,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "trafo-boost",
+          "type": "torus",
+          "params": {
+            "radius": 0.075,
+            "tube": 0.03
+          },
+          "position": [
+            -0.02,
+            0.97,
+            0.13
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#c8793a",
+            "metalness": 0.85,
+            "roughness": 0.3,
+            "emissive": "#4a1c00",
+            "emissiveIntensity": 0.5,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "inti-ferit",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.03,
+            "radiusBottom": 0.03,
+            "height": 0.12
+          },
+          "position": [
+            -0.02,
+            0.97,
+            0.13
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#2b2b33",
+            "metalness": 0.2,
+            "roughness": 0.8,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "kumparan-koil",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "geometry": {
+            "type": "torus",
+            "params": {
+              "radius": 0.06,
+              "tube": 0.006
+            }
+          },
+          "instances": {
+            "transforms": [
+              {
+                "position": [
+                  -0.02,
+                  0.97,
+                  0.113
+                ],
+                "rotation": [
+                  90,
+                  0,
+                  0
+                ],
+                "scale": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              {
+                "position": [
+                  -0.02,
+                  0.97,
+                  0.12
+                ],
+                "rotation": [
+                  90,
+                  0,
+                  0
+                ],
+                "scale": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              {
+                "position": [
+                  -0.02,
+                  0.97,
+                  0.127
+                ],
+                "rotation": [
+                  90,
+                  0,
+                  0
+                ],
+                "scale": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              {
+                "position": [
+                  -0.02,
+                  0.97,
+                  0.134
+                ],
+                "rotation": [
+                  90,
+                  0,
+                  0
+                ],
+                "scale": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              {
+                "position": [
+                  -0.02,
+                  0.97,
+                  0.141
+                ],
+                "rotation": [
+                  90,
+                  0,
+                  0
+                ],
+                "scale": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              {
+                "position": [
+                  -0.02,
+                  0.97,
+                  0.148
+                ],
+                "rotation": [
+                  90,
+                  0,
+                  0
+                ],
+                "scale": [
+                  1,
+                  1,
+                  1
+                ]
+              }
+            ]
+          },
+          "material": {
+            "color": "#d98a44",
+            "metalness": 0.85,
+            "roughness": 0.28,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "kapasitor",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.045,
+            "radiusBottom": 0.045,
+            "height": 0.15
+          },
+          "position": [
+            0.1,
+            0.95,
+            0.13
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#1e4fa8",
+            "metalness": 0.3,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "kapasitor-besar",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.03,
+            "radiusBottom": 0.03,
+            "height": 0.11
+          },
+          "position": [
+            0.02,
+            0.95,
+            0.16
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#1e4fa8",
+            "metalness": 0.3,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "jembatan-dioda",
+          "type": "box",
+          "params": {
+            "width": 0.08,
+            "height": 0.02,
+            "depth": 0.06
+          },
+          "position": [
+            -0.13,
+            0.86,
+            0.13
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#16181f",
+            "metalness": 0.3,
+            "roughness": 0.55,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "penyangga-trafo",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.05
+          },
+          "position": [
+            -0.01,
+            0.97,
+            0.02
+          ],
+          "rotation": [
+            0,
+            0,
+            90
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#8892a0",
+            "metalness": 0.8,
+            "roughness": 0.35,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "penyangga-kapasitor",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.13
+          },
+          "position": [
+            0.05,
+            0.95,
+            0.02
+          ],
+          "rotation": [
+            0,
+            0,
+            90
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#8892a0",
+            "metalness": 0.8,
+            "roughness": 0.35,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "kabel-pcb-ic-1",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.006,
+            "radiusBottom": 0.006,
+            "height": 0.1025
+          },
+          "position": [
+            -0.1,
+            1.06,
+            0.125
+          ],
+          "rotation": [
+            0,
+            0,
+            -78.69
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "material": {
+            "color": "#c8793a",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-pcb-ic-2",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.006,
+            "radiusBottom": 0.006,
+            "height": 0.0762
+          },
+          "position": [
+            -0.035,
+            1.035,
+            0.13
+          ],
+          "rotation": [
+            0,
+            0,
+            -156.8
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "material": {
+            "color": "#c8793a",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-pcb-trafo-1",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.007,
+            "radiusBottom": 0.007,
+            "height": 0.0632
+          },
+          "position": [
+            -0.12,
+            0.99,
+            0.13
+          ],
+          "rotation": [
+            0,
+            0,
+            -108.43
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#c8793a",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-pcb-trafo-2",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.007,
+            "radiusBottom": 0.007,
+            "height": 0.0768
+          },
+          "position": [
+            -0.055,
+            0.975,
+            0.145
+          ],
+          "rotation": [
+            0,
+            0,
+            -98.13
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#c8793a",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "batre-liion",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.075,
+            "radiusBottom": 0.075,
+            "height": 0.34
+          },
+          "position": [
+            0.17,
+            0.8,
+            -0.02
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "material": {
+            "color": "#263356",
+            "metalness": 0.7,
+            "roughness": 0.35,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
           "id": "terminal-baterai",
           "type": "instances",
           "params": {},
@@ -2537,108 +2311,6 @@
           "internalOnly": true
         },
         {
-          "id": "kristal-oscilator",
-          "type": "box",
-          "params": {
-            "width": 0.04,
-            "height": 0.018,
-            "depth": 0.025
-          },
-          "position": [
-            -0.05,
-            1.09,
-            0.1
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#b9c4cf",
-            "metalness": 0.7,
-            "roughness": 0.3,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "kapasitor-besar",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.03,
-            "radiusBottom": 0.03,
-            "height": 0.11
-          },
-          "position": [
-            0.02,
-            0.95,
-            0.16
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#1e4fa8",
-            "metalness": 0.3,
-            "roughness": 0.4,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "penyangga-pcb",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.008,
-            "radiusBottom": 0.008,
-            "height": 0.18
-          },
-          "position": [
-            -0.075,
-            1.03,
-            0.02
-          ],
-          "rotation": [
-            0,
-            0,
-            90
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#8892a0",
-            "metalness": 0.8,
-            "roughness": 0.35,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
           "id": "penyangga-batre",
           "type": "cylinder",
           "params": {
@@ -2661,7 +2333,7 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "baterai",
           "material": {
             "color": "#8892a0",
             "metalness": 0.8,
@@ -2673,88 +2345,195 @@
           "internalOnly": true
         },
         {
-          "id": "penyangga-trafo",
+          "id": "kabel-plus-baterai-1",
           "type": "cylinder",
           "params": {
             "radiusTop": 0.008,
             "radiusBottom": 0.008,
-            "height": 0.05
+            "height": 0.1166
           },
           "position": [
-            -0.01,
-            0.97,
-            0.02
+            0.17,
+            1.01,
+            0.03
           ],
           "rotation": [
+            59.04,
             0,
-            0,
-            90
+            0
           ],
           "scale": [
             1,
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "baterai",
           "material": {
-            "color": "#8892a0",
-            "metalness": 0.8,
-            "roughness": 0.35,
+            "color": "#e53935",
+            "metalness": 0.15,
+            "roughness": 0.4,
             "emissive": "#000000",
             "emissiveIntensity": 1,
             "opacity": 1
           },
-          "internalOnly": true
+          "internalOnly": true,
+          "hideOnExplode": true
         },
         {
-          "id": "penyangga-kapasitor",
+          "id": "kabel-plus-baterai-2",
           "type": "cylinder",
           "params": {
             "radiusTop": 0.008,
             "radiusBottom": 0.008,
-            "height": 0.13
+            "height": 0.1594
           },
           "position": [
-            0.05,
+            0.095,
+            1.03,
+            0.105
+          ],
+          "rotation": [
+            0,
+            0,
+            97.59
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "material": {
+            "color": "#e53935",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-plus-baterai-3",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.1418
+          },
+          "position": [
+            0.01,
             0.95,
-            0.02
+            0.135
           ],
           "rotation": [
             0,
             0,
-            90
+            171.87
           ],
           "scale": [
             1,
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "baterai",
           "material": {
-            "color": "#8892a0",
-            "metalness": 0.8,
-            "roughness": 0.35,
+            "color": "#e53935",
+            "metalness": 0.15,
+            "roughness": 0.4,
             "emissive": "#000000",
             "emissiveIntensity": 1,
             "opacity": 1
           },
-          "internalOnly": true
+          "internalOnly": true,
+          "hideOnExplode": true
         },
         {
-          "id": "tiang-frame-1",
+          "id": "kabel-minus-baterai-1",
           "type": "cylinder",
           "params": {
-            "radiusTop": 0.012,
-            "radiusBottom": 0.012,
-            "height": 0.42
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.1375
           },
           "position": [
-            0.552,
-            2.552,
-            0.03
+            0.11,
+            0.645,
+            -0.05
           ],
           "rotation": [
-            90,
+            0,
+            0,
+            75.96
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "material": {
+            "color": "#15171d",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-minus-baterai-2",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.2685
+          },
+          "position": [
+            -0.04,
+            0.755,
+            -0.05
+          ],
+          "rotation": [
+            0,
+            0,
+            43.45
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "material": {
+            "color": "#15171d",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-minus-baterai-3",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.1204
+          },
+          "position": [
+            -0.13,
+            0.855,
+            0.04
+          ],
+          "rotation": [
+            85.24,
             0,
             0
           ],
@@ -2763,118 +2542,17 @@
             1,
             1
           ],
-          "layer": "tengah",
+          "layer": "baterai",
           "material": {
-            "color": "#b9c2cc",
-            "metalness": 0.75,
-            "roughness": 0.3,
+            "color": "#15171d",
+            "metalness": 0.15,
+            "roughness": 0.4,
             "emissive": "#000000",
             "emissiveIntensity": 1,
             "opacity": 1
           },
-          "internalOnly": true
-        },
-        {
-          "id": "tiang-frame-2",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.012,
-            "radiusBottom": 0.012,
-            "height": 0.42
-          },
-          "position": [
-            -0.552,
-            2.552,
-            0.03
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#b9c2cc",
-            "metalness": 0.75,
-            "roughness": 0.3,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "tiang-frame-3",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.012,
-            "radiusBottom": 0.012,
-            "height": 0.42
-          },
-          "position": [
-            -0.552,
-            1.448,
-            0.03
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#b9c2cc",
-            "metalness": 0.75,
-            "roughness": 0.3,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
-        },
-        {
-          "id": "tiang-frame-4",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.012,
-            "radiusBottom": 0.012,
-            "height": 0.42
-          },
-          "position": [
-            0.552,
-            1.448,
-            0.03
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "tengah",
-          "material": {
-            "color": "#b9c2cc",
-            "metalness": 0.75,
-            "roughness": 0.3,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1
-          },
-          "internalOnly": true
+          "internalOnly": true,
+          "hideOnExplode": true
         },
         {
           "id": "karet-kabel-1",
@@ -2941,6 +2619,387 @@
             "opacity": 1
           },
           "internalOnly": true
+        },
+        {
+          "id": "kabel-tegangan-1",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.1526
+          },
+          "position": [
+            0.02,
+            1.035,
+            0.16
+          ],
+          "rotation": [
+            0,
+            0,
+            -31.61
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "material": {
+            "color": "#ffb45e",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-tegangan-2",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.2563
+          },
+          "position": [
+            0.04,
+            1.225,
+            0.14
+          ],
+          "rotation": [
+            0,
+            0,
+            9.09
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "material": {
+            "color": "#ffb45e",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-tegangan-3",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.3718
+          },
+          "position": [
+            0.01,
+            1.535,
+            0.105
+          ],
+          "rotation": [
+            0,
+            0,
+            3.09
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "material": {
+            "color": "#ffb45e",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-tegangan-4",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.2617
+          },
+          "position": [
+            0,
+            1.85,
+            0.075
+          ],
+          "rotation": [
+            -6.58,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "jala",
+          "material": {
+            "color": "#ffb45e",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-ground-1",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.007,
+            "radiusBottom": 0.007,
+            "height": 0.1833
+          },
+          "position": [
+            0.12,
+            1.02,
+            0.09
+          ],
+          "rotation": [
+            0,
+            0,
+            -14.04
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "material": {
+            "color": "#8b95a5",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-ground-2",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.007,
+            "radiusBottom": 0.007,
+            "height": 0.3288
+          },
+          "position": [
+            0.095,
+            1.25,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            16.7
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "tengah",
+          "material": {
+            "color": "#8b95a5",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "kabel-ground-3",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.007,
+            "radiusBottom": 0.007,
+            "height": 0.5144
+          },
+          "position": [
+            0.025,
+            1.65,
+            -0.105
+          ],
+          "rotation": [
+            -12.41,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "jala",
+          "material": {
+            "color": "#8b95a5",
+            "metalness": 0.15,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true,
+          "hideOnExplode": true
+        },
+        {
+          "id": "tiang-frame-1",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.012,
+            "radiusBottom": 0.012,
+            "height": 0.42
+          },
+          "position": [
+            0.552,
+            2.552,
+            0.03
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "belakang",
+          "material": {
+            "color": "#b9c2cc",
+            "metalness": 0.75,
+            "roughness": 0.3,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "tiang-frame-2",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.012,
+            "radiusBottom": 0.012,
+            "height": 0.42
+          },
+          "position": [
+            -0.552,
+            2.552,
+            0.03
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "belakang",
+          "material": {
+            "color": "#b9c2cc",
+            "metalness": 0.75,
+            "roughness": 0.3,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "tiang-frame-3",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.012,
+            "radiusBottom": 0.012,
+            "height": 0.42
+          },
+          "position": [
+            -0.552,
+            1.448,
+            0.03
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "belakang",
+          "material": {
+            "color": "#b9c2cc",
+            "metalness": 0.75,
+            "roughness": 0.3,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
+        },
+        {
+          "id": "tiang-frame-4",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.012,
+            "radiusBottom": 0.012,
+            "height": 0.42
+          },
+          "position": [
+            0.552,
+            1.448,
+            0.03
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "belakang",
+          "material": {
+            "color": "#b9c2cc",
+            "metalness": 0.75,
+            "roughness": 0.3,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          },
+          "internalOnly": true
         }
       ]
     },
@@ -2966,6 +3025,7 @@
         1,
         1
       ],
+      "layer": "jala",
       "material": {
         "color": "#1b1d24",
         "metalness": 0.2,
@@ -2977,8 +3037,7 @@
         "flatShading": false,
         "fog": true,
         "doubleSide": false
-      },
-      "layer": "jala"
+      }
     },
     {
       "id": "nyamuk-sayap-kiri",
@@ -3002,19 +3061,19 @@
         1,
         1
       ],
+      "layer": "jala",
       "material": {
-        "color": "#dfe9ff",
+        "color": "#eaf2ff",
         "metalness": 0,
-        "roughness": 0.3,
-        "emissive": "#6f8fbf",
-        "emissiveIntensity": 0.3,
-        "opacity": 0.4,
+        "roughness": 0.22,
+        "emissive": "#9fc0ff",
+        "emissiveIntensity": 1.1,
+        "opacity": 0.72,
         "wireframe": false,
         "flatShading": false,
         "fog": true,
         "doubleSide": true
-      },
-      "layer": "jala"
+      }
     },
     {
       "id": "nyamuk-sayap-kanan",
@@ -3038,19 +3097,19 @@
         1,
         1
       ],
+      "layer": "jala",
       "material": {
-        "color": "#dfe9ff",
+        "color": "#eaf2ff",
         "metalness": 0,
-        "roughness": 0.3,
-        "emissive": "#6f8fbf",
-        "emissiveIntensity": 0.3,
-        "opacity": 0.4,
+        "roughness": 0.22,
+        "emissive": "#9fc0ff",
+        "emissiveIntensity": 1.1,
+        "opacity": 0.72,
         "wireframe": false,
         "flatShading": false,
         "fog": true,
         "doubleSide": true
-      },
-      "layer": "jala"
+      }
     },
     {
       "id": "nyamuk-mata",
@@ -3073,204 +3132,155 @@
         1,
         1
       ],
+      "layer": "jala",
       "material": {
-        "color": "#ff3b30",
+        "color": "#ff5544",
         "metalness": 0,
-        "roughness": 0.25,
+        "roughness": 0.18,
         "emissive": "#ff3b30",
-        "emissiveIntensity": 3,
+        "emissiveIntensity": 4.5,
         "opacity": 1,
         "wireframe": false,
         "flatShading": false,
         "fog": true,
         "doubleSide": false
-      },
-      "layer": "jala"
+      }
     }
   ],
-  "power": {
-    "label": "Nyala",
-    "default": true,
-    "affects": [
-      "jala",
-      "led-daya"
-    ]
-  },
-  "post": {
-    "bloom": {
-      "strength": 0.6,
-      "radius": 0.5,
-      "threshold": 0.72
-    }
-  },
-  "cameraPath": {
-    "loop": true,
-    "autoplay": true,
-    "shots": [
-      {
-        "type": "crane",
-        "duration": 4,
-        "ease": "inOut",
-        "from": [
-          5,
-          8,
-          7
-        ],
-        "toY": 3.2,
-        "target": "raket",
-        "transition": "dissolve",
-        "transitionDuration": 0.8,
-        "caption": "Oke, kita mulai dari bentuk utuhnya dulu. Kepala raketnya bulat, jalanya biru, dan gagangnya di bawah sana."
+  "dynamicCables": [
+    {
+      "id": "kabel-flex-plus",
+      "from": {
+        "id": "batre-liion",
+        "at": [
+          0.07,
+          0.16,
+          0
+        ]
       },
-      {
-        "type": "orbit",
-        "duration": 5,
-        "ease": "inOut",
-        "target": "jala-melingkar",
-        "framing": {
-          "object": "jala-melingkar",
-          "fill": 0.35
-        },
-        "radius": 3.6,
-        "height": 2.4,
-        "startAngle": 0,
-        "sweep": 180,
-        "transition": "dissolve",
-        "transitionDuration": 0.8,
-        "caption": "Pelan-pelan kita kelilingi kepalanya. Dua cincin ini mengapit jala kawat di tengah."
-      },
-      {
-        "type": "zoom",
-        "duration": 4,
-        "ease": "inOut",
-        "target": "jala-melingkar",
-        "framing": {
-          "object": "jala-melingkar",
-          "fill": 0.55
-        },
-        "fromDistance": 3.4,
-        "toDistance": 1.9,
-        "transition": "dissolve",
-        "transitionDuration": 0.8,
-        "dof": {
-          "enabled": true,
-          "target": "jala-melingkar",
-          "aperture": 0.00012,
-          "maxblur": 0.01
-        },
-        "caption": "Jalanya sebenarnya tiga lapis. Lapis tengah bermuatan tinggi, dua lapis luar dibumikan—jadi kalau nyamuk nyentuh keduanya, aliran listrik kecil langsung lewat."
-      },
-      {
-        "type": "dolly",
-        "duration": 5,
-        "ease": "inOut",
-        "from": [
-          2,
-          1.7,
-          3
-        ],
-        "to": [
-          1.1,
-          1.35,
-          2.3
-        ],
-        "target": "otak-pcb",
-        "framing": {
-          "object": "otak-pcb",
-          "fill": 0.5
-        },
-        "explode": [
+      "to": {
+        "id": "saklar",
+        "at": [
           0,
-          0.8
-        ],
-        "transition": "dissolve",
-        "transitionDuration": 0.8,
-        "caption": "Sekarang kita masuk ke dalam gagangnya. Kita buka perlahan... kelihatan baterainya, pcb otak, trafo kecil, dan jalur kabel merah-hitam yang menyambung semuanya."
+          0,
+          0.04
+        ]
       },
-      {
-        "type": "zoom",
-        "duration": 4,
-        "ease": "inOut",
-        "target": "batre-liion",
-        "framing": {
-          "object": "batre-liion",
-          "fill": 0.6
-        },
-        "fromDistance": 2,
-        "toDistance": 1,
-        "transition": "dissolve",
-        "transitionDuration": 0.8,
-        "caption": "Sumber tenaganya baterai isi ulang tiga komma tujuh volt. Dari terminal merah kabel jalan ke saklar, lalu ke PCB; terminal hitam kembali sebagai ground."
+      "color": "#e53935",
+      "radius": 0.009,
+      "sag": 0.06
+    },
+    {
+      "id": "kabel-flex-minus",
+      "from": {
+        "id": "batre-liion",
+        "at": [
+          0.07,
+          -0.16,
+          0
+        ]
       },
-      {
-        "type": "zoom",
-        "duration": 4,
-        "ease": "inOut",
-        "target": "trafo-boost",
-        "framing": {
-          "object": "trafo-boost",
-          "fill": 0.6
-        },
-        "fromDistance": 2,
-        "toDistance": 0.95,
-        "transition": "dissolve",
-        "transitionDuration": 0.8,
-        "caption": "Nah si trafo ini yang menaikkan tegangan. Arus searah dari baterai diubah jadi arus bolak-balik dulu, lalu dinaikkan jadi sekitar seribu volt lebih—tipis arusnya, aman buat kita."
+      "to": {
+        "id": "jembatan-dioda",
+        "at": [
+          -0.04,
+          0,
+          0
+        ]
       },
-      {
-        "type": "crane",
-        "duration": 5,
-        "ease": "inOut",
-        "from": [
-          3,
-          2.2,
-          5.5
-        ],
-        "toY": 6,
-        "target": "raket",
-        "transition": "dissolve",
-        "transitionDuration": 0.8,
-        "caption": "Dan itu dia, dari baterai sampai ke jala. Kita tarik kembali, raket bulat utuh lagi. Sederhana, tapi pintar."
-      }
-    ],
-    "effects": [
-      {
-        "type": "colorGrade",
-        "look": "clean"
+      "color": "#20232a",
+      "radius": 0.009,
+      "sag": 0.05
+    },
+    {
+      "id": "kabel-flex-pcb",
+      "from": {
+        "id": "jembatan-dioda",
+        "at": [
+          0.04,
+          0,
+          0
+        ]
       },
-      {
-        "type": "vignette"
+      "to": {
+        "id": "otak-pcb",
+        "at": [
+          -0.1,
+          0,
+          0.12
+        ]
       },
-      {
-        "type": "letterbox",
-        "ratio": 0.09
-      }
-    ]
-  },
-  "assembly": {
-    "mode": "layered",
-    "axis": "z",
-    "layers": [
-      {
-        "id": "jala",
-        "offset": 1.2
+      "color": "#c8793a",
+      "radius": 0.008,
+      "sag": 0.04
+    },
+    {
+      "id": "kabel-flex-trafo",
+      "from": {
+        "id": "otak-pcb",
+        "at": [
+          -0.1,
+          0,
+          0.12
+        ]
       },
-      {
-        "id": "tengah",
-        "offset": 0.35
+      "to": {
+        "id": "trafo-boost",
+        "at": [
+          0,
+          0,
+          0.075
+        ]
       },
-      {
-        "id": "baterai",
-        "offset": -0.85
+      "color": "#c8793a",
+      "radius": 0.008,
+      "sag": 0.04
+    },
+    {
+      "id": "kabel-flex-hv",
+      "from": {
+        "id": "trafo-boost",
+        "at": [
+          0,
+          0,
+          0.075
+        ]
       },
-      {
-        "id": "pegangan",
-        "offset": 0
+      "to": {
+        "id": "frame-depan",
+        "at": [
+          0,
+          -0.78,
+          0
+        ]
       },
-      {
-        "id": "depan",
-        "offset": 1.7
-      }
-    ]
-  }
+      "color": "#ffb45e",
+      "emissive": "#ff8a1e",
+      "emissiveIntensity": 0.8,
+      "radius": 0.008,
+      "sag": 0.09
+    },
+    {
+      "id": "kabel-flex-ground",
+      "from": {
+        "id": "frame-belakang",
+        "at": [
+          0,
+          -0.78,
+          0
+        ]
+      },
+      "to": {
+        "id": "otak-pcb",
+        "at": [
+          0.1,
+          0,
+          -0.1
+        ]
+      },
+      "color": "#8b95a5",
+      "radius": 0.007,
+      "sag": 0.07
+    }
+  ]
 }

@@ -13,7 +13,7 @@
 <img id="shot" alt="">
 <pre id="report">{}</pre>
 <script type="module">
-import { buildScene, makeRenderer, makeComposer, smokeCheck, applyAnimations, stepPhysics, applyExplode, compileCameraPath, sampleCameraPath } from './js/scene-builder.js';
+import { buildScene, loadExtensions, makeRenderer, makeComposer, smokeCheck, applyAnimations, stepPhysics, applyExplode, compileCameraPath, sampleCameraPath } from './js/scene-builder.js';
 
 const params = new URLSearchParams(location.search);
 const scenePath = params.get('scene') || 'scene.json';
@@ -26,7 +26,7 @@ window.addEventListener('error', e => report.errors.push(String(e.message)));
 
 try {
   const spec = await (await fetch(scenePath + '?t=' + Date.now())).json();
-  const handle = await buildScene(spec);
+  const handle = await buildScene(spec, { extensions: await loadExtensions(spec) });
   const urlT = parseFloat(new URLSearchParams(location.search).get('t') || '');
   const cinePath = compileCameraPath(handle);
   if (cinePath && !isNaN(urlT)) {

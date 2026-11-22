@@ -1,0 +1,1 @@
+export function install(handle, THREE){ const m = handle.registry.get("alas"); if (m) m.material.color.set("#00ff88"); }

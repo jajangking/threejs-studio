@@ -1441,9 +1441,11 @@ def apply_diff(current, diff):
         ids = {o.get('id') for o in objs}
         spec['joints'] = [j for j in spec['joints']
                           if isinstance(j, dict) and j.get('body1') in ids and j.get('body2') in ids]
-    for key in ('camera', 'environment', 'post', 'meta'):
+    for key in ('camera', 'environment', 'post', 'meta', 'assembly', 'extensions'):
         if isinstance(diff.get(key), dict):
             spec[key] = {**(spec.get(key) or {}), **diff[key]}
+    if isinstance(diff.get('dynamicCables'), list):
+        spec['dynamicCables'] = diff['dynamicCables']
     return spec, n_up, len(removes)
 
 
@@ -1471,6 +1473,7 @@ Alat (pilih maksimal 6 langkah, WAJIB pakai alat sebelum final):
 - semantic {"diff":{...}} — cek kelengkapan makna diff terhadap card (skor + yang hilang).
 - preview {"diff":{...}} — render headless diff sementara → smoke 8 cek, coverage, luminansi.
 - vision {"diff":{...}} — render lalu minta penilaian estetika (bisa gagal bila model sibuk).
+- create_capability {"name":"...","code":"export function install(handle, THREE){...}","reason":"..."} — PASANG KEMAMPUAN BARU di builder bila alat yang ada tidak cukup (mis. kabel dinamis, efek khusus). Kode divalidasi (node --check + larangan fetch/eval/import/shell). Setelah terpasang, tambahkan nama capability ke spec.extensions lewat diff agar dipakai build berikutnya.
 Aturan: jangan mengarang id objek yang tidak ada di inspect_scene kecuali membuat objek baru lewat upserts. Gunakan preview/semantic untuk MEMPERBAIKI diff sebelum final. Utamakan detail teknis & assembly layered untuk benda berlapis. DILARANG memanggil shell, menulis file, atau membaca kredensial."""
 
 def loop_scene_summary(spec):
@@ -1516,6 +1519,11 @@ def loop_tool(name, args, spec, user_text):
         return '\n'.join(f'{i+1}. {u}' for i, u in enumerate(loop_bing(str(args.get('topic') or user_text)))) or 'tidak ada hasil'
     if name == 'hermes_task':
         return hermes_task(args.get('prompt') or user_text, args.get('kind') or 'research')
+    if name == 'create_capability':
+        r = install_capability(args.get('name'), args.get('code'), args.get('reason'))
+        if r.get('ok'):
+            status(f'🧩 capability baru terpasang: {r["name"]}')
+        return json.dumps(r, ensure_ascii=False)
     if name in ('semantic', 'preview', 'vision'):
         d = args.get('diff')
         if not isinstance(d, dict): return 'diff belum diberikan'
@@ -1544,6 +1552,44 @@ def loop_tool(name, args, spec, user_text):
             return out
         return brief
     return f'alat {name} tidak dikenal'
+
+EXT_DIR = os.path.join(ROOT, 'extensions')
+DANGEROUS_JS = re.compile(
+    r'\b(eval|importScripts|XMLHttpRequest|WebSocket|child_process|globalThis|Worker)\b'
+    r'|\bprocess\s*\.|\bnew\s+Function\b|\bFunction\s*\('
+    r'|\bfetch\s*\(|\brequire\s*\(|\bimport\s*\('
+    r'|document\.cookie|localStorage|sessionStorage', re.I)
+
+def install_capability(name, code, reason=''):
+    """Pasang ekstensi builder buatan agent — divalidasi ketat, tanpa akses jaringan/shell."""
+    name = re.sub(r'[^a-z0-9_-]', '-', str(name or '').lower()).strip('-')[:40]
+    if len(name) < 3:
+        return {'ok': False, 'error': 'nama minimal 3 karakter'}
+    code = str(code or '')
+    if len(code) > 12000:
+        return {'ok': False, 'error': 'kode terlalu panjang (maks 12000 char)'}
+    if DANGEROUS_JS.search(code):
+        return {'ok': False, 'error': 'kode memakai API terlarang (fetch/eval/import/shell/storage)'}
+    if not re.search(r'export\s+(async\s+)?function\s+install\b|export\s+const\s+install\b', code):
+        return {'ok': False, 'error': 'wajib mengekspor function install(handle, THREE)'}
+    os.makedirs(EXT_DIR, exist_ok=True)
+    tmp = os.path.join(EXT_DIR, '.check-' + name + '.mjs')
+    with open(tmp, 'w') as f:
+        f.write(code)
+    try:
+        chk = subprocess.run(['node', '--check', tmp], cwd=ROOT, capture_output=True, timeout=20)
+        if chk.returncode != 0:
+            return {'ok': False, 'error': 'syntax JS invalid: ' + chk.stderr.decode('utf-8', 'ignore')[-300:]}
+    finally:
+        if os.path.exists(tmp): os.remove(tmp)
+    fp = os.path.join(EXT_DIR, name + '.js')
+    with open(fp, 'w') as f:
+        f.write(code)
+    with open(fp + '.json', 'w') as f:
+        json.dump({'name': name, 'reason': str(reason)[:300], 'size': len(code),
+                   'sha256': hashlib.sha256(code.encode()).hexdigest(), 'at': time.time()},
+                  f, indent=2)
+    return {'ok': True, 'name': name, 'use': 'tambahkan "' + name + '" ke spec.extensions'}
 
 HERMES_CLI = '/data/home/.local/bin/hermes'
 HERMES_TOOLSETS = 'web,vision,skills,file'  # tanpa terminal — bridge tidak boleh menjalankan shell
@@ -1615,7 +1661,7 @@ def agent_loop(job_id, model, user_text):
             status('✅ loop selesai — validasi hasil akhir…')
             obj.pop('thought', None); obj.pop('action', None); obj.pop('args', None)
             return json.dumps(obj, ensure_ascii=False), use
-        allowed = ['inspect_scene', 'read_contract', 'knowledge', 'web_research', 'semantic', 'preview', 'vision']
+        allowed = ['inspect_scene', 'read_contract', 'knowledge', 'web_research', 'semantic', 'preview', 'vision', 'create_capability']
         if CHAT.get('hermes_bridge'): allowed.append('hermes_task')
         if action not in allowed:
             msgs.append({'role': 'user', 'content': f'Alat {action} tidak ada. Pilih dari: {", ".join(allowed)}.'})
@@ -2673,6 +2719,18 @@ class Handler(SimpleHTTPRequestHandler):
             r = bedah_gate('bedah-check', float(payload.get('factor') or 0.8))
             return self._send(200, {'ok': True, 'result': r,
                                     'images': ['/iterations/bedah-check/bedah.png', '/iterations/bedah-check/bedah-detail.png']})
+        if path == '/api/capability/install':
+            r = install_capability(payload.get('name'), payload.get('code'), payload.get('reason'))
+            return self._send(200 if r.get('ok') else 400, r)
+        if path.startswith('/api/capability/list'):
+            out = []
+            try:
+                for fn in sorted(os.listdir(EXT_DIR)):
+                    if fn.endswith('.js.json'):
+                        out.append(read_json(os.path.join(EXT_DIR, fn), {}))
+            except OSError:
+                pass
+            return self._send(200, {'ok': True, 'capabilities': out})
         if path == '/api/agent/hermes':
             with LOCK:
                 CHAT['hermes_bridge'] = bool(payload.get('enabled'))

@@ -297,8 +297,9 @@ export async function buildScene(spec, opts = {}) {
         if (Array.isArray(o.scale)) mesh.scale.fromArray(o.scale);
         else mesh.scale.setScalar(o.scale);
       }
-      mesh.visible = (o.visible ?? true) && !o.internalOnly;
+      mesh.visible = (o.visible ?? true) && !o.internalOnly && !(o.hideOnExplode ?? false);
       mesh.userData.internalOnly = !!o.internalOnly;
+      mesh.userData.hideOnExplode = !!o.hideOnExplode;
       mesh.userData.specId = o.id;
       if (o.sky) mesh.userData.isSky = true;  // elemen langit/dekorasi jauh (awan dll)
       if (mesh.material) mesh.userData.baseEmissive = mesh.material.emissiveIntensity ?? 1;
@@ -413,6 +414,7 @@ export async function buildScene(spec, opts = {}) {
   }
 
   // Kontrol interaktif (slider/toggle) — nilai liveOverrides di atas spec
+  let handle;
   const overrides = {};
   for (const c of spec.controls || []) {
     if (!c.target) continue;
@@ -420,7 +422,27 @@ export async function buildScene(spec, opts = {}) {
     if (c.type === 'toggle') overrides[c.target].enabled = c.default ?? true;
     else overrides[c.target][c.param || 'speed'] = c.default ?? c.min ?? 0;
   }
-  return { scene, camera, target, registry, errors, spec, animations, overrides, physicsWorld, bodyMap, triggers, drag: null, powerTriggered: false };
+  // Kabel dinamis:TubeGeometry dihitung ulang tiap applyExplode supaya tetap
+  // menyambung antar komponen yang terpisah (kabel kaku akan terputus).
+  handle = { scene, camera, target, registry, errors, spec, animations, overrides, physicsWorld, bodyMap, triggers, drag: null, powerTriggered: false };
+  handle.dynamicCables = [];
+  for (const c of spec.dynamicCables || []) {
+    try {
+      const m2 = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
+        color: c.color || '#ffb45e', emissive: c.emissive || '#000000',
+        emissiveIntensity: c.emissiveIntensity ?? 0, metalness: 0.2, roughness: 0.4,
+      }));
+      m2.name = c.id; m2.userData.specId = c.id;
+      scene.add(m2); registry.set(c.id, m2);
+      handle.dynamicCables.push({ spec: c, mesh: m2 });
+    } catch (e) { errors.push(`dynamicCable ${c.id}: ${e.message}`); }
+  }
+  updateDynamicCables(handle);
+  for (const ext of (opts.extensions || [])) {
+    try { ext.install?.(handle, THREE); }
+    catch (e) { errors.push(`extension: ${e.message}`); }
+  }
+  return handle;
 }
 
 // Renderer dengan pengaturan warna & tone mapping yang BENAR (anti warna pucat).
@@ -1074,6 +1096,38 @@ export function sampleCameraPath(handle, path, t) {
   return { pos, target, fov, explode, caption: sampleCaption || s.caption, shotIndex: s.i, shotProgress: u, shot: s };
 }
 
+export async function loadExtensions(spec) {
+  const out = [];
+  for (const name of (spec?.extensions || [])) {
+    try {
+      const mod = await import('/extensions/' + String(name).replace(/[^a-zA-Z0-9_-]/g, '') + '.js');
+      if (typeof mod.install === 'function') out.push(mod);
+    } catch (e) { console.warn('extension gagal dimuat:', name, e); }
+  }
+  return out;
+}
+
+function updateDynamicCables(handle) {
+  if (!handle?.dynamicCables?.length) return;
+  handle.scene.updateMatrixWorld(true);
+  const at = (ref) => {
+    const m = handle.registry.get(ref?.id);
+    if (!m) return null;
+    const v = new THREE.Vector3(...(ref.at || [0, 0, 0]));
+    return v.applyMatrix4(m.matrixWorld);
+  };
+  for (const c of handle.dynamicCables) {
+    const a = at(c.spec.from), b = at(c.spec.to);
+    if (!a || !b || !isFinite(a.x + a.y + a.z + b.x + b.y + b.z)) continue;
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    mid.y -= (c.spec.sag ?? 0.05);
+    const curve = new THREE.CatmullRomCurve3([a, mid, b]);
+    const geo = new THREE.TubeGeometry(curve, 18, c.spec.radius ?? 0.006, 6, false);
+    c.mesh.geometry.dispose();
+    c.mesh.geometry = geo;
+  }
+}
+
 // ─────────────────────────── TOOLKIT BEDAH ASSEMBLY ───────────────────────────
 // Semua fitur view — tidak mengubah spec. Dipakai studio DAN export HTML.
 
@@ -1081,7 +1135,10 @@ export function sampleCameraPath(handle, path, t) {
 // Offset aditif (kurangi offset lama, tambah baru) — aman composing dengan fisika/animasi.
 export function applyExplode(handle, factor) {
   // Bagian internalOnly hanya muncul saat scene dibuka (factor > 0).
-  handle.scene.traverse(m => { if (m.userData?.internalOnly) m.visible = factor > 0.02; });
+  handle.scene.traverse(m => {
+    if (m.userData?.hideOnExplode) m.visible = factor <= 0.02;
+    else if (m.userData?.internalOnly) m.visible = factor > 0.02;
+  });
   const roots = (handle.spec.objects || []).map(o => handle.registry.get(o.id)).filter(Boolean);
   // Mode LAYERED: benda berlapis (jam, mesin, konektor) harus terbuka SEPANJANG SUMBU,
   // bukan radial — kalau tidak, penutup depan & roda gigi sama-sama di pusat dan tak terpisah.
@@ -1109,6 +1166,7 @@ export function applyExplode(handle, factor) {
       for (const ch of m.children || []) visit(ch);
     };
     for (const m of roots) visit(m);
+    updateDynamicCables(handle);
     return;
   }
   const isScenery = m => m.userData?.isSky || m.name === '__ground' || /^(backdrop|ground|langit|bintang)$/i.test(m.userData?.specId || '');
@@ -1174,6 +1232,7 @@ export function applyExplode(handle, factor) {
       m.children.forEach((ch, j) => off(ch, lc, lr, j));
     }
   });
+  updateDynamicCables(handle);
 }
 
 // Section / cutaway: clipping plane global (semua material terpotong, lihat isi dalam)
