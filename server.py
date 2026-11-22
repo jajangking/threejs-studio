@@ -821,6 +821,14 @@ FISIKA RAPIER (untuk simulasi nyata: jatuh, tumbukan, domino, bandul, roda bermo
 - emissiveIntensity WAJIB ≤ 5 (nilai 12 membuat objek blown-out putih dan merusak penilaian vision).
 - Reset fisika tersedia di viewport; render headless mensimulasikan 2 detik sebelum screenshot.
 
+SATU PROMPT UNTUK MODEL BERLAPIS (jam, mesin, motor, konektor, dll):
+- Dalam SATU jawaban, tulis KONTRAK + daftar komponen DALAM + assembly + cameraPath exploded. Jangan hanya bentuk luar lalu disusul kemudian.
+- Wajib sertakan: "assembly":{"mode":"layered","axis":"z","layers":[{"id":"depan","offset":1.2},{"id":"tengah","offset":0.4},{"id":"dalam","offset":-0.4},{"id":"belakang","offset":-1.2}]}
+  (offset dalam meter, searah sumbu; objek luar offset positif, objek dalam negatif).
+- Setiap objek (termasuk roda gigi/jarum/komponen internal) WAJIB punya field "layer" yang sama dengan id layer.
+- Wajib ada shot dengan "explode":[0,0.8] di cameraPath supaya kedalaman terlihat langsung saat diputar.
+- Benda non-lapis seperti kabel tetap boleh radial (tanpa assembly) — itu sudah didukung.
+
 REFERENSI TEKNIS: bila prompt disertai bagian '=== REFERENSI TEKNIS ===', itu fakta ukuran & daftar komponen dari sumber eksternal — ikuti, jangan karang bentuk generik. Beri id objek yang mengandung keyword yang tercantum supaya gerbang semantik bisa memverifikasi. Contoh: kabel data harus punya jacket, shield, drain, vbus, gnd, dplus, dminus, cc, strain, usb-a, usb-c, tongue, dan pin (boleh instances 24 transform). Detail teknis lebih penting daripada dekorasi.
 
 STANDAR ESTETIKA (smoke test lolos SAJA TIDAK CUKUP — hasil harus layak final, bukan seperti tutorial):
@@ -1053,6 +1061,16 @@ def semantic_check(spec, text):
                 walk(o)
             mn = req.get('min', 1)
             found[req['key']] = {'label': req.get('label', req['key']), 'count': n, 'min': mn, 'ok': n >= mn}
+        if card.get('requiresAssembly'):
+            asm = spec.get('assembly') or {}
+            layers = asm.get('layers') or []
+            objs = spec.get('objects') or []
+            tagged = sum(1 for o in objs if isinstance(o, dict) and o.get('layer'))
+            okasm = (asm.get('mode') == 'layered' and len(layers) >= card.get('minLayers', 3)
+                     and tagged >= max(3, len(objs) // 2))
+            found['assembly'] = {'label': f"Assembly layered ≥{card.get('minLayers', 3)} lapis + field layer pada objek",
+                                 'count': len(layers) if asm.get('mode') == 'layered' else 0,
+                                 'min': card.get('minLayers', 3), 'ok': okasm}
         missing = [f"{v['label']} ({v['count']}/{v['min']})" for v in found.values() if not v['ok']]
         summaries.append({
             'card': card.get('id'), 'title': card.get('title'),

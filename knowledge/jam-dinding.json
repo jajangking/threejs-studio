@@ -1,0 +1,19 @@
+{
+  "id": "jam-dinding",
+  "title": "Jam dinding — konstruksi & urutan lapisan",
+  "keywords": ["jam dinding", "jam", "wall clock", "clock", "mekanisme jam", "roda gigi jam"],
+  "requiresAssembly": true,
+  "minLayers": 3,
+  "note": "Agent WAJIB mengisi spec.assembly {mode:'layered',axis:'z',layers:[{id,offset meter}]} dan menandai setiap objek dengan field layer. Satu prompt harus menghasilkan kontrak + bagian dalam + assembly + shot exploded sekaligus.",
+  "facts": "Jam dinding terdiri dari lapisan berurutan depan→belakang pada sumbu Z: (1) kaca/bezel penutup; (2) wajah jam/dial + penanda jam + angka; (3) jarum jam/menit/detik + hub; (4) roda gigi penggerak (gear train) — gigi besar menggerakkan gigi kecil dengan rasio tertentu; (5) escapement + palang/balance yang membatasi laju; (6) sumber tenaga: per yang digulung atau baterai + motor stepper; (7) casing belakang + braket gantung dinding. Mekanisme bekerja: tenaga dari per/baterai → roda gigi → escapement membagi waktu → jarum berputar pada kecepatan berbeda (jam 1/12 putaran per jam, menit 1 putaran per jam, detik 1 putaran per menit). Detail yang WAJIB ada: minimal 3 roda gigi dengan gigi terlihat, jarum terpisah (bukan satu objek), penanda jam, dan penutup yang bisa terbuka saat exploded.",
+  "required_parts": [
+    {"key": "casing", "label": "Casing jam", "keywords": ["casing", "shell", "body", "kotak"], "min": 1},
+    {"key": "kaca", "label": "Kaca / bezel depan", "keywords": ["kaca", "glass", "bezel", "cover", "penutup"], "min": 1},
+    {"key": "dial", "label": "Wajah jam / dial", "keywords": ["dial", "wajah", "face", "penanda", "marker"], "min": 1},
+    {"key": "jarum", "label": "Jarum jam/menit/detik terpisah", "keywords": ["jarum", "hand", "needle"], "min": 3},
+    {"key": "gigi", "label": "Roda gigi (gear train)", "keywords": ["gigi", "gear", "roda"], "min": 3},
+    {"key": "escapement", "label": "Escapement / pembagi waktu", "keywords": ["escapement", "palang", "balance", "pendulum"], "min": 1},
+    {"key": "tenaga", "label": "Per / baterai / motor", "keywords": ["per", "spring", "baterai", "battery", "motor"], "min": 1},
+    {"key": "belakang", "label": "Penutup belakang + gantungan", "keywords": ["belakang", "back", "braket", "gantung"], "min": 1}
+  ]
+}

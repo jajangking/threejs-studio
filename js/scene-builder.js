@@ -1080,6 +1080,29 @@ export function sampleCameraPath(handle, path, t) {
 // Offset aditif (kurangi offset lama, tambah baru) — aman composing dengan fisika/animasi.
 export function applyExplode(handle, factor) {
   const roots = (handle.spec.objects || []).map(o => handle.registry.get(o.id)).filter(Boolean);
+  // Mode LAYERED: benda berlapis (jam, mesin, konektor) harus terbuka SEPANJANG SUMBU,
+  // bukan radial — kalau tidak, penutup depan & roda gigi sama-sama di pusat dan tak terpisah.
+  const asm = handle.spec.assembly;
+  if (asm?.mode === 'layered' && Array.isArray(asm.layers)) {
+    const axis = { x: 0, y: 1, z: 2 }[asm.axis || 'z'];
+    const byId = new Map((handle.spec.objects || []).map(o => [o.id, o]));
+    const layers = new Map(asm.layers.map(l => [l.id, l]));
+    const isSky = m => m.userData?.isSky || m.name === '__ground' || /^(backdrop|ground|langit|bintang)$/i.test(m.userData?.specId || '');
+    for (const m of roots) {
+      if (isSky(m)) continue;
+      const o = byId.get(m.userData.specId);
+      const layer = o && layers.get(o.layer);
+      const prev = m.userData.explodeOff || new THREE.Vector3();
+      m.position.sub(prev);
+      const next = new THREE.Vector3();
+      if (layer) {
+        next.setComponent(axis, (layer.offset ?? 0) * factor);
+        m.position.add(next);
+      }
+      m.userData.explodeOff = next;
+    }
+    return;
+  }
   const isScenery = m => m.userData?.isSky || m.name === '__ground' || /^(backdrop|ground|langit|bintang)$/i.test(m.userData?.specId || '');
   // Pusat & radius dari posisi DASAR (bukan posisi terkini) — stabil, tidak drift tiap frame.
   // Pakai MEDIAN per sumbu: dua konektor di ujung kabel tidak menarik pusat menjauh

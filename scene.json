@@ -103,7 +103,8 @@
         "flatShading": false,
         "fog": true,
         "doubleSide": false
-      }
+      },
+      "layer": "belakang"
     },
     {
       "id": "papan-bawah",
@@ -122,7 +123,8 @@
         "color": "#1b222b",
         "metalness": 0.05,
         "roughness": 0.8
-      }
+      },
+      "layer": "dalam"
     },
     {
       "id": "casing-jam",
@@ -146,7 +148,8 @@
         "color": "#2b2119",
         "metalness": 0.35,
         "roughness": 0.5
-      }
+      },
+      "layer": "dalam"
     },
     {
       "id": "wajah-jam",
@@ -170,7 +173,8 @@
         "color": "#f2e9d8",
         "metalness": 0.05,
         "roughness": 0.65
-      }
+      },
+      "layer": "tengah"
     },
     {
       "id": "bezel",
@@ -188,7 +192,8 @@
         "color": "#c9a227",
         "metalness": 0.75,
         "roughness": 0.3
-      }
+      },
+      "layer": "tengah"
     },
     {
       "id": "lintasan-menit",
@@ -206,7 +211,8 @@
         "color": "#b9ad96",
         "metalness": 0.2,
         "roughness": 0.6
-      }
+      },
+      "layer": "depan"
     },
     {
       "id": "penanda-jam",
@@ -381,7 +387,8 @@
           ],
           "s": 1
         }
-      ]
+      ],
+      "layer": "dalam"
     },
     {
       "id": "jarum-jam",
@@ -421,7 +428,8 @@
             "roughness": 0.6
           }
         }
-      ]
+      ],
+      "layer": "depan"
     },
     {
       "id": "jarum-menit",
@@ -461,7 +469,8 @@
             "roughness": 0.6
           }
         }
-      ]
+      ],
+      "layer": "depan"
     },
     {
       "id": "jarum-detik",
@@ -501,7 +510,8 @@
             "roughness": 0.5
           }
         }
-      ]
+      ],
+      "layer": "depan"
     },
     {
       "id": "pusat-jam",
@@ -525,7 +535,8 @@
         "color": "#d4af37",
         "metalness": 0.8,
         "roughness": 0.25
-      }
+      },
+      "layer": "depan"
     },
     {
       "id": "pusat-jam-tutup",
@@ -542,7 +553,8 @@
         "color": "#e8c85a",
         "metalness": 0.8,
         "roughness": 0.2
-      }
+      },
+      "layer": "depan"
     },
     {
       "id": "rak",
@@ -561,7 +573,8 @@
         "color": "#5a4632",
         "metalness": 0.05,
         "roughness": 0.75
-      }
+      },
+      "layer": "tengah"
     },
     {
       "id": "pot",
@@ -580,7 +593,8 @@
         "color": "#a8613f",
         "metalness": 0.05,
         "roughness": 0.8
-      }
+      },
+      "layer": "tengah"
     },
     {
       "id": "tanaman",
@@ -645,7 +659,8 @@
             "roughness": 0.85
           }
         }
-      ]
+      ],
+      "layer": "tengah"
     },
     {
       "id": "bingkai",
@@ -664,7 +679,8 @@
         "color": "#3b2f24",
         "metalness": 0.1,
         "roughness": 0.6
-      }
+      },
+      "layer": "dalam"
     },
     {
       "id": "lukisan",
@@ -683,7 +699,8 @@
         "color": "#6a8fa8",
         "metalness": 0.1,
         "roughness": 0.5
-      }
+      },
+      "layer": "dalam"
     },
     {
       "id": "penopang-mesin",
@@ -707,7 +724,8 @@
         "color": "#8a8f96",
         "metalness": 0.55,
         "roughness": 0.45
-      }
+      },
+      "layer": "dalam"
     },
     {
       "id": "baterai-aa",
@@ -785,7 +803,8 @@
             "roughness": 0.6
           }
         }
-      ]
+      ],
+      "layer": "belakang"
     },
     {
       "id": "pcb-kuarsa",
@@ -804,7 +823,8 @@
         "color": "#1d6b46",
         "metalness": 0.15,
         "roughness": 0.7
-      }
+      },
+      "layer": "dalam"
     },
     {
       "id": "kristal-kuarsa",
@@ -828,7 +848,8 @@
         "color": "#cfd6de",
         "metalness": 0.85,
         "roughness": 0.2
-      }
+      },
+      "layer": "dalam"
     },
     {
       "id": "kumparan-motor",
@@ -851,7 +872,8 @@
         "color": "#b87333",
         "metalness": 0.65,
         "roughness": 0.35
-      }
+      },
+      "layer": "dalam"
     },
     {
       "id": "rotor-stepper",
@@ -910,7 +932,8 @@
             "roughness": 0.3
           }
         }
-      ]
+      ],
+      "layer": "dalam"
     },
     {
       "id": "gir-detik-kuarsa",
@@ -1073,7 +1096,8 @@
             }
           ]
         }
-      ]
+      ],
+      "layer": "dalam"
     },
     {
       "id": "gir-menit-kuarsa",
@@ -1236,7 +1260,8 @@
             }
           ]
         }
-      ]
+      ],
+      "layer": "dalam"
     },
     {
       "id": "gir-jam-kuarsa",
@@ -1399,7 +1424,8 @@
             }
           ]
         }
-      ]
+      ],
+      "layer": "dalam"
     }
   ],
   "controls": [
@@ -1505,6 +1531,28 @@
       {
         "type": "letterbox",
         "ratio": 0.08
+      }
+    ]
+  },
+  "assembly": {
+    "mode": "layered",
+    "axis": "z",
+    "layers": [
+      {
+        "id": "depan",
+        "offset": 1.2
+      },
+      {
+        "id": "tengah",
+        "offset": 0.4
+      },
+      {
+        "id": "dalam",
+        "offset": -0.5
+      },
+      {
+        "id": "belakang",
+        "offset": -1.2
       }
     ]
   }
