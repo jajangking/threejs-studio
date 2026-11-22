@@ -1,0 +1,44 @@
+{
+  "id": "facebook-marketplace-login-page",
+  "title": "Halaman Login Facebook Marketplace (Generik)",
+  "keywords": [
+    "facebook",
+    "marketplace",
+    "login",
+    "lokasi",
+    "kategori"
+  ],
+  "facts": "Semua halaman yang diekstrak adalah halaman login Facebook dengan kolom 'Email or mobile number' dan 'Password' serta tautan 'Forgot password?' [1][2][3][4]. Struktur URL Marketplace memuat kategori seperti '/home-improvements/' [1] dan '/vehicles/' [3]. Halaman Marketplace tersedia per lokasi kota, misalnya Houston [2] dan Pensacola [3]. Salah satu URL memuat ID lokasi numerik 114747201876025 [4]. Sumber tidak memuat data geometri, dimensi, material, atau parameter komponen 3D apa pun [unverified].",
+  "required_parts": [
+    {
+      "key": "login-panel",
+      "label": "Panel Login Facebook",
+      "keywords": [
+        "login",
+        "password",
+        "email"
+      ],
+      "min": 1
+    }
+  ],
+  "note": "Sumber hanya berisi chrome UI/login Facebook tanpa konten katalog; tidak ada spesifikasi komponen 3D yang terukur sehingga semua parameter geometri harus ditandai [unverified].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.facebook.com/marketplace/108421015849665/home-improvements/"
+    },
+    {
+      "n": 2,
+      "url": "https://www.facebook.com/marketplace/houston/"
+    },
+    {
+      "n": 3,
+      "url": "https://www.facebook.com/marketplace/pensacola/vehicles/"
+    },
+    {
+      "n": 4,
+      "url": "https://www.facebook.com/marketplace/114747201876025/"
+    }
+  ],
+  "researched_at": 1795321454.109682
+}

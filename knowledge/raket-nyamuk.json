@@ -1,0 +1,25 @@
+{
+  "id": "raket-nyamuk",
+  "title": "Raket nyamuk listrik — kepala melingkar & rangkaian internal",
+  "keywords": ["raket nyamuk", "electric mosquito racket", "fly swatter", "mosquito killer racket", "jala listrik", "bug zapper", "raket listrik"],
+  "requiresAssembly": true,
+  "minLayers": 3,
+  "facts": "Raket nyamuk listrik berbentuk seperti raket tenis/badminton dengan kepala MELINGKAR dan jala listrik, bukan kotak [1]. Rangkaian tersembunyi di dalam gagang terdiri dari: charging circuit (capacitive dropper: kapasitor + jembatan dioda + kapasitor perhalus yang menurunkan 220/110V AC menjadi sekitar 3V DC), baterai isi ulang, oscillator, transformer, voltage multiplier, dan grid jala [1]. Baterai DC tidak bisa dinaikkan langsung oleh transformer, sehingga oscillator mengubah DC menjadi AC frekuensi tinggi sebelum dinaikkan menjadi tegangan sekitar 3000V dengan arus sangat kecil [1]. Jala terdiri dari TIGA grid paralel: grid tengah berpotensial tinggi diapit dua grid luar yang dibumikan; jala hanya bertegangan saat tombol ditekan [1][2]. Teardown model dua baterai D-cell menunjukkan LED merah dan tombol aktif di gagang [2]. Saat serangga menyentuh grid tengah dan luar sekaligus, busur listrik mengalir melalui tubuhnya [1][2]. Kepala WAJIB berbentuk cincin/torus dengan jala radial; dilarang memakai empat frame box persegi. Semua komponen elektronik WAJIB berada di dalam gagang/kepala dan punya field layer untuk exploded.",
+  "required_parts": [
+    {"key": "kepala", "label": "Kepala melingkar — objek bertipe torus", "keywords": ["torus", "cincin", "ring", "frame-depan", "frame-belakang", "lingkaran", "melingkar", "bulat"], "must_type": "torus", "min": 2},
+    {"key": "jala", "label": "Jala kawat / grid tiga lapis", "keywords": ["jala", "mesh", "grid", "kawat"], "min": 1},
+    {"key": "baterai", "label": "Baterai isi ulang", "keywords": ["batre", "baterai", "battery", "liion", "li-ion", "sel"], "min": 1},
+    {"key": "kabel", "label": "Jalur kabel ke jala", "keywords": ["kabel", "wire", "jalur"], "min": 2},
+    {"key": "otak", "label": "Otak / PCB / IC", "keywords": ["pcb", "otak", "ic-", "mikro", "board"], "min": 1},
+    {"key": "osilator", "label": "Osilator / trafo boost tegangan", "keywords": ["trafo", "transformer", "boost", "ferit", "inti", "koil", "coil"], "min": 1},
+    {"key": "kapasitor", "label": "Kapasitor / capacitive dropper", "keywords": ["kapasitor", "capacitor", "kapas"], "min": 1},
+    {"key": "sakelar", "label": "Tombol daya / sakelar", "keywords": ["saklar", "switch", "tombol"], "min": 1},
+    {"key": "led", "label": "LED indikator", "keywords": ["led", "indikator"], "min": 1},
+    {"key": "gagang", "label": "Gagang isolasi", "keywords": ["pegangan", "gagang", "handle"], "min": 1}
+  ],
+  "sources": [
+    {"n": 1, "url": "https://www.electricaltechnology.org/2023/03/mosquito-killer-racket-bat-fly-swatter-racket-bug-zapper.html", "title": "Working of Electric Mosquito Killer Racket / Fly Swatter Bat"},
+    {"n": 2, "url": "https://steemit.com/steemstem/@proteus-h/teardown-explanation-of-an-electric-fly-swatter", "title": "Teardown/Explanation of an Electric Fly-Swatter"}
+  ],
+  "note": "Kepala wajib torus/melingkar (bukan kotak). Komponen internal wajib ada di spec dan diberi field layer; assembly layered minimal 3 lapis agar fitur Bedah/Exploded benar-benar membuka isi gagang."
+}

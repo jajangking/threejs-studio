@@ -1,36 +1,40 @@
 {
   "meta": {
-    "name": "jam dinding",
-    "concept": "Jam dinding analog klasik dengan wajah krem, bezel kuningan, dan jarum berputar pada dinding interior",
+    "name": "Raket nyamuk",
+    "concept": "Product hero raket nyamuk listrik dengan jala bermuatan biru",
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-06",
-    "saved_at": 1795318828.7070415
+    "iteration": "iter-02",
+    "saved_at": 1795321957.5459776
   },
   "environment": {
-    "background": "#2b3646",
+    "background": "#0b1018",
     "fog": {
-      "color": "#2b3646",
-      "near": 22,
-      "far": 70
+      "color": "#0b1018",
+      "near": 14,
+      "far": 45
     },
     "ground": {
       "size": 40,
-      "color": "#232b34",
-      "roughness": 0.95
+      "color": "#151a22",
+      "roughness": 0.92,
+      "textureRepeat": [
+        24,
+        24
+      ]
     },
-    "exposure": 1.35
+    "exposure": 1.15
   },
   "camera": {
     "position": [
-      0,
-      2.8,
-      8.4
+      3.8,
+      2.5,
+      6.2
     ],
     "target": [
       0,
-      2.5,
+      1.45,
       0
     ],
     "fov": 45
@@ -39,18 +43,18 @@
     {
       "id": "hemi",
       "type": "hemisphere",
-      "color": "#cfe0f8",
-      "groundColor": "#4a5566",
-      "intensity": 0.95
+      "color": "#7f95c7",
+      "groundColor": "#141824",
+      "intensity": 0.6
     },
     {
       "id": "key",
       "type": "directional",
-      "color": "#fff4de",
-      "intensity": 3.2,
+      "color": "#fff4e0",
+      "intensity": 2.2,
       "position": [
         6,
-        9,
+        10,
         7
       ],
       "castShadow": true,
@@ -59,29 +63,39 @@
     {
       "id": "fill",
       "type": "directional",
-      "color": "#a9c6ff",
-      "intensity": 0.85,
+      "color": "#6fa8ff",
+      "intensity": 0.8,
       "position": [
-        -6,
+        -8,
         4,
-        5
+        -2
       ]
     },
     {
-      "id": "ambient",
-      "type": "ambient",
-      "color": "#8fa2bd",
-      "intensity": 0.5
+      "id": "rim",
+      "type": "directional",
+      "color": "#00d0ff",
+      "intensity": 1.0,
+      "position": [
+        -3,
+        6,
+        -8
+      ]
     }
   ],
   "objects": [
     {
-      "id": "dinding",
-      "type": "box",
+      "id": "langit",
+      "type": "sky",
+      "params": {
+        "top": "#050810",
+        "horizon": "#1b2740",
+        "radius": 220
+      },
       "position": [
         0,
-        2.6,
-        -0.35
+        0,
+        0
       ],
       "rotation": [
         0,
@@ -93,91 +107,34 @@
         1,
         1
       ],
-      "params": {
-        "width": 9,
-        "height": 6.5,
-        "depth": 0.5
-      },
       "material": {
-        "color": "#46586c",
-        "metalness": 0.05,
-        "roughness": 0.94,
+        "color": "#0b1020",
+        "metalness": 0,
+        "roughness": 1,
         "emissive": "#000000",
         "emissiveIntensity": 1,
         "opacity": 1,
         "wireframe": false,
         "flatShading": false,
-        "fog": true,
+        "fog": false,
         "doubleSide": false
-      },
-      "layer": "belakang"
+      }
     },
     {
-      "id": "papan-bawah",
-      "type": "box",
-      "position": [
-        0,
-        0.18,
-        -0.06
-      ],
-      "params": {
-        "width": 9,
-        "height": 0.36,
-        "depth": 0.12
-      },
-      "material": {
-        "color": "#333d49",
-        "metalness": 0.05,
-        "roughness": 0.8
-      },
-      "layer": "dalam"
-    },
-    {
-      "id": "casing-jam",
-      "type": "torus",
-      "position": [
-        0,
-        2.5,
-        0.02
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radius": 1.43,
-        "tube": 0.12
-      },
-      "material": {
-        "color": "#6b5236",
-        "metalness": 0.45,
-        "roughness": 0.5,
-        "emissive": "#000000",
-        "emissiveIntensity": 1,
-        "opacity": 1,
-        "wireframe": false,
-        "flatShading": false,
-        "fog": true,
-        "doubleSide": false
-      },
-      "layer": "dalam"
-    },
-    {
-      "id": "wajah-jam",
+      "id": "alas",
       "type": "cylinder",
+      "params": {
+        "radiusTop": 0.7,
+        "radiusBottom": 0.82,
+        "height": 0.12
+      },
       "position": [
         0,
-        2.5,
-        0.12
+        0.06,
+        0
       ],
       "rotation": [
-        90,
+        0,
         0,
         0
       ],
@@ -186,372 +143,26 @@
         1,
         1
       ],
-      "params": {
-        "radiusTop": 1.38,
-        "radiusBottom": 1.38,
-        "height": 0.02
-      },
       "material": {
-        "color": "#f7efe2",
-        "metalness": 0.05,
-        "roughness": 0.5,
-        "emissive": "#fff4de",
-        "emissiveIntensity": 0.05,
-        "opacity": 0.22,
+        "color": "#2b3140",
+        "metalness": 0.65,
+        "roughness": 0.42,
+        "emissive": "#000000",
+        "emissiveIntensity": 1,
+        "opacity": 1,
         "wireframe": false,
         "flatShading": false,
         "fog": true,
         "doubleSide": false
-      },
-      "layer": "tengah"
+      }
     },
     {
-      "id": "bezel",
-      "type": "torus",
-      "position": [
-        0,
-        2.5,
-        0.13
-      ],
-      "params": {
-        "radius": 1.43,
-        "tube": 0.07
-      },
-      "material": {
-        "color": "#c9a227",
-        "metalness": 0.75,
-        "roughness": 0.3
-      },
-      "layer": "tengah"
-    },
-    {
-      "id": "lintasan-menit",
-      "type": "torus",
-      "position": [
-        0,
-        2.5,
-        0.15
-      ],
-      "params": {
-        "radius": 1.24,
-        "tube": 0.012
-      },
-      "material": {
-        "color": "#b9ad96",
-        "metalness": 0.2,
-        "roughness": 0.6
-      },
-      "layer": "depan"
-    },
-    {
-      "id": "penanda-jam",
-      "type": "instances",
-      "geometry": {
-        "type": "box",
-        "params": {
-          "width": 0.08,
-          "height": 0.22,
-          "depth": 0.02
-        }
-      },
-      "material": {
-        "color": "#2b2620",
-        "metalness": 0.1,
-        "roughness": 0.7
-      },
-      "transforms": [
-        {
-          "p": [
-            0,
-            3.6,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            0
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            0.55,
-            3.453,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            -30
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            0.953,
-            3.05,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            -60
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            1.1,
-            2.5,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            -90
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            0.953,
-            1.95,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            -120
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            0.55,
-            1.547,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            -150
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            0,
-            1.4,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            -180
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            -0.55,
-            1.547,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            150
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            -0.953,
-            1.95,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            120
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            -1.1,
-            2.5,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            90
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            -0.953,
-            3.05,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            60
-          ],
-          "s": 1
-        },
-        {
-          "p": [
-            -0.55,
-            3.453,
-            0.17
-          ],
-          "r": [
-            0,
-            0,
-            30
-          ],
-          "s": 1
-        }
-      ],
-      "layer": "dalam"
-    },
-    {
-      "id": "jarum-jam",
+      "id": "raket",
       "type": "group",
       "position": [
         0,
-        2.5,
-        0.19
-      ],
-      "rotation": [
         0,
-        0,
-        55
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": 0.000145
-      },
-      "children": [
-        {
-          "id": "jarum-jam-batang",
-          "type": "box",
-          "position": [
-            0,
-            0.36,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "width": 0.1,
-            "height": 0.72,
-            "depth": 0.02
-          },
-          "material": {
-            "color": "#23201c",
-            "metalness": 0.2,
-            "roughness": 0.6,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        }
-      ],
-      "layer": "depan"
-    },
-    {
-      "id": "jarum-menit",
-      "type": "group",
-      "position": [
-        0,
-        2.5,
-        0.21
-      ],
-      "rotation": [
-        0,
-        0,
-        -60
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": 0.00175
-      },
-      "children": [
-        {
-          "id": "jarum-menit-batang",
-          "type": "box",
-          "position": [
-            0,
-            0.5,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "width": 0.07,
-            "height": 1,
-            "depth": 0.02
-          },
-          "material": {
-            "color": "#23201c",
-            "metalness": 0.2,
-            "roughness": 0.6,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        }
-      ],
-      "layer": "depan"
-    },
-    {
-      "id": "jarum-detik",
-      "type": "group",
-      "position": [
-        0,
-        2.5,
-        0.23
+        0
       ],
       "rotation": [
         0,
@@ -564,14 +175,53 @@
         1
       ],
       "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": 0.105
+        "type": "oscillate",
+        "axis": "y",
+        "amplitude": 5,
+        "period": 12
       },
       "children": [
         {
-          "id": "jarum-detik-batang",
-          "type": "box",
+          "id": "pegangan",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.09,
+            "radiusBottom": 0.1,
+            "height": 1.0
+          },
+          "position": [
+            0,
+            0.62,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "pegangan",
+          "material": {
+            "color": "#ff9f1c",
+            "metalness": 0.05,
+            "roughness": 0.42,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "gagang-karet",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.116,
+            "radiusBottom": 0.116,
+            "height": 0.52
+          },
           "position": [
             0,
             0.42,
@@ -587,1278 +237,953 @@
             1,
             1
           ],
-          "params": {
-            "width": 0.025,
-            "height": 1.35,
-            "depth": 0.012
-          },
+          "layer": "pegangan",
           "material": {
-            "color": "#c0392b",
+            "color": "#15171d",
+            "metalness": 0,
+            "roughness": 0.95,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "ridges-1",
+          "type": "torus",
+          "params": {
+            "radius": 0.117,
+            "tube": 0.01
+          },
+          "position": [
+            0,
+            0.26,
+            0
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "pegangan",
+          "material": {
+            "color": "#2a2f38",
+            "metalness": 0.3,
+            "roughness": 0.7,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "ridges-2",
+          "type": "torus",
+          "params": {
+            "radius": 0.117,
+            "tube": 0.01
+          },
+          "position": [
+            0,
+            0.36,
+            0
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "pegangan",
+          "material": {
+            "color": "#2a2f38",
+            "metalness": 0.3,
+            "roughness": 0.7,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "ridges-3",
+          "type": "torus",
+          "params": {
+            "radius": 0.117,
+            "tube": 0.01
+          },
+          "position": [
+            0,
+            0.46,
+            0
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "pegangan",
+          "material": {
+            "color": "#2a2f38",
+            "metalness": 0.3,
+            "roughness": 0.7,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "ridges-4",
+          "type": "torus",
+          "params": {
+            "radius": 0.117,
+            "tube": 0.01
+          },
+          "position": [
+            0,
+            0.56,
+            0
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "pegangan",
+          "material": {
+            "color": "#2a2f38",
+            "metalness": 0.3,
+            "roughness": 0.7,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "cincin-leher",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.13,
+            "radiusBottom": 0.11,
+            "height": 0.14
+          },
+          "position": [
+            0,
+            1.13,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "pegangan",
+          "material": {
+            "color": "#c9d2dc",
+            "metalness": 0.85,
+            "roughness": 0.28,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "frame-depan",
+          "type": "torus",
+          "params": {
+            "radius": 0.8,
+            "tube": 0.055
+          },
+          "position": [
+            0,
+            2.0,
+            0.05
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "jala",
+          "material": {
+            "color": "#f7931e",
+            "metalness": 0.05,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "frame-belakang",
+          "type": "torus",
+          "params": {
+            "radius": 0.8,
+            "tube": 0.055
+          },
+          "position": [
+            0,
+            2.0,
+            -0.05
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "tengah",
+          "material": {
+            "color": "#d9760f",
+            "metalness": 0.05,
+            "roughness": 0.45,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "jala-melingkar",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "jala",
+          "material": {
+            "color": "#9fc4e6",
+            "metalness": 0.9,
+            "roughness": 0.2,
+            "emissive": "#1e63ff",
+            "emissiveIntensity": 1.8,
+            "opacity": 1
+          },
+          "geometry": {
+            "type": "box",
+            "params": {
+              "width": 1,
+              "height": 0.012,
+              "depth": 0.012
+            }
+          },
+          "animate": {
+            "type": "blink",
+            "period": 0.7,
+            "min": 0.8,
+            "max": 2.2
+          },
+          "transforms": [
+            {
+              "p": [
+                0,
+                2.0,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1.52,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0,
+                2.2,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1.47,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0,
+                1.8,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1.47,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0,
+                2.4,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1.29,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0,
+                1.6,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1.29,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0,
+                2.6,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                0.93,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0,
+                1.4,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                0.93,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0,
+                2.0,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                90
+              ],
+              "s": [
+                1.52,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.2,
+                2.0,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                90
+              ],
+              "s": [
+                1.47,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.2,
+                2.0,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                90
+              ],
+              "s": [
+                1.47,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.4,
+                2.0,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                90
+              ],
+              "s": [
+                1.29,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.4,
+                2.0,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                90
+              ],
+              "s": [
+                1.29,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.6,
+                2.0,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                90
+              ],
+              "s": [
+                0.93,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.6,
+                2.0,
+                0
+              ],
+              "r": [
+                0,
+                0,
+                90
+              ],
+              "s": [
+                0.93,
+                1,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tombol-daya",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.06,
+            "radiusBottom": 0.06,
+            "height": 0.03
+          },
+          "position": [
+            0,
+            0.86,
+            0.115
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "pegangan",
+          "material": {
+            "color": "#e53935",
+            "metalness": 0.1,
+            "roughness": 0.35,
+            "emissive": "#ff2d2d",
+            "emissiveIntensity": 0.9,
+            "opacity": 1
+          },
+          "onClick": {
+            "action": "power"
+          }
+        },
+        {
+          "id": "led-daya",
+          "type": "sphere",
+          "params": {
+            "radius": 0.026
+          },
+          "position": [
+            0,
+            1.0,
+            0.108
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "pegangan",
+          "material": {
+            "color": "#00e676",
+            "metalness": 0,
+            "roughness": 0.2,
+            "emissive": "#00ff88",
+            "emissiveIntensity": 3,
+            "opacity": 1
+          },
+          "animate": {
+            "type": "blink",
+            "period": 1.4,
+            "min": 0.6,
+            "max": 3
+          }
+        },
+        {
+          "id": "otak-pcb",
+          "type": "box",
+          "params": {
+            "width": 0.13,
+            "height": 0.018,
+            "depth": 0.16
+          },
+          "position": [
+            0,
+            1.04,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "tengah",
+          "material": {
+            "color": "#1b5e3c",
+            "metalness": 0.2,
+            "roughness": 0.6,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "ic-utama",
+          "type": "box",
+          "params": {
+            "width": 0.05,
+            "height": 0.022,
+            "depth": 0.05
+          },
+          "position": [
+            0,
+            1.058,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "tengah",
+          "material": {
+            "color": "#0d0f14",
+            "metalness": 0.4,
+            "roughness": 0.5,
+            "emissive": "#16324f",
+            "emissiveIntensity": 0.4,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "saklar",
+          "type": "box",
+          "params": {
+            "width": 0.08,
+            "height": 0.02,
+            "depth": 0.05
+          },
+          "position": [
+            0,
+            0.86,
+            0.06
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "tengah",
+          "material": {
+            "color": "#b0b8c2",
+            "metalness": 0.8,
+            "roughness": 0.3,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "batre-liion",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.055,
+            "radiusBottom": 0.055,
+            "height": 0.22
+          },
+          "position": [
+            0,
+            0.78,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "material": {
+            "color": "#263356",
+            "metalness": 0.7,
+            "roughness": 0.35,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "trafo-boost",
+          "type": "torus",
+          "params": {
+            "radius": 0.045,
+            "tube": 0.018
+          },
+          "position": [
+            0,
+            0.97,
+            0
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "tengah",
+          "material": {
+            "color": "#c8793a",
+            "metalness": 0.85,
+            "roughness": 0.3,
+            "emissive": "#4a1c00",
+            "emissiveIntensity": 0.5,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "inti-ferit",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.018,
+            "radiusBottom": 0.018,
+            "height": 0.075
+          },
+          "position": [
+            0,
+            0.97,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "tengah",
+          "material": {
+            "color": "#2b2b33",
+            "metalness": 0.2,
+            "roughness": 0.8,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "kapasitor",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.028,
+            "radiusBottom": 0.028,
+            "height": 0.09
+          },
+          "position": [
+            0.055,
+            0.93,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "tengah",
+          "material": {
+            "color": "#1e4fa8",
+            "metalness": 0.3,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1
+          }
+        },
+        {
+          "id": "kabel-merah",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.28
+          },
+          "position": [
+            -0.045,
+            0.92,
+            0.02
+          ],
+          "rotation": [
+            0,
+            0,
+            8
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "material": {
+            "color": "#e53935",
             "metalness": 0.1,
             "roughness": 0.5,
             "emissive": "#000000",
             "emissiveIntensity": 1,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        }
-      ],
-      "layer": "depan"
-    },
-    {
-      "id": "pusat-jam",
-      "type": "cylinder",
-      "position": [
-        0,
-        2.5,
-        0.26
-      ],
-      "rotation": [
-        90,
-        0,
-        0
-      ],
-      "params": {
-        "radiusTop": 0.09,
-        "radiusBottom": 0.09,
-        "height": 0.06
-      },
-      "material": {
-        "color": "#d4af37",
-        "metalness": 0.8,
-        "roughness": 0.25
-      },
-      "layer": "depan"
-    },
-    {
-      "id": "pusat-jam-tutup",
-      "type": "sphere",
-      "position": [
-        0,
-        2.5,
-        0.3
-      ],
-      "params": {
-        "radius": 0.035
-      },
-      "material": {
-        "color": "#e8c85a",
-        "metalness": 0.8,
-        "roughness": 0.2
-      },
-      "layer": "depan"
-    },
-    {
-      "id": "rak",
-      "type": "box",
-      "position": [
-        2.6,
-        1.35,
-        0.06
-      ],
-      "params": {
-        "width": 1.8,
-        "height": 0.08,
-        "depth": 0.32
-      },
-      "material": {
-        "color": "#8a6d4e",
-        "metalness": 0.05,
-        "roughness": 0.75
-      },
-      "layer": "tengah"
-    },
-    {
-      "id": "pot",
-      "type": "cylinder",
-      "position": [
-        2.3,
-        1.52,
-        0.06
-      ],
-      "params": {
-        "radiusTop": 0.17,
-        "radiusBottom": 0.12,
-        "height": 0.26
-      },
-      "material": {
-        "color": "#cf8a5e",
-        "metalness": 0.05,
-        "roughness": 0.8
-      },
-      "layer": "tengah"
-    },
-    {
-      "id": "tanaman",
-      "type": "group",
-      "position": [
-        2.3,
-        1.72,
-        0.06
-      ],
-      "children": [
-        {
-          "id": "daun-1",
-          "type": "icosahedron",
-          "position": [
-            0,
-            0.12,
-            0
-          ],
-          "params": {
-            "radius": 0.24,
-            "detail": 0
-          },
-          "material": {
-            "color": "#3f7a4a",
-            "metalness": 0,
-            "roughness": 0.85
+            "opacity": 1
           }
         },
         {
-          "id": "daun-2",
-          "type": "icosahedron",
-          "position": [
-            0.18,
-            0.02,
-            0.05
-          ],
-          "params": {
-            "radius": 0.16,
-            "detail": 0
-          },
-          "material": {
-            "color": "#4f8c56",
-            "metalness": 0,
-            "roughness": 0.85
-          }
-        },
-        {
-          "id": "daun-3",
-          "type": "icosahedron",
-          "position": [
-            -0.16,
-            0.03,
-            -0.03
-          ],
-          "params": {
-            "radius": 0.15,
-            "detail": 0
-          },
-          "material": {
-            "color": "#356b41",
-            "metalness": 0,
-            "roughness": 0.85
-          }
-        }
-      ],
-      "layer": "tengah"
-    },
-    {
-      "id": "bingkai",
-      "type": "box",
-      "position": [
-        -2.8,
-        3.2,
-        -0.05
-      ],
-      "params": {
-        "width": 1.4,
-        "height": 1,
-        "depth": 0.06
-      },
-      "material": {
-        "color": "#6b5540",
-        "metalness": 0.1,
-        "roughness": 0.6
-      },
-      "layer": "dalam"
-    },
-    {
-      "id": "lukisan",
-      "type": "box",
-      "position": [
-        -2.8,
-        3.2,
-        -0.005
-      ],
-      "params": {
-        "width": 1.2,
-        "height": 0.8,
-        "depth": 0.02
-      },
-      "material": {
-        "color": "#9fc0d8",
-        "metalness": 0.1,
-        "roughness": 0.5
-      },
-      "layer": "dalam"
-    },
-    {
-      "id": "penopang-mesin",
-      "type": "cylinder",
-      "position": [
-        0,
-        2.5,
-        -0.055
-      ],
-      "rotation": [
-        90,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radiusTop": 1.18,
-        "radiusBottom": 1.18,
-        "height": 0.025
-      },
-      "material": {
-        "color": "#2a303a",
-        "metalness": 0.45,
-        "roughness": 0.6,
-        "emissive": "#000000",
-        "emissiveIntensity": 1,
-        "opacity": 1,
-        "wireframe": false,
-        "flatShading": false,
-        "fog": true,
-        "doubleSide": false
-      },
-      "layer": "dalam"
-    },
-    {
-      "id": "baterai-aa",
-      "type": "group",
-      "position": [
-        -0.55,
-        2.25,
-        -0.02
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "children": [
-        {
-          "id": "baterai-aa-badan",
+          "id": "kabel-hitam",
           "type": "cylinder",
+          "params": {
+            "radiusTop": 0.008,
+            "radiusBottom": 0.008,
+            "height": 0.28
+          },
           "position": [
-            0,
-            0,
-            0
+            0.045,
+            0.92,
+            -0.02
           ],
           "rotation": [
             0,
             0,
-            90
+            -8
           ],
           "scale": [
             1,
             1,
             1
           ],
-          "params": {
-            "radiusTop": 0.13,
-            "radiusBottom": 0.13,
-            "height": 0.52
-          },
+          "layer": "baterai",
           "material": {
-            "color": "#1f2328",
-            "metalness": 0.2,
-            "roughness": 0.45,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        },
-        {
-          "id": "baterai-aa-positif",
-          "type": "cylinder",
-          "position": [
-            0.28,
-            0,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            90
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "radiusTop": 0.045,
-            "radiusBottom": 0.045,
-            "height": 0.03
-          },
-          "material": {
-            "color": "#c9ced6",
-            "metalness": 0.8,
-            "roughness": 0.25,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        },
-        {
-          "id": "baterai-aa-label",
-          "type": "box",
-          "position": [
-            0,
-            0,
-            0.132
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "width": 0.32,
-            "height": 0.18,
-            "depth": 0.005
-          },
-          "material": {
-            "color": "#e1c45c",
+            "color": "#15171d",
             "metalness": 0.1,
             "roughness": 0.6,
             "emissive": "#000000",
             "emissiveIntensity": 1,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        }
-      ],
-      "layer": "belakang"
-    },
-    {
-      "id": "pcb-kuarsa",
-      "type": "box",
-      "position": [
-        0.15,
-        2.62,
-        -0.01
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "width": 0.95,
-        "height": 0.75,
-        "depth": 0.035
-      },
-      "material": {
-        "color": "#1d6b46",
-        "metalness": 0.15,
-        "roughness": 0.7,
-        "emissive": "#1d6b46",
-        "emissiveIntensity": 0.12,
-        "opacity": 1,
-        "wireframe": false,
-        "flatShading": false,
-        "fog": true,
-        "doubleSide": false
-      },
-      "layer": "dalam"
-    },
-    {
-      "id": "kristal-kuarsa",
-      "type": "cylinder",
-      "position": [
-        0.38,
-        2.78,
-        0.01
-      ],
-      "rotation": [
-        90,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "params": {
-        "radiusTop": 0.028,
-        "radiusBottom": 0.028,
-        "height": 0.11
-      },
-      "material": {
-        "color": "#dfe8f2",
-        "metalness": 0.85,
-        "roughness": 0.2,
-        "emissive": "#cfd6de",
-        "emissiveIntensity": 0.35,
-        "opacity": 1,
-        "wireframe": false,
-        "flatShading": false,
-        "fog": true,
-        "doubleSide": false
-      },
-      "layer": "dalam"
-    },
-    {
-      "id": "kumparan-motor",
-      "type": "torus",
-      "position": [
-        0.18,
-        2.38,
-        0.01
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1.5,
-        1.5,
-        1
-      ],
-      "params": {
-        "radius": 0.11,
-        "tube": 0.028
-      },
-      "material": {
-        "color": "#b87333",
-        "metalness": 0.65,
-        "roughness": 0.35,
-        "emissive": "#b87333",
-        "emissiveIntensity": 0.55,
-        "opacity": 1,
-        "wireframe": false,
-        "flatShading": false,
-        "fog": true,
-        "doubleSide": false
-      },
-      "layer": "dalam"
-    },
-    {
-      "id": "rotor-stepper",
-      "type": "group",
-      "position": [
-        0.18,
-        2.38,
-        0.03
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1.5,
-        1.5,
-        1
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": 6.283
-      },
-      "children": [
-        {
-          "id": "rotor-stepper-magnet",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "radiusTop": 0.075,
-            "radiusBottom": 0.075,
-            "height": 0.03
-          },
-          "material": {
-            "color": "#707782",
-            "metalness": 0.75,
-            "roughness": 0.3,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
+            "opacity": 1
           }
         },
         {
-          "id": "rotor-stepper-pin",
-          "type": "box",
-          "position": [
-            0.06,
-            0,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "width": 0.03,
-            "height": 0.08,
-            "depth": 0.02
-          },
-          "material": {
-            "color": "#9aa4b2",
-            "metalness": 0.8,
-            "roughness": 0.3,
-            "emissive": "#000000",
-            "emissiveIntensity": 1,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        }
-      ],
-      "layer": "dalam"
-    },
-    {
-      "id": "gir-detik-kuarsa",
-      "type": "group",
-      "position": [
-        0.18,
-        2.38,
-        0.07
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1.6,
-        1.6,
-        1
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": 0.105
-      },
-      "children": [
-        {
-          "id": "gir-detik-cakram",
+          "id": "kabel-tegangan",
           "type": "cylinder",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
           "params": {
-            "radiusTop": 0.22,
-            "radiusBottom": 0.22,
-            "height": 0.02
+            "radiusTop": 0.006,
+            "radiusBottom": 0.006,
+            "height": 0.9
           },
-          "material": {
-            "color": "#c9a227",
-            "metalness": 0.7,
-            "roughness": 0.35,
-            "emissive": "#c9a227",
-            "emissiveIntensity": 0.55,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        },
-        {
-          "id": "gir-detik-gigi",
-          "type": "instances",
           "position": [
-            0,
-            0,
-            0
+            0.02,
+            1.45,
+            0.02
           ],
           "rotation": [
             0,
             0,
-            0
+            2
           ],
           "scale": [
             1,
             1,
             1
           ],
-          "geometry": {
-            "type": "box",
-            "params": {
-              "width": 0.07,
-              "height": 0.035,
-              "depth": 0.035
-            }
-          },
+          "layer": "baterai",
           "material": {
-            "color": "#c9a227",
-            "metalness": 0.7,
-            "roughness": 0.35,
-            "emissive": "#c9a227",
-            "emissiveIntensity": 0.55,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          },
-          "transforms": [
-            {
-              "p": [
-                0.24,
-                0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.17,
-                0.17,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                45
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0,
-                0.24,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                90
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.17,
-                0.17,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                135
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.24,
-                0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                180
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.17,
-                -0.17,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                225
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0,
-                -0.24,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                270
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.17,
-                -0.17,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                315
-              ],
-              "s": 1
-            }
-          ]
+            "color": "#ffb45e",
+            "metalness": 0.2,
+            "roughness": 0.45,
+            "emissive": "#ff8a1e",
+            "emissiveIntensity": 1.2,
+            "opacity": 1
+          }
         }
-      ],
-      "layer": "dalam"
+      ]
     },
     {
-      "id": "gir-menit-kuarsa",
-      "type": "group",
-      "position": [
-        -0.28,
-        2.62,
-        0.08
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1.5,
-        1.5,
-        1
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": -0.00175
-      },
-      "children": [
-        {
-          "id": "gir-menit-cakram",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "radiusTop": 0.18,
-            "radiusBottom": 0.18,
-            "height": 0.02
-          },
-          "material": {
-            "color": "#b08d57",
-            "metalness": 0.7,
-            "roughness": 0.35,
-            "emissive": "#b08d57",
-            "emissiveIntensity": 0.5,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        },
-        {
-          "id": "gir-menit-gigi",
-          "type": "instances",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "geometry": {
-            "type": "box",
-            "params": {
-              "width": 0.07,
-              "height": 0.035,
-              "depth": 0.035
-            }
-          },
-          "material": {
-            "color": "#b08d57",
-            "metalness": 0.7,
-            "roughness": 0.35,
-            "emissive": "#b08d57",
-            "emissiveIntensity": 0.5,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          },
-          "transforms": [
-            {
-              "p": [
-                0.2,
-                0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.141,
-                0.141,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                45
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0,
-                0.2,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                90
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.141,
-                0.141,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                135
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.2,
-                0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                180
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.141,
-                -0.141,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                225
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0,
-                -0.2,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                270
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.141,
-                -0.141,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                315
-              ],
-              "s": 1
-            }
-          ]
-        }
-      ],
-      "layer": "dalam"
-    },
-    {
-      "id": "gir-jam-kuarsa",
-      "type": "group",
-      "position": [
-        -0.62,
-        2.38,
-        0.09
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1.4,
-        1.4,
-        1
-      ],
-      "animate": {
-        "type": "spin",
-        "axis": "z",
-        "speed": 0.000145
-      },
-      "children": [
-        {
-          "id": "gir-jam-cakram",
-          "type": "cylinder",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "radiusTop": 0.16,
-            "radiusBottom": 0.16,
-            "height": 0.02
-          },
-          "material": {
-            "color": "#d4af37",
-            "metalness": 0.7,
-            "roughness": 0.35,
-            "emissive": "#d4af37",
-            "emissiveIntensity": 0.5,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        },
-        {
-          "id": "gir-jam-gigi",
-          "type": "instances",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "geometry": {
-            "type": "box",
-            "params": {
-              "width": 0.07,
-              "height": 0.035,
-              "depth": 0.035
-            }
-          },
-          "material": {
-            "color": "#d4af37",
-            "metalness": 0.7,
-            "roughness": 0.35,
-            "emissive": "#d4af37",
-            "emissiveIntensity": 0.5,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          },
-          "transforms": [
-            {
-              "p": [
-                0.18,
-                0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                0
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.127,
-                0.127,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                45
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0,
-                0.18,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                90
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.127,
-                0.127,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                135
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.18,
-                0,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                180
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                -0.127,
-                -0.127,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                225
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0,
-                -0.18,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                270
-              ],
-              "s": 1
-            },
-            {
-              "p": [
-                0.127,
-                -0.127,
-                0
-              ],
-              "r": [
-                0,
-                0,
-                315
-              ],
-              "s": 1
-            }
-          ]
-        }
-      ],
-      "layer": "dalam"
-    },
-    {
-      "id": "jendela-mekanik",
-      "type": "torus",
-      "position": [
-        0,
-        2.5,
-        0.145
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
+      "id": "nyamuk-badan",
+      "type": "capsule",
       "params": {
-        "radius": 0.92,
-        "tube": 0.025
+        "radius": 0.018,
+        "length": 0.05
       },
-      "material": {
-        "color": "#d4af37",
-        "metalness": 0.75,
-        "roughness": 0.32,
-        "emissive": "#d4af37",
-        "emissiveIntensity": 0.35,
-        "opacity": 1,
-        "wireframe": false,
-        "flatShading": false,
-        "fog": true,
-        "doubleSide": false
-      },
-      "layer": "depan"
-    },
-    {
-      "id": "penutup-belakang",
-      "type": "cylinder",
       "position": [
-        0,
-        2.5,
-        -0.09
+        0.62,
+        2.42,
+        0.3
       ],
       "rotation": [
-        90,
         0,
-        0
+        0,
+        35
       ],
       "scale": [
         1,
         1,
         1
       ],
-      "params": {
-        "radiusTop": 1.46,
-        "radiusBottom": 1.46,
-        "height": 0.04
-      },
       "material": {
-        "color": "#5a4630",
-        "metalness": 0.35,
+        "color": "#1b1d24",
+        "metalness": 0.2,
         "roughness": 0.6,
         "emissive": "#000000",
         "emissiveIntensity": 1,
@@ -1868,15 +1193,90 @@
         "fog": true,
         "doubleSide": false
       },
-      "layer": "belakang"
+      "layer": "jala"
     },
     {
-      "id": "braket-gantung",
-      "type": "torus",
+      "id": "nyamuk-sayap-kiri",
+      "type": "plane",
+      "params": {
+        "width": 0.07,
+        "height": 0.035
+      },
       "position": [
+        0.58,
+        2.48,
+        0.3
+      ],
+      "rotation": [
+        25,
         0,
-        4.06,
-        -0.06
+        35
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "material": {
+        "color": "#dfe9ff",
+        "metalness": 0,
+        "roughness": 0.3,
+        "emissive": "#6f8fbf",
+        "emissiveIntensity": 0.3,
+        "opacity": 0.4,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": true
+      },
+      "layer": "jala"
+    },
+    {
+      "id": "nyamuk-sayap-kanan",
+      "type": "plane",
+      "params": {
+        "width": 0.07,
+        "height": 0.035
+      },
+      "position": [
+        0.66,
+        2.48,
+        0.31
+      ],
+      "rotation": [
+        25,
+        0,
+        -35
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "material": {
+        "color": "#dfe9ff",
+        "metalness": 0,
+        "roughness": 0.3,
+        "emissive": "#6f8fbf",
+        "emissiveIntensity": 0.3,
+        "opacity": 0.4,
+        "wireframe": false,
+        "flatShading": false,
+        "fog": true,
+        "doubleSide": true
+      },
+      "layer": "jala"
+    },
+    {
+      "id": "nyamuk-mata",
+      "type": "sphere",
+      "params": {
+        "radius": 0.009
+      },
+      "position": [
+        0.65,
+        2.44,
+        0.315
       ],
       "rotation": [
         0,
@@ -1888,227 +1288,130 @@
         1,
         1
       ],
-      "params": {
-        "radius": 0.16,
-        "tube": 0.035
-      },
       "material": {
-        "color": "#c9a227",
-        "metalness": 0.8,
-        "roughness": 0.3,
-        "emissive": "#000000",
-        "emissiveIntensity": 1,
+        "color": "#ff3b30",
+        "metalness": 0,
+        "roughness": 0.25,
+        "emissive": "#ff3b30",
+        "emissiveIntensity": 3,
         "opacity": 1,
         "wireframe": false,
         "flatShading": false,
         "fog": true,
         "doubleSide": false
       },
-      "layer": "belakang"
-    },
-    {
-      "id": "palang-escapement",
-      "type": "group",
-      "position": [
-        0.58,
-        2.62,
-        0.09
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": [
-        1,
-        1,
-        1
-      ],
-      "animate": {
-        "type": "oscillate",
-        "axis": "z",
-        "amplitude": 18,
-        "period": 1.2
-      },
-      "children": [
-        {
-          "id": "palang-escapement-batang",
-          "type": "box",
-          "position": [
-            0,
-            0,
-            0
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "width": 0.42,
-            "height": 0.035,
-            "depth": 0.025
-          },
-          "material": {
-            "color": "#d4af37",
-            "metalness": 0.75,
-            "roughness": 0.3,
-            "emissive": "#d4af37",
-            "emissiveIntensity": 0.45,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        },
-        {
-          "id": "palang-escapement-roler",
-          "type": "torus",
-          "position": [
-            0,
-            0,
-            0.01
-          ],
-          "rotation": [
-            0,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "params": {
-            "radius": 0.12,
-            "tube": 0.018
-          },
-          "material": {
-            "color": "#b87333",
-            "metalness": 0.7,
-            "roughness": 0.35,
-            "emissive": "#b87333",
-            "emissiveIntensity": 0.4,
-            "opacity": 1,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": false
-          }
-        }
-      ],
-      "layer": "dalam"
+      "layer": "jala"
     }
   ],
-  "controls": [
-    {
-      "id": "ctl-speed",
-      "type": "slider",
-      "label": "Kecepatan jarum detik",
-      "target": "jarum-detik",
-      "param": "speed",
-      "min": 0,
-      "max": 3,
-      "step": 0.1,
-      "default": 0.72
-    }
-  ],
+  "power": {
+    "label": "Nyala",
+    "default": true,
+    "affects": [
+      "jala",
+      "led-daya"
+    ]
+  },
   "post": {
     "bloom": {
-      "strength": 0.25,
+      "strength": 0.6,
       "radius": 0.5,
-      "threshold": 0.9
+      "threshold": 0.72
     }
   },
   "cameraPath": {
+    "loop": true,
+    "autoplay": true,
     "shots": [
       {
-        "id": "establish",
-        "type": "orbit",
-        "target": "wajah-jam",
-        "radius": 6.2,
-        "height": 3,
-        "startAngle": 0,
-        "sweep": 55,
-        "duration": 5,
-        "ease": "inOut",
-        "caption": "Jam dinding kuarsa: tampilan klasik di luar, mesin bertenaga baterai di dalam."
+        "type": "crane",
+        "duration": 2,
+        "from": [
+          5,
+          8,
+          7
+        ],
+        "toY": 3.2,
+        "target": "raket",
+        "caption": "Raket bulat terpampang utuh dari atas."
       },
       {
-        "id": "reveal",
         "type": "orbit",
-        "target": "wajah-jam",
-        "radius": 5,
-        "height": 2.6,
-        "startAngle": 35,
-        "sweep": 70,
-        "duration": 6,
-        "ease": "inOut",
+        "duration": 3,
+        "target": "jala-melingkar",
+        "radius": 3.2,
+        "height": 2.4,
+        "startAngle": 0,
+        "sweep": 200,
+        "caption": "Jala melingkar bermuatan biru dari berbagai sudut."
+      },
+      {
+        "type": "zoom",
+        "duration": 2,
+        "target": "jala-melingkar",
+        "framing": {
+          "object": "jala-melingkar",
+          "fill": 0.55
+        },
+        "fromDistance": 3.2,
+        "toDistance": 1.8,
+        "caption": "Detail anyaman kawat bertegangan."
+      },
+      {
+        "type": "dolly",
+        "duration": 3,
+        "from": [
+          2,
+          1.6,
+          3
+        ],
+        "to": [
+          1,
+          1.3,
+          2.2
+        ],
+        "target": "otak-pcb",
+        "framing": {
+          "object": "otak-pcb",
+          "fill": 0.5
+        },
         "explode": [
           0,
           0.8
         ],
-        "transition": "dissolve",
-        "transitionDuration": 0.6,
-        "caption": "Modul kuarsa terlihat: baterai AA, PCB, kristal kuarsa, kumparan, dan roda gigi."
+        "caption": "Bedah: baterai Li-ion, otak MCU, dan trafo boost tegangan tinggi."
       },
       {
-        "id": "kuarsa-close",
         "type": "zoom",
-        "target": "kristal-kuarsa",
-        "fromDistance": 2.8,
-        "toDistance": 1.2,
-        "duration": 3.5,
-        "transition": "dissolve",
-        "transitionDuration": 0.5,
-        "caption": "Kristal kuarsa memberi getaran stabil yang dibagi rangkaian elektronik menjadi pulsa waktu."
+        "duration": 2,
+        "target": "trafo-boost",
+        "framing": {
+          "object": "trafo-boost",
+          "fill": 0.6
+        },
+        "fromDistance": 2,
+        "toDistance": 0.9,
+        "caption": "Trafo boost menaikkan 3,7 V menjadi ~1,2 kV."
       },
       {
-        "id": "motor-close",
-        "type": "zoom",
-        "target": "rotor-stepper",
-        "fromDistance": 2.2,
-        "toDistance": 1.1,
-        "duration": 3.5,
-        "caption": "Kumparan menggerakkan rotor stepper; putaran diteruskan lewat roda gigi ke jarum detik, menit, dan jam."
-      },
-      {
-        "id": "tutup",
-        "type": "dolly",
+        "type": "crane",
+        "duration": 2,
         "from": [
-          0,
-          2.6,
+          3,
+          2.2,
           5.5
         ],
-        "to": [
-          0,
-          2.6,
-          7.2
-        ],
-        "target": "wajah-jam",
-        "duration": 3,
-        "caption": "Hasilnya gerak jarum yang presisi dan efisien dengan sumber daya baterai."
+        "toY": 6,
+        "target": "raket",
+        "caption": "Tarik kembali: raket bulat utuh dalam bingkai."
       }
     ],
-    "loop": true,
-    "autoplay": false,
     "effects": [
       {
         "type": "colorGrade",
-        "look": "warm"
+        "look": "clean"
       },
       {
         "type": "vignette"
-      },
-      {
-        "type": "letterbox",
-        "ratio": 0.08
       }
     ]
   },
@@ -2117,20 +1420,20 @@
     "axis": "z",
     "layers": [
       {
-        "id": "depan",
+        "id": "jala",
         "offset": 1.2
       },
       {
         "id": "tengah",
-        "offset": 0.4
+        "offset": 0.35
       },
       {
-        "id": "dalam",
-        "offset": -0.5
+        "id": "baterai",
+        "offset": -0.85
       },
       {
-        "id": "belakang",
-        "offset": -1.2
+        "id": "pegangan",
+        "offset": 0
       }
     ]
   }

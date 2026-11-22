@@ -1085,22 +1085,27 @@ export function applyExplode(handle, factor) {
   const asm = handle.spec.assembly;
   if (asm?.mode === 'layered' && Array.isArray(asm.layers)) {
     const axis = { x: 0, y: 1, z: 2 }[asm.axis || 'z'];
-    const byId = new Map((handle.spec.objects || []).map(o => [o.id, o]));
+    const byId = new Map();
+    const indexSpec = (o) => { byId.set(o.id, o); for (const c of o.children || []) indexSpec(c); };
+    for (const o of handle.spec.objects || []) indexSpec(o);
     const layers = new Map(asm.layers.map(l => [l.id, l]));
     const isSky = m => m.userData?.isSky || m.name === '__ground' || /^(backdrop|ground|langit|bintang)$/i.test(m.userData?.specId || '');
-    for (const m of roots) {
-      if (isSky(m)) continue;
-      const o = byId.get(m.userData.specId);
-      const layer = o && layers.get(o.layer);
-      const prev = m.userData.explodeOff || new THREE.Vector3();
-      m.position.sub(prev);
-      const next = new THREE.Vector3();
-      if (layer) {
-        next.setComponent(axis, (layer.offset ?? 0) * factor);
-        m.position.add(next);
+    const visit = (m) => {
+      if (!isSky(m)) {
+        const o = byId.get(m.userData.specId);
+        const layer = o && layers.get(o.layer);
+        const prev = m.userData.explodeOff || new THREE.Vector3();
+        m.position.sub(prev);
+        const next = new THREE.Vector3();
+        if (layer) {
+          next.setComponent(axis, (layer.offset ?? 0) * factor);
+          m.position.add(next);
+        }
+        m.userData.explodeOff = next;
       }
-      m.userData.explodeOff = next;
-    }
+      for (const ch of m.children || []) visit(ch);
+    };
+    for (const m of roots) visit(m);
     return;
   }
   const isScenery = m => m.userData?.isSky || m.name === '__ground' || /^(backdrop|ground|langit|bintang)$/i.test(m.userData?.specId || '');

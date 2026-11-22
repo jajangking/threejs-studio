@@ -124,7 +124,19 @@ def kb_research(job, topic):
             {'role': 'user', 'content': q}], max_tokens=3000)
         text = raw[0] if isinstance(raw, tuple) else raw
         card = extract_json_object(text)
-        if not card or not isinstance(card.get('required_parts'), list):
+        def templated(c):
+            return (not c or str(c.get('id')) == 'slug' or 'Format:' in str(c.get('facts'))
+                    or 'kata kunci' in str(c.get('keywords'))
+                    or any(str(p.get('label')) == '...' for p in (c.get('required_parts') or [])))
+        if templated(card):  # model kadang mengembalikan contoh template — coba model lain sekali
+            raw2 = call_router('qwen/qwen4-max:free', [
+                {'role': 'system', 'content': 'Balas HANYA JSON card yang sudah diisi, BUKAN contoh format.'},
+                {'role': 'user', 'content': q}], max_tokens=3000)
+            t2 = raw2[0] if isinstance(raw2, tuple) else raw2
+            card = extract_json_object(t2)
+        if templated(card):
+            raise RuntimeError('model menghasilkan card template — coba topik yang lebih spesifik')
+        if not isinstance(card.get('required_parts'), list):
             raise RuntimeError('model tidak menghasilkan card valid')
         slug = re.sub(r'[^a-z0-9-]', '-', str(card.get('id') or topic).lower()).strip('-')[:48] or 'card'
         card['sources'] = [{'n': i + 1, 'url': u} for i, u in enumerate(urls)]
@@ -978,11 +990,13 @@ def build_agent_prompt(user_text, repair=None, selection=None):
                   'DILARANG mengubah objects, lights, camera statis, environment, post, controls, atau contract — ',
                   'itu wilayah Studio Design. Server akan membuang bagian diff di luar cameraPath/audio.',
                   'Fokus: sutradarai konten — shot profesional, narasi tiap shot, transisi, dan urutan tur.', '']
-    cards = knowledge_for(user_text)
+    cards = knowledge_for(user_text, scene if isinstance(scene, dict) else None)
     if cards:
         parts += ['=== REFERENSI TEKNIS — WAJIB, JANGAN BUAT MODEL GENERIK ===']
         for c in cards:
             parts += [f"## {c.get('title')}", c.get('facts', ''), 'BAGIAN WAJIB (id objek HARUS mengandung salah satu keyword):']
+            for s in (c.get('sources') or []):
+                parts.append(f"- Sumber [{s.get('n')}]: {s.get('url')}")
             for req in c.get('required_parts', []):
                 parts.append(f"- {req.get('label')}: keyword {req.get('keywords')}, minimal {req.get('min')}")
         parts.append('Setiap bagian wajib harus ADA di spec dengan id yang cocok — gerbang semantik akan menolak bila hilang. Detail teknis > dekorasi.')
@@ -1129,23 +1143,38 @@ def _render(iter_id, notes):
 # ── Knowledge card teknis + gerbang semantik ──
 KNOWLEDGE_DIR = os.path.join(ROOT, 'knowledge')
 
-def knowledge_for(text):
-    cards, low = [], (text or '').lower()
+def knowledge_for(text, spec=None):
+    """Pilih card paling relevan. Satu keyword umum ('kabel') tidak boleh mengaktifkan
+    card USB pada scene raket yang hanya menyebut 'jalur kabel' di dalamnya."""
+    low = (text or '').lower()
+    if isinstance(spec, dict):
+        low += ' ' + str((spec.get('meta') or {}).get('name') or '').lower()
+        low += ' ' + ' '.join(str(o.get('id') or '') + ' ' + str(o.get('name') or '')
+                             for o in (spec.get('objects') or []) if isinstance(o, dict))
+    scored = []
     try:
         names = sorted(os.listdir(KNOWLEDGE_DIR))
     except OSError:
-        return cards
+        return []
     for fn in names:
         if not fn.endswith('.json'):
             continue
         card = read_json(os.path.join(KNOWLEDGE_DIR, fn), None)
-        if isinstance(card, dict) and any(k.lower() in low for k in card.get('keywords', [])):
-            cards.append(card)
-    return cards
+        if not isinstance(card, dict):
+            continue
+        hits = [k for k in card.get('keywords', []) if str(k).lower() in low]
+        if not hits:
+            continue
+        score = sum(max(1, len(str(k))) for k in hits)
+        # butuh 2 kecocokan ATAU satu frasa spesifik (>=8 char, mis. 'kabel data', 'raket nyamuk')
+        if len(hits) >= 2 or max(len(str(k)) for k in hits) >= 8:
+            scored.append((score, card))
+    scored.sort(key=lambda x: -x[0])
+    return [c for _, c in scored[:2]]
 
 def semantic_check(spec, text):
     """Cek bagian WAJIB sesuai knowledge card — verifikasi makna, bukan cuma struktur."""
-    cards = knowledge_for(text)
+    cards = knowledge_for(text, spec)
     if not cards:
         return None
     summaries = []
@@ -1156,7 +1185,9 @@ def semantic_check(spec, text):
             def walk(o):
                 nonlocal n
                 hay = ((o.get('id') or '') + ' ' + (o.get('name') or '')).lower()
-                if any(k.lower() in hay for k in req.get('keywords', [])):
+                must = req.get('must_type')
+                type_ok = (not must or str(o.get('type') or '').lower() == str(must).lower())
+                if type_ok and any(k.lower() in hay for k in req.get('keywords', [])):
                     tr = (o.get('instances') or {}).get('transforms') or []
                     n += max(1, len(tr)) if req.get('count_instances') and tr else 1
                 for c in o.get('children') or []:
