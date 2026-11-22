@@ -617,7 +617,7 @@ def _message_text(msg):
     return ''
 
 
-def call_router(model, messages, max_tokens=20000, temperature=0.4):
+def call_router(model, messages, max_tokens=20000, temperature=0.4, json_mode=True):
     """OpenAI-compatible router tanpa auth.
 
     Dua gelombang: model utama + longcat (mampu output besar) lebih dulu.
@@ -638,13 +638,16 @@ def call_router(model, messages, max_tokens=20000, temperature=0.4):
 
     def worker(m):
         try:
-            data = http_json(ROUTER_URL, {
+            payload = {
                 'model': m,
                 'messages': messages,
                 'temperature': temperature,
                 'max_tokens': max_tokens,
                 'stream': False,
-            }, timeout=240)
+            }
+            if json_mode:
+                payload['response_format'] = {'type': 'json_object'}
+            data = http_json(ROUTER_URL, payload, timeout=240)
             choices = data.get('choices') or []
             text = _message_text(choices[0].get('message')) if choices else ''
             q.put((m, text.strip(), None))
@@ -1718,8 +1721,10 @@ def agent_loop(job_id, model, user_text):
             last_diff = obj['args']['diff']
         status(f'👀 loop {step}/{MAX_STEPS} — hasil {action}: {str(res)[:120]}')
         msgs.append({'role': 'assistant', 'content': json.dumps(obj, ensure_ascii=False)})
-        msgs.append({'role': 'user', 'content': 'HASIL ALAT ' + action + ': ' + str(res)[:4000] +
+        msgs.append({'role': 'user', 'content': 'HASIL ALAT ' + action + ': ' + str(res)[:1500] +
                      '\nLanjutkan langkah berikutnya atau final. Balas JSON.'})
+        if step >= 9 and len(msgs) > 14:  # model kecil mudah kehilangan format bila context membengkak
+            msgs = [msgs[0]] + msgs[-12:]
     if last_diff:
         status('✅ finalisasi otomatis — memakai diff terbaik yang sudah tervalidasi')
         return json.dumps({'reply': 'Selesai setelah pencarian alat; diff terbaik diterapkan otomatis.',
