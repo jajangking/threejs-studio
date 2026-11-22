@@ -5,8 +5,8 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-02",
-    "saved_at": 1795321957.5459776
+    "iteration": "iter-03",
+    "saved_at": 1795322743.682403
   },
   "environment": {
     "background": "#0b1018",
@@ -1324,7 +1324,8 @@
     "shots": [
       {
         "type": "crane",
-        "duration": 2,
+        "duration": 4,
+        "ease": "inOut",
         "from": [
           5,
           8,
@@ -1332,42 +1333,61 @@
         ],
         "toY": 3.2,
         "target": "raket",
-        "caption": "Raket bulat terpampang utuh dari atas."
+        "transition": "dissolve",
+        "transitionDuration": 0.8,
+        "caption": "Oke, kita mulai dari bentuk utuhnya dulu. Kepala raketnya bulat, jalanya biru, dan gagangnya di bawah sana."
       },
       {
         "type": "orbit",
-        "duration": 3,
+        "duration": 5,
+        "ease": "inOut",
         "target": "jala-melingkar",
-        "radius": 3.2,
+        "framing": {
+          "object": "jala-melingkar",
+          "fill": 0.35
+        },
+        "radius": 3.6,
         "height": 2.4,
         "startAngle": 0,
-        "sweep": 200,
-        "caption": "Jala melingkar bermuatan biru dari berbagai sudut."
+        "sweep": 180,
+        "transition": "dissolve",
+        "transitionDuration": 0.8,
+        "caption": "Pelan-pelan kita kelilingi kepalanya. Dua cincin ini mengapit jala kawat di tengah."
       },
       {
         "type": "zoom",
-        "duration": 2,
+        "duration": 4,
+        "ease": "inOut",
         "target": "jala-melingkar",
         "framing": {
           "object": "jala-melingkar",
           "fill": 0.55
         },
-        "fromDistance": 3.2,
-        "toDistance": 1.8,
-        "caption": "Detail anyaman kawat bertegangan."
+        "fromDistance": 3.4,
+        "toDistance": 1.9,
+        "transition": "dissolve",
+        "transitionDuration": 0.8,
+        "dof": {
+          "enabled": true,
+          "target": "jala-melingkar",
+          "aperture": 0.00012,
+          "maxblur": 0.01
+        },
+        "caption": "Jalanya sebenarnya tiga lapis. Lapis tengah bermuatan tinggi, dua lapis luar dibumikan—jadi kalau nyamuk nyentuh keduanya, aliran listrik kecil langsung lewat."
       },
       {
         "type": "dolly",
-        "duration": 3,
+        "duration": 5,
+        "ease": "inOut",
         "from": [
           2,
-          1.6,
+          1.7,
           3
         ],
         "to": [
-          1,
-          1.3,
-          2.2
+          1.1,
+          1.35,
+          2.3
         ],
         "target": "otak-pcb",
         "framing": {
@@ -1378,23 +1398,44 @@
           0,
           0.8
         ],
-        "caption": "Bedah: baterai Li-ion, otak MCU, dan trafo boost tegangan tinggi."
+        "transition": "dissolve",
+        "transitionDuration": 0.8,
+        "caption": "Sekarang kita masuk ke dalam gagangnya. Kita buka perlahan... kelihatan baterainya, pcb otak, dan trafo kecil di dalam sana."
       },
       {
         "type": "zoom",
-        "duration": 2,
+        "duration": 4,
+        "ease": "inOut",
+        "target": "batre-liion",
+        "framing": {
+          "object": "batre-liion",
+          "fill": 0.6
+        },
+        "fromDistance": 2,
+        "toDistance": 1,
+        "transition": "dissolve",
+        "transitionDuration": 0.8,
+        "caption": "Sumber tenaganya baterai isi ulang tiga komma tujuh volt. Kecil, tapi cukup buat seluruh rangkaian."
+      },
+      {
+        "type": "zoom",
+        "duration": 4,
+        "ease": "inOut",
         "target": "trafo-boost",
         "framing": {
           "object": "trafo-boost",
           "fill": 0.6
         },
         "fromDistance": 2,
-        "toDistance": 0.9,
-        "caption": "Trafo boost menaikkan 3,7 V menjadi ~1,2 kV."
+        "toDistance": 0.95,
+        "transition": "dissolve",
+        "transitionDuration": 0.8,
+        "caption": "Nah si trafo ini yang menaikkan tegangan. Arus searah dari baterai diubah jadi arus bolak-balik dulu, lalu dinaikkan jadi sekitar seribu volt lebih—tipis arusnya, aman buat kita."
       },
       {
         "type": "crane",
-        "duration": 2,
+        "duration": 5,
+        "ease": "inOut",
         "from": [
           3,
           2.2,
@@ -1402,7 +1443,9 @@
         ],
         "toY": 6,
         "target": "raket",
-        "caption": "Tarik kembali: raket bulat utuh dalam bingkai."
+        "transition": "dissolve",
+        "transitionDuration": 0.8,
+        "caption": "Dan itu dia, dari baterai sampai ke jala. Kita tarik kembali, raket bulat utuh lagi. Sederhana, tapi pintar."
       }
     ],
     "effects": [
@@ -1412,6 +1455,10 @@
       },
       {
         "type": "vignette"
+      },
+      {
+        "type": "letterbox",
+        "ratio": 0.09
       }
     ]
   },

@@ -6,6 +6,7 @@ Agent menulis scene.json + iterations/; user melihat via studio & menyimpan edit
 Semua dependensi = python stdlib. Tidak ada paket baru.
 """
 import base64
+import copy
 import hashlib
 import json
 import os
@@ -467,6 +468,7 @@ def chat_state():
                     break
         return {
             'running': running,
+            'loop_mode': bool(CHAT.get('loop_mode')),
             'job_id': CHAT['job_id'],
             'status_lines': list(CHAT['status_lines'][-CHAT_STATUS_MAX:]),
             'messages': msgs if isinstance(msgs, list) else [],
@@ -1357,11 +1359,154 @@ def materialize_result(result):
     return None, ''
 
 
+LOOP_SYSTEM = """Kamu agen Three.js berpikir BERULANG dengan alat. Balas SELALU JSON:
+langkah berpikir: {"thought":"alasan singkat","action":"nama_alat","args":{...}}
+selesai: {"thought":"ringkasan","action":"final","reply":"...","contract":"...","diff":{...}}
+Alat (pilih maksimal 6 langkah, WAJIB pakai alat sebelum final):
+- inspect_scene {} — daftar objek beserta id/type/layer, lampu, assembly.
+- read_contract {} — kontrak scene saat ini.
+- knowledge {"topic":"..."} — referensi teknis & bagian wajib dari knowledge card.
+- web_research {"topic":"..."} — cari 4 halaman web (judul + URL) untuk fakta teknis.
+- semantic {"diff":{...}} — cek kelengkapan makna diff terhadap card (skor + yang hilang).
+- preview {"diff":{...}} — render headless diff sementara → smoke 8 cek, coverage, luminansi.
+- vision {"diff":{...}} — render lalu minta penilaian estetika (bisa gagal bila model sibuk).
+Aturan: jangan mengarang id objek yang tidak ada di inspect_scene kecuali membuat objek baru lewat upserts. Gunakan preview/semantic untuk MEMPERBAIKI diff sebelum final. Utamakan detail teknis & assembly layered untuk benda berlapis. DILARANG memanggil shell, menulis file, atau membaca kredensial."""
+
+def loop_scene_summary(spec):
+    lines = []
+    def walk(o, d=0):
+        lines.append(f"{'  '*d}{o.get('id')} [{o.get('type')}] pos={o.get('position')} layer={o.get('layer')}")
+        for c in o.get('children') or []: walk(c, d + 1)
+    for o in (spec.get('objects') or []): walk(o)
+    return ('objek:\n' + '\n'.join(lines[:150]) +
+            f"\nlampu={len(spec.get('lights') or [])} assembly={spec.get('assembly')}")
+
+def loop_bing(topic):
+    ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36'}
+    req = urllib.request.Request('https://www.bing.com/search?q=' + urllib.parse.quote(topic), headers=ua)
+    page = urllib.request.urlopen(req, timeout=20).read().decode('utf-8', 'ignore')
+    out = []
+    for href in re.findall(r'<h2[^>]*>.*?<a[^>]*href="([^"]+)"', page, re.S):
+        href = htmlmod.unescape(href)
+        m = re.search(r'[?&]u=a1([^&]+)', href)
+        if m:
+            b = m.group(1); b += '=' * (-len(b) % 4)
+            real = base64.urlsafe_b64decode(b).decode('utf-8', 'ignore')
+        else:
+            real = href
+        if real.startswith('http') and real not in out: out.append(real)
+    return out[:4]
+
+def loop_tool(name, args, spec, user_text):
+    args = args if isinstance(args, dict) else {}
+    if name == 'inspect_scene':
+        return loop_scene_summary(spec)
+    if name == 'read_contract':
+        return read_text(os.path.join(ROOT, 'contract.md'))[:3000] or '(kosong)'
+    if name == 'knowledge':
+        cards = knowledge_for(args.get('topic') or user_text, spec)
+        if not cards: return 'tidak ada knowledge card yang cocok'
+        return '\n\n'.join(f"## {c.get('title')}\n{c.get('facts','')}\n" +
+                            '\n'.join(f"- {r.get('label')}: {r.get('keywords')} min {r.get('min')}"
+                                      for r in c.get('required_parts', [])) +
+                            '\n'.join(f"Sumber [{s.get('n')}]: {s.get('url')}" for s in c.get('sources', []))
+                            for c in cards)[:4500]
+    if name == 'web_research':
+        return '\n'.join(f'{i+1}. {u}' for i, u in enumerate(loop_bing(str(args.get('topic') or user_text)))) or 'tidak ada hasil'
+    if name in ('semantic', 'preview', 'vision'):
+        d = args.get('diff')
+        if not isinstance(d, dict): return 'diff belum diberikan'
+        cand = apply_diff(copy.deepcopy(spec), d)[0]
+        if not cand: return 'diff ditolak (validasi gagal)'
+        if name == 'semantic':
+            r = semantic_check(cand, user_text)
+            return (f"skor={r['score']}% lolos={r['ok']} hilang={r['missing']}" if r else 'tidak ada card untuk domain ini')
+        fp = os.path.join(ROOT, 'iterations', 'loop-preview', 'scene.json')
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
+        with open(fp, 'w') as f: json.dump(cand, f, ensure_ascii=False)
+        try:
+            out = subprocess.run(['python3', 'scripts/render.py', 'loop-preview', '--scene',
+                                  'iterations/loop-preview/scene.json', '--notes', 'loop preview',
+                                  '--w', '960', '--h', '540'], cwd=ROOT, capture_output=True,
+                                 timeout=180).stdout.decode('utf-8', 'ignore')
+        except Exception as e:
+            return 'render gagal: ' + str(e)[:200]
+        brief = ' '.join(out.split())[-500:]
+        if name == 'vision':
+            v = vision_gate('loop-preview')
+            return brief + ' | estetika: ' + (str(v) if v else 'model vision tidak tersedia')
+        return brief
+    return f'alat {name} tidak dikenal'
+
+def agent_loop(job_id, model, user_text):
+    """Agentic loop: pikir → panggil alat → amati → ulang, lalu final. Default OFF."""
+    spec = read_json(os.path.join(ROOT, 'scene.json'), {})
+    use = model if not str(model).startswith(('opencode:', 'hermes:')) else 'tencent/hy4-flash:free'
+    status(f'🧠 MODE LOOP aktif — model {use}, berjalan sampai final (maks 25 langkah pengaman)')
+    msgs = [
+        {'role': 'system', 'content': LOOP_SYSTEM + '\n\n' + SYSTEM_PROMPT[:3500]},
+        {'role': 'user', 'content': 'PERMINTAAN USER: ' + user_text},
+    ]
+    last_diff = None
+    MAX_STEPS = 25  # tidak memotong pekerjaan; hanya pengaman anti-muter
+    for step in range(1, MAX_STEPS + 1):
+        if not _job_active(job_id): raise RuntimeError('job dibatalkan')
+        if step >= MAX_STEPS - 3:
+            msgs.append({'role': 'user', 'content': 'Segera selesaikan: balas JSON action="final" dengan diff terbaikmu. Jangan memanggil alat lagi.'})
+        if step >= 3 and step % 4 == 0:
+            msgs.append({'role': 'user', 'content': 'Pengingat: kamu BOLEH langsung final kapan saja bila diff sudah valid — tidak perlu menunggu sempurna.'})
+        status(f'🧠 loop {step}/{MAX_STEPS} — berpikir…')
+        raw = call_router(use, msgs, max_tokens=2500)
+        txt = raw[0] if isinstance(raw, tuple) else raw
+        obj = extract_json_object(txt)
+        if not isinstance(obj, dict):
+            msgs.append({'role': 'user', 'content': 'Jawaban bukan JSON. Balas JSON sesuai protokol.'})
+            continue
+        thought = str(obj.get('thought') or '')[:160]
+        action = str(obj.get('action') or '').lower()
+        status(f'🧠 loop {step}/{MAX_STEPS} — {thought}')
+        if action == 'final':
+            status('✅ loop selesai — validasi hasil akhir…')
+            obj.pop('thought', None); obj.pop('action', None); obj.pop('args', None)
+            return json.dumps(obj, ensure_ascii=False), use
+        if action not in ('inspect_scene', 'read_contract', 'knowledge', 'web_research', 'semantic', 'preview', 'vision'):
+            msgs.append({'role': 'user', 'content': f'Alat {action} tidak ada. Pilih dari: inspect_scene, read_contract, knowledge, web_research, semantic, preview, vision.'})
+            continue
+        status(f'🔧 loop {step}/{MAX_STEPS} — memanggil {action}…')
+        res = loop_tool(action, obj.get('args'), spec, user_text)
+        if action in ('semantic', 'preview', 'vision') and isinstance((obj.get('args') or {}).get('diff'), dict):
+            last_diff = obj['args']['diff']
+        status(f'👀 loop {step}/{MAX_STEPS} — hasil {action}: {str(res)[:120]}')
+        msgs.append({'role': 'assistant', 'content': json.dumps(obj, ensure_ascii=False)})
+        msgs.append({'role': 'user', 'content': 'HASIL ALAT ' + action + ': ' + str(res)[:4000] +
+                     '\nLanjutkan langkah berikutnya atau final. Balas JSON.'})
+    if last_diff:
+        status('✅ finalisasi otomatis — memakai diff terbaik yang sudah tervalidasi')
+        return json.dumps({'reply': 'Selesai setelah pencarian alat; diff terbaik diterapkan otomatis.',
+                           'diff': last_diff}, ensure_ascii=False), use
+    # tidak ada diff sama sekali: minta satu langkah final eksplisit, lalu pakai apa adanya
+    msgs.append({'role': 'user', 'content': 'Balas JSON final sekarang dengan diff minimal yang valid (boleh kosong upserts bila scene sudah benar).'})
+    try:
+        raw = call_router(use, msgs, max_tokens=2500)
+        txt = raw[0] if isinstance(raw, tuple) else raw
+        obj = extract_json_object(txt) or {}
+        obj.pop('thought', None); obj.pop('action', None); obj.pop('args', None)
+        if isinstance(obj.get('diff'), dict):
+            status('✅ finalisasi darurat — diff disetujui')
+            return json.dumps(obj, ensure_ascii=False), use
+    except Exception:
+        pass
+    raise RuntimeError('loop tidak menghasilkan diff yang bisa dipakai')
+
+
 def run_agent_job(job_id, user_text, model):
     try:
         status(f'job {job_id} dimulai · model {model}')
         status('menyiapkan konteks (contract, scene, feedback, riwayat)…')
-        raw, used_model = ask_llm(model, user_text)
+        if CHAT.get('loop_mode'):
+            raw, used_model = agent_loop(job_id, model, user_text)
+        else:
+            raw, used_model = ask_llm(model, user_text)
         if not _job_active(job_id):
             return  # dibatalkan saat menunggu model — jangan proses respons zombie
         status(f'memanggil model {used_model}… respons diterima, mem-parsing JSON')
@@ -2331,6 +2476,10 @@ class Handler(SimpleHTTPRequestHandler):
             os.remove(fp)
             status(f'usul sutradara DISETUJUI — {len(cp["shots"])} shot diterapkan ke tur')
             return self._send(200, {'ok': True, 'shots': len(cp['shots'])})
+        if path == '/api/agent/loop':
+            with LOCK:
+                CHAT['loop_mode'] = bool(payload.get('enabled'))
+            return self._send(200, {'ok': True, 'loop_mode': CHAT['loop_mode']})
         if path == '/api/knowledge/research':
             topic = (payload.get('topic') or '').strip()
             if not topic:

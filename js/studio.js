@@ -1321,6 +1321,13 @@ $('#btnProjNew').onclick = () => {
 $('#btnExpHtml').onclick = () => { location.href = '/api/export?format=html'; toast('Mengunduh HTML mandiri…'); };
 $('#btnExpZip').onclick = () => { location.href = '/api/export?format=zip'; toast('Mengunduh ZIP lengkap…'); };
 $('#btnExpJson').onclick = () => { location.href = '/api/export?format=json'; toast('Mengunduh scene.json…'); };
+$('#loopMode').onchange = async (e) => {
+  try {
+    const r = await fetch('/api/agent/loop', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: e.target.checked }) }).then(x => x.json());
+    toast(r.loop_mode ? '🧠 Mode Loop ON — agent akan berpikir & memakai alat sampai yakin' : 'Mode Loop OFF — job biasa kembali cepat');
+  } catch (err) { toast('Gagal mengubah mode: ' + err.message); }
+};
 $('#btnDesignPropose').onclick = async () => {
   const brief = $('#chatText').value.trim();
   if (!brief) return toast('Tulis brief di kolom prompt dulu');
