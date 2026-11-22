@@ -1425,7 +1425,21 @@ def apply_diff(current, diff):
     spec = json.loads(json.dumps(current))
     objs = spec.get('objects') or []
     removes = set(diff.get('remove_ids') or [])
-    objs = [o for o in objs if o.get('id') not in removes]
+    def prune(lst):
+        out = []
+        for o in lst or []:
+            if not isinstance(o, dict) or o.get('id') in removes:
+                continue
+            if isinstance(o.get('children'), list):
+                o['children'] = prune(o['children'])
+            out.append(o)
+        return out
+    objs = prune(objs)
+    for c in (spec.get('dynamicCables') or []):
+        if isinstance(c, dict) and any(isinstance(c.get(k), dict) and c[k].get('id') in removes
+                                       for k in ('from', 'to')):
+            c['_removed'] = True
+    spec['dynamicCables'] = [c for c in (spec.get('dynamicCables') or []) if not c.get('_removed')]
     by_id = {o.get('id'): i for i, o in enumerate(objs)}
     n_up = 0
     for o in diff.get('upserts') or []:

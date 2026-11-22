@@ -5,8 +5,8 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-13",
-    "saved_at": 1795336748.9928524
+    "iteration": "iter-14",
+    "saved_at": 1795337384.7236528
   },
   "environment": {
     "background": "#0b1018",
@@ -4548,46 +4548,6 @@
             "flatShading": false,
             "fog": true,
             "doubleSide": false
-          }
-        },
-        {
-          "id": "cangkang-depan",
-          "type": "cylinder",
-          "params": {
-            "radiusTop": 0.76,
-            "radiusBottom": 0.76,
-            "height": 0.012,
-            "radialSegments": 64
-          },
-          "position": [
-            0,
-            2,
-            0.105
-          ],
-          "rotation": [
-            90,
-            0,
-            0
-          ],
-          "scale": [
-            1,
-            1,
-            1
-          ],
-          "layer": "cangkang",
-          "internalOnly": true,
-          "name": "Cangkang depan polikarbonat",
-          "material": {
-            "color": "#bfe4ff",
-            "metalness": 0.05,
-            "roughness": 0.12,
-            "emissive": "#2f7dff",
-            "emissiveIntensity": 0.18,
-            "opacity": 0.16,
-            "wireframe": false,
-            "flatShading": false,
-            "fog": true,
-            "doubleSide": true
           }
         },
         {
