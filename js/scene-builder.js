@@ -1139,7 +1139,8 @@ function updateDynamicCables(handle) {
 export function applyExplode(handle, factor) {
   // Bagian internalOnly hanya muncul saat scene dibuka (factor > 0).
   handle.scene.traverse(m => {
-    if (m.userData?.hideOnExplode) m.visible = factor <= 0.02;
+    if (m.userData?.internalOnly && m.userData?.hideOnExplode) m.visible = false; // internal & digantikan kabel dinamis — selalu sembunyi
+    else if (m.userData?.hideOnExplode) m.visible = factor <= 0.02;
     else if (m.userData?.internalOnly) m.visible = factor > 0.02;
   });
   const roots = (handle.spec.objects || []).map(o => handle.registry.get(o.id)).filter(Boolean);
