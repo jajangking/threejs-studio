@@ -1,0 +1,41 @@
+{
+  "note": "Pustaka model GLB lokal. CC0 = bebas pakai. Aset 'awacke1' hanya untuk uji (lisensi belum jelas).",
+  "models": [
+    {
+      "id": "fan_standing_four",
+      "name": "Kipas berdiri (Kenney Marble Kit)",
+      "file": "/assets/glb/fan_standing_four.glb",
+      "license": "CC0",
+      "source": "https://github.com/Papyszoo/CC0-Public-Domain-Models/blob/main/packs/kenney-marble-kit/models/fan_standing_four/fan_standing_four.glb",
+      "scale": 4.5,
+      "tags": ["kipas", "fan", "furniture", "electric"]
+    },
+    {
+      "id": "ceiling_fan",
+      "name": "Kipas plafon (Kenney Furniture Kit)",
+      "file": "/assets/glb/ceiling_fan.glb",
+      "license": "CC0",
+      "source": "https://github.com/Papyszoo/CC0-Public-Domain-Models/blob/main/packs/kenney-furniture-kit/models/ceiling_fan/ceiling_fan.glb",
+      "scale": 2,
+      "tags": ["kipas", "fan", "plafon", "ceiling"]
+    },
+    {
+      "id": "rubber_duck",
+      "name": "Bebek karet (uji HF Space)",
+      "file": "/assets/glb/rubber_duck.glb",
+      "license": "unknown - test only",
+      "source": "https://huggingface.co/spaces/awacke1/GLB.Loader.HTML5/resolve/main/rubber_duck.glb",
+      "scale": 1,
+      "tags": ["test"]
+    },
+    {
+      "id": "hugging_face",
+      "name": "Logo Hugging Face (uji HF Space)",
+      "file": "/assets/glb/hugging_face.glb",
+      "license": "unknown - test only",
+      "source": "https://huggingface.co/spaces/awacke1/GLB.Loader.HTML5/resolve/main/hugging_face.glb",
+      "scale": 1,
+      "tags": ["test"]
+    }
+  ]
+}
