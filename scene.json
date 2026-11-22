@@ -5,8 +5,8 @@
     "seed": 42,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-10",
-    "saved_at": 1795332080.696997
+    "iteration": "iter-12",
+    "saved_at": 1795335179.811074
   },
   "environment": {
     "background": "#0b1018",
@@ -108,8 +108,16 @@
     "axis": "z",
     "layers": [
       {
+        "id": "cangkang",
+        "offset": 2.5
+      },
+      {
         "id": "depan",
         "offset": 1.8
+      },
+      {
+        "id": "keypad",
+        "offset": 1.35
       },
       {
         "id": "jala",
@@ -3011,14 +3019,14 @@
         "length": 0.05
       },
       "position": [
-        0.62,
-        2.42,
-        0.3
+        0.6,
+        2.4,
+        0.07
       ],
       "rotation": [
+        90,
         0,
-        0,
-        35
+        0
       ],
       "scale": [
         1,
@@ -3047,9 +3055,9 @@
         "height": 0.035
       },
       "position": [
-        0.58,
-        2.48,
-        0.3
+        0.565,
+        2.455,
+        0.078
       ],
       "rotation": [
         25,
@@ -3085,7 +3093,7 @@
       "position": [
         0.66,
         2.48,
-        0.31
+        0.08
       ],
       "rotation": [
         25,
@@ -3118,9 +3126,9 @@
         "radius": 0.009
       },
       "position": [
-        0.65,
-        2.44,
-        0.315
+        0.628,
+        2.415,
+        0.092
       ],
       "rotation": [
         0,
@@ -3144,6 +3152,2344 @@
         "flatShading": false,
         "fog": true,
         "doubleSide": false
+      }
+    },
+    {
+      "id": "raket-detail",
+      "type": "group",
+      "params": {},
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "animate": {
+        "type": "oscillate",
+        "axis": "y",
+        "amplitude": 5,
+        "period": 12
+      },
+      "children": [
+        {
+          "id": "detail-jejak-tembaga",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "internalOnly": true,
+          "geometry": {
+            "type": "box",
+            "params": {
+              "width": 0.012,
+              "height": 0.004,
+              "depth": 0.22
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                -0.25,
+                1.034,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.222,
+                1.034,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.194,
+                1.034,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.166,
+                1.034,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.138,
+                1.034,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.11,
+                1.034,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.082,
+                1.034,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.054,
+                1.034,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#c98a3a",
+            "metalness": 0.9,
+            "roughness": 0.3,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-baut-pcb",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "internalOnly": true,
+          "geometry": {
+            "type": "cylinder",
+            "params": {
+              "radiusTop": 0.012,
+              "radiusBottom": 0.012,
+              "height": 0.014
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                -0.26,
+                1.04,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.04,
+                1.04,
+                0.06
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.26,
+                1.04,
+                -0.18
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.04,
+                1.04,
+                -0.18
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#b8c0ca",
+            "metalness": 0.9,
+            "roughness": 0.25,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-sirip-pendingin",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "internalOnly": true,
+          "geometry": {
+            "type": "box",
+            "params": {
+              "width": 0.008,
+              "height": 0.05,
+              "depth": 0.07
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                -0.195,
+                1.1,
+                0.07
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.181,
+                1.1,
+                0.07
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.167,
+                1.1,
+                0.07
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.153,
+                1.1,
+                0.07
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.139,
+                1.1,
+                0.07
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.125,
+                1.1,
+                0.07
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#9aa4af",
+            "metalness": 0.85,
+            "roughness": 0.3,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-resistor",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "otak",
+          "internalOnly": true,
+          "geometry": {
+            "type": "cylinder",
+            "params": {
+              "radiusTop": 0.008,
+              "radiusBottom": 0.008,
+              "height": 0.03
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                -0.24,
+                0.99,
+                0.14
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.204,
+                0.99,
+                0.14
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.168,
+                0.99,
+                0.14
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.132,
+                0.99,
+                0.14
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.096,
+                0.99,
+                0.14
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.06,
+                0.99,
+                0.14
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#d8c9a8",
+            "metalness": 0.2,
+            "roughness": 0.6,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-kumparan-koil",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "internalOnly": true,
+          "geometry": {
+            "type": "torus",
+            "params": {
+              "radius": 0.06,
+              "tube": 0.006
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                -0.02,
+                0.97,
+                0.113
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.02,
+                0.97,
+                0.12
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.02,
+                0.97,
+                0.127
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.02,
+                0.97,
+                0.134
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.02,
+                0.97,
+                0.141
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                -0.02,
+                0.97,
+                0.148
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#d98a44",
+            "metalness": 0.85,
+            "roughness": 0.28,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-terminal-baterai",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "internalOnly": true,
+          "geometry": {
+            "type": "cylinder",
+            "params": {
+              "radiusTop": 0.03,
+              "radiusBottom": 0.03,
+              "height": 0.02
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                0.17,
+                0.98,
+                -0.02
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.17,
+                0.62,
+                -0.02
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#d9a441",
+            "metalness": 0.85,
+            "roughness": 0.25,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-pengali-dioda",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "internalOnly": true,
+          "name": "Tangga pengali tegangan — dioda",
+          "geometry": {
+            "type": "box",
+            "params": {
+              "width": 0.02,
+              "height": 0.012,
+              "depth": 0.012
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                -0.02,
+                0.9,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.01,
+                0.9,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.04,
+                0.9,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.07,
+                0.9,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.1,
+                0.9,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#16181f",
+            "metalness": 0.3,
+            "roughness": 0.5,
+            "emissive": "#2a0f00",
+            "emissiveIntensity": 0.35,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-pengali-kapasitor",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "dalam",
+          "internalOnly": true,
+          "name": "Tangga pengali tegangan — kapasitor",
+          "geometry": {
+            "type": "cylinder",
+            "params": {
+              "radiusTop": 0.012,
+              "radiusBottom": 0.012,
+              "height": 0.03
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                -0.02,
+                0.86,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.01,
+                0.86,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.04,
+                0.86,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.07,
+                0.86,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.1,
+                0.86,
+                0.16
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#1e4fa8",
+            "metalness": 0.3,
+            "roughness": 0.4,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-pegas-baterai",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "internalOnly": true,
+          "name": "Pegas kontak negatif baterai",
+          "geometry": {
+            "type": "torus",
+            "params": {
+              "radius": 0.03,
+              "tube": 0.005
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                0.17,
+                0.62,
+                -0.02
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.17,
+                0.635,
+                -0.02
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.17,
+                0.65,
+                -0.02
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.17,
+                0.665,
+                -0.02
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.17,
+                0.68,
+                -0.02
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.17,
+                0.695,
+                -0.02
+              ],
+              "r": [
+                90,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#b8c0ca",
+            "metalness": 0.9,
+            "roughness": 0.28,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-rel-baterai",
+          "type": "instances",
+          "params": {},
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "internalOnly": true,
+          "name": "Rel kompartemen baterai",
+          "geometry": {
+            "type": "box",
+            "params": {
+              "width": 0.012,
+              "height": 0.38,
+              "depth": 0.18
+            }
+          },
+          "transforms": [
+            {
+              "p": [
+                0.085,
+                0.8,
+                -0.02
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "p": [
+                0.255,
+                0.8,
+                -0.02
+              ],
+              "r": [
+                0,
+                0,
+                0
+              ],
+              "s": [
+                1,
+                1,
+                1
+              ]
+            }
+          ],
+          "material": {
+            "color": "#20242c",
+            "metalness": 0.15,
+            "roughness": 0.78,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-landas-kompartemen",
+          "type": "box",
+          "params": {
+            "width": 0.21,
+            "height": 0.012,
+            "depth": 0.18
+          },
+          "position": [
+            0.17,
+            0.612,
+            -0.02
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "internalOnly": true,
+          "name": "Dasar kompartemen baterai 18650",
+          "material": {
+            "color": "#2b3140",
+            "metalness": 0.35,
+            "roughness": 0.7,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "detail-label-baterai",
+          "type": "box",
+          "params": {
+            "width": 0.11,
+            "height": 0.035,
+            "depth": 0.003
+          },
+          "position": [
+            0.17,
+            0.8,
+            0.057
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "baterai",
+          "internalOnly": true,
+          "name": "18650 Li-ion 3.7V 2000mAh",
+          "material": {
+            "color": "#eef3f8",
+            "metalness": 0.05,
+            "roughness": 0.55,
+            "emissive": "#cfd8e6",
+            "emissiveIntensity": 0.12,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "cangkang-depan",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.76,
+            "radiusBottom": 0.76,
+            "height": 0.012,
+            "radialSegments": 64
+          },
+          "position": [
+            0,
+            2,
+            0.105
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "cangkang",
+          "internalOnly": true,
+          "name": "Cangkang depan polikarbonat",
+          "material": {
+            "color": "#bfe4ff",
+            "metalness": 0.05,
+            "roughness": 0.12,
+            "emissive": "#2f7dff",
+            "emissiveIntensity": 0.18,
+            "opacity": 0.16,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": true
+          }
+        },
+        {
+          "id": "cangkang-seal",
+          "type": "torus",
+          "params": {
+            "radius": 0.79,
+            "tube": 0.016
+          },
+          "position": [
+            0,
+            2,
+            0.1
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "cangkang",
+          "internalOnly": true,
+          "name": "Gasket karet cangkang depan",
+          "material": {
+            "color": "#2a303a",
+            "metalness": 0.05,
+            "roughness": 0.88,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "keypad-silikon",
+          "type": "box",
+          "params": {
+            "width": 0.21,
+            "height": 0.33,
+            "depth": 0.012
+          },
+          "position": [
+            0,
+            0.93,
+            0.175
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "keypad",
+          "internalOnly": true,
+          "name": "Keypad silikon gagang",
+          "material": {
+            "color": "#1b1f27",
+            "metalness": 0,
+            "roughness": 0.9,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "keypad-tombol",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.055,
+            "radiusBottom": 0.055,
+            "height": 0.02
+          },
+          "position": [
+            0,
+            0.86,
+            0.185
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "keypad",
+          "internalOnly": true,
+          "name": "Tombol ON/OFF silikon",
+          "material": {
+            "color": "#e53935",
+            "metalness": 0.1,
+            "roughness": 0.35,
+            "emissive": "#ff2d2d",
+            "emissiveIntensity": 0.6,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "keypad-lensa-led",
+          "type": "cylinder",
+          "params": {
+            "radiusTop": 0.022,
+            "radiusBottom": 0.022,
+            "height": 0.014
+          },
+          "position": [
+            0,
+            1,
+            0.185
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "keypad",
+          "internalOnly": true,
+          "name": "Lensa LED indikator",
+          "material": {
+            "color": "#d9ffe8",
+            "metalness": 0,
+            "roughness": 0.2,
+            "emissive": "#00ff88",
+            "emissiveIntensity": 1.4,
+            "opacity": 0.6,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "keypad-legend-onoff",
+          "type": "box",
+          "params": {
+            "width": 0.07,
+            "height": 0.014,
+            "depth": 0.002
+          },
+          "position": [
+            0,
+            0.775,
+            0.183
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "keypad",
+          "internalOnly": true,
+          "name": "Legend ON / OFF",
+          "material": {
+            "color": "#d7dde6",
+            "metalness": 0,
+            "roughness": 0.75,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        },
+        {
+          "id": "keypad-legend-charge",
+          "type": "box",
+          "params": {
+            "width": 0.09,
+            "height": 0.014,
+            "depth": 0.002
+          },
+          "position": [
+            0,
+            1.065,
+            0.183
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "layer": "keypad",
+          "internalOnly": true,
+          "name": "Legend CHARGE 5V",
+          "material": {
+            "color": "#d7dde6",
+            "metalness": 0,
+            "roughness": 0.75,
+            "emissive": "#000000",
+            "emissiveIntensity": 1,
+            "opacity": 1,
+            "wireframe": false,
+            "flatShading": false,
+            "fog": true,
+            "doubleSide": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "jala-luar-depan",
+      "type": "instances",
+      "params": {},
+      "position": [
+        0,
+        0,
+        0.14
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "layer": "jala",
+      "geometry": {
+        "type": "box",
+        "params": {
+          "width": 1,
+          "height": 0.008,
+          "depth": 0.008
+        }
+      },
+      "material": {
+        "color": "#7f9fbf",
+        "metalness": 0.85,
+        "roughness": 0.3,
+        "emissive": "#123a6b",
+        "emissiveIntensity": 0.45,
+        "opacity": 1
+      },
+      "transforms": [
+        {
+          "p": [
+            0,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.52,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            2.2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.47,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            1.8,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.47,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            2.4,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.29,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            1.6,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.29,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            2.6,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            0.93,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            1.4,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            0.93,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.52,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0.2,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.47,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            -0.2,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.47,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0.4,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.29,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            -0.4,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.29,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0.6,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            0.93,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            -0.6,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            0.93,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jala-luar-belakang",
+      "type": "instances",
+      "params": {},
+      "position": [
+        0,
+        0,
+        -0.14
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "layer": "jala",
+      "geometry": {
+        "type": "box",
+        "params": {
+          "width": 1,
+          "height": 0.008,
+          "depth": 0.008
+        }
+      },
+      "material": {
+        "color": "#6f8ca8",
+        "metalness": 0.85,
+        "roughness": 0.32,
+        "emissive": "#0e2d55",
+        "emissiveIntensity": 0.35,
+        "opacity": 1
+      },
+      "transforms": [
+        {
+          "p": [
+            0,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.52,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            2.2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.47,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            1.8,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.47,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            2.4,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.29,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            1.6,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            1.29,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            2.6,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            0.93,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            1.4,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            0
+          ],
+          "s": [
+            0.93,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.52,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0.2,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.47,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            -0.2,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.47,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0.4,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.29,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            -0.4,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            1.29,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            0.6,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            0.93,
+            1,
+            1
+          ]
+        },
+        {
+          "p": [
+            -0.6,
+            2,
+            0
+          ],
+          "r": [
+            0,
+            0,
+            90
+          ],
+          "s": [
+            0.93,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "busur-kontak",
+      "type": "cylinder",
+      "params": {
+        "radiusTop": 0.006,
+        "radiusBottom": 0.006,
+        "height": 0.072
+      },
+      "position": [
+        0.622,
+        2.4,
+        0.07
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "layer": "jala",
+      "material": {
+        "color": "#eaffff",
+        "metalness": 0,
+        "roughness": 0.15,
+        "emissive": "#79f0ff",
+        "emissiveIntensity": 6,
+        "opacity": 0.9
+      },
+      "animate": {
+        "type": "blink",
+        "period": 0.16,
+        "min": 0.6,
+        "max": 7
+      }
+    },
+    {
+      "id": "titik-kontak-tengah",
+      "type": "sphere",
+      "params": {
+        "radius": 0.013
+      },
+      "position": [
+        0.622,
+        2.4,
+        0.004
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "layer": "jala",
+      "material": {
+        "color": "#d9fbff",
+        "metalness": 0,
+        "roughness": 0.12,
+        "emissive": "#bff4ff",
+        "emissiveIntensity": 7,
+        "opacity": 0.92
+      },
+      "animate": {
+        "type": "blink",
+        "period": 0.16,
+        "min": 0.5,
+        "max": 8
+      }
+    },
+    {
+      "id": "titik-kontak-luar",
+      "type": "sphere",
+      "params": {
+        "radius": 0.013
+      },
+      "position": [
+        0.622,
+        2.4,
+        0.136
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "layer": "jala",
+      "material": {
+        "color": "#d9fbff",
+        "metalness": 0,
+        "roughness": 0.12,
+        "emissive": "#bff4ff",
+        "emissiveIntensity": 7,
+        "opacity": 0.92
+      },
+      "animate": {
+        "type": "blink",
+        "period": 0.16,
+        "min": 0.5,
+        "max": 8
       }
     }
   ],
@@ -3282,5 +5628,44 @@
       "radius": 0.007,
       "sag": 0.07
     }
-  ]
+  ],
+  "cameraPath": {
+    "shots": [
+      {
+        "id": "establish-raket",
+        "type": "orbit",
+        "target": [
+          0,
+          1.5,
+          0
+        ],
+        "radius": 8,
+        "height": 3.2,
+        "sweep": 90,
+        "duration": 6,
+        "fov": 45,
+        "caption": "Raket nyamuk — tiga grid dalam kepala melingkar"
+      },
+      {
+        "id": "makro-grid",
+        "type": "dolly",
+        "from": [
+          2.6,
+          2.6,
+          0.9
+        ],
+        "to": [
+          1.1,
+          2.45,
+          0.35
+        ],
+        "target": "nyamuk-badan",
+        "duration": 7,
+        "fov": 42,
+        "caption": "Grid tengah bertegangan tinggi, dua grid luar dibumikan — nyamuk menjembatani celah"
+      }
+    ],
+    "loop": false,
+    "autoplay": false
+  }
 }
