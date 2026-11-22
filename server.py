@@ -1659,9 +1659,14 @@ def agent_loop(job_id, model, user_text):
         {'role': 'user', 'content': 'PERMINTAAN USER: ' + user_text},
     ]
     last_diff = None
+    bad_json = 0
+    deadline = time.time() + 600  # pengaman 10 menit, bukan pemotong kerja normal
     MAX_STEPS = 25  # tidak memotong pekerjaan; hanya pengaman anti-muter
     for step in range(1, MAX_STEPS + 1):
         if not _job_active(job_id): raise RuntimeError('job dibatalkan')
+        if time.time() > deadline:
+            status('⏰ loop mencapai batas waktu 10 menit — finalisasi dengan hasil terbaik')
+            break
         if step >= MAX_STEPS - 3:
             msgs.append({'role': 'user', 'content': 'Segera selesaikan: balas JSON action="final" dengan diff terbaikmu. Jangan memanggil alat lagi.'})
         if step >= 3 and step % 4 == 0:
@@ -1683,8 +1688,18 @@ def agent_loop(job_id, model, user_text):
             txt = raw[0] if isinstance(raw, tuple) else raw
         obj = extract_json_object(txt)
         if not isinstance(obj, dict):
-            msgs.append({'role': 'user', 'content': 'Jawaban bukan JSON. Balas JSON sesuai protokol.'})
+            bad_json += 1
+            status(f'⚠️ loop {step}/{MAX_STEPS} — jawaban bukan JSON ({bad_json}/5), minta ulang dengan format tegas')
+            hint = ('Balas HANYA satu objek JSON, tanpa markdown/teks lain. Contoh: '
+                    '{"thought":"alasan","action":"inspect_scene","args":{}} — '
+                    'atau action="final" dengan {"reply":"...","diff":{...}}.'
+                    if bad_json >= 2 else 'Jawaban bukan JSON. Balas JSON sesuai protokol.')
+            msgs.append({'role': 'user', 'content': hint})
+            if bad_json >= 5:
+                status('❌ model terus mengembalikan jawaban non-JSON — loop dihentikan')
+                break
             continue
+        bad_json = 0
         thought = str(obj.get('thought') or '')[:160]
         action = str(obj.get('action') or '').lower()
         status(f'🧠 loop {step}/{MAX_STEPS} — {thought}')
@@ -1724,7 +1739,7 @@ def agent_loop(job_id, model, user_text):
             return json.dumps(obj, ensure_ascii=False), use
     except Exception:
         pass
-    raise RuntimeError('loop tidak menghasilkan diff yang bisa dipakai')
+    raise RuntimeError(f'loop tidak menghasilkan diff yang bisa dipakai (JSON gagal {bad_json}×, langkah {MAX_STEPS})')
 
 
 def run_agent_job(job_id, user_text, model):
