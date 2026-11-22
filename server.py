@@ -382,7 +382,18 @@ CHAT = {
     'status_lines': [],
     'error': None,
     'last_iteration': None,
+    'fallback_enabled': True,
+    'loop_mode': False,
 }
+try:
+    _st = json.load(open(os.path.join(ROOT, 'settings.json')))
+    if isinstance(_st, dict):
+        if 'fallback_enabled' in _st:
+            CHAT['fallback_enabled'] = bool(_st['fallback_enabled'])
+        if 'loop_mode' in _st:
+            CHAT['loop_mode'] = bool(_st['loop_mode'])
+except Exception:
+    pass
 CHAT_STATUS_MAX = 80
 CONSOLE_JOURNAL = os.path.join(ROOT, 'console-journal.json')
 try:
@@ -469,6 +480,7 @@ def chat_state():
         return {
             'running': running,
             'loop_mode': bool(CHAT.get('loop_mode')),
+            'fallback_enabled': bool(CHAT.get('fallback_enabled', True)),
             'job_id': CHAT['job_id'],
             'status_lines': list(CHAT['status_lines'][-CHAT_STATUS_MAX:]),
             'messages': msgs if isinstance(msgs, list) else [],
@@ -609,11 +621,15 @@ def call_router(model, messages, max_tokens=20000, temperature=0.4):
     penuh (~4-5k token) sering terpotong di model dengan limit output kecil.
     """
     import queue
-    primary = []
-    for m in [model, 'meituan/longcat-2.5:free']:
-        if m not in primary:
-            primary.append(m)
-    secondary = [m for m in FREE_ROUTER_MODELS if m not in primary]
+    allow_fb = bool(CHAT.get('fallback_enabled', True))
+    primary = [model] if not allow_fb else []
+    if allow_fb:
+        for m in [model, 'meituan/longcat-2.5:free']:
+            if m not in primary:
+                primary.append(m)
+    secondary = ([m for m in FREE_ROUTER_MODELS if m not in primary] if allow_fb else [])
+    if not allow_fb:
+        status('fallback NONAKTIF — hanya model ' + str(model))
     q = queue.Queue()
 
     def worker(m):
@@ -1073,6 +1089,9 @@ def ask_llm(model, user_text, repair=None, max_tokens=20000):
             return call_opencode(mid, SYSTEM_PROMPT + '\n\n' + prompt)
         except Exception as e:
             if not any(k in str(e).lower() for k in ('timeout', 'timed out', '504', 'gateway')):
+                raise
+            if not CHAT.get('fallback_enabled', True):
+                status('fallback NONAKTIF — opencode gagal, tidak beralih ke router')
                 raise
             fb = 'tencent/hy4-flash:free'  # model cepat, tidak perlu API key
             status(f'⚠️ opencode timeout — fallback otomatis ke {fb} (jangan perlu kirim ulang)')
@@ -2602,10 +2621,30 @@ class Handler(SimpleHTTPRequestHandler):
             r = bedah_gate('bedah-check', float(payload.get('factor') or 0.8))
             return self._send(200, {'ok': True, 'result': r,
                                     'images': ['/iterations/bedah-check/bedah.png', '/iterations/bedah-check/bedah-detail.png']})
+        if path == '/api/agent/fallback':
+            with LOCK:
+                CHAT['fallback_enabled'] = bool(payload.get('enabled'))
+                enabled = CHAT['fallback_enabled']
+            try:
+                st = read_json(os.path.join(ROOT, 'settings.json'), {}) or {}
+                if not isinstance(st, dict): st = {}
+                st['fallback_enabled'] = enabled
+                write_json(os.path.join(ROOT, 'settings.json'), st)
+            except Exception:
+                pass
+            return self._send(200, {'ok': True, 'fallback_enabled': enabled})
         if path == '/api/agent/loop':
             with LOCK:
                 CHAT['loop_mode'] = bool(payload.get('enabled'))
-            return self._send(200, {'ok': True, 'loop_mode': CHAT['loop_mode']})
+                loop_on = CHAT['loop_mode']
+            try:
+                st = read_json(os.path.join(ROOT, 'settings.json'), {}) or {}
+                if not isinstance(st, dict): st = {}
+                st['loop_mode'] = loop_on
+                write_json(os.path.join(ROOT, 'settings.json'), st)
+            except Exception:
+                pass
+            return self._send(200, {'ok': True, 'loop_mode': loop_on})
         if path == '/api/knowledge/research':
             topic = (payload.get('topic') or '').strip()
             if not topic:

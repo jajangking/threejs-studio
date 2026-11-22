@@ -1081,6 +1081,7 @@ async function pollChat() {
   try {
     const st = await (await fetch('/api/chat/state?t=' + Date.now())).json();
     chatStatusLines = st.status_lines || [];
+    if (typeof st.fallback_enabled === 'boolean' && $('#fallbackMode')) $('#fallbackMode').checked = st.fallback_enabled;
     renderServerStatus(chatStatusLines);
     chatRunning = !!st.running;
     renderChat(st.messages || []);
@@ -1321,6 +1322,13 @@ $('#btnProjNew').onclick = () => {
 $('#btnExpHtml').onclick = () => { location.href = '/api/export?format=html'; toast('Mengunduh HTML mandiri…'); };
 $('#btnExpZip').onclick = () => { location.href = '/api/export?format=zip'; toast('Mengunduh ZIP lengkap…'); };
 $('#btnExpJson').onclick = () => { location.href = '/api/export?format=json'; toast('Mengunduh scene.json…'); };
+$('#fallbackMode').onchange = async (e) => {
+  try {
+    const r = await fetch('/api/agent/fallback', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: e.target.checked }) }).then(x => x.json());
+    toast(r.fallback_enabled ? '♻️ Fallback ON — agent boleh pindah model saat gagal' : 'Fallback OFF — model free dipakai apa adanya');
+  } catch (err) { toast('Gagal: ' + err.message); }
+};
 $('#btnBedahCheck').onclick = async () => {
   $('#designStatus').classList.add('show');
   $('#designStatus').textContent = '🔎 Merender versi exploded & menilai isi dalam…';

@@ -211,6 +211,8 @@ button:disabled{opacity:.4;cursor:default}
 #chatStatus.show{display:flex}
 #chatStatus .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #chatComposer{flex:none;border-top:1px solid var(--border);padding:8px;background:var(--panel2)}
+#fallbackWrap{font-size:10px;color:var(--dim);white-space:nowrap;display:flex;align-items:center;gap:3px;cursor:pointer}
+#fallbackWrap input{accent-color:var(--accent)}
 #loopWrap{font-size:10px;color:var(--dim);white-space:nowrap;display:flex;align-items:center;gap:3px;cursor:pointer}
 #loopWrap input{accent-color:var(--accent)}
 #kbTopic{width:96px!important;min-width:0;font-size:10px!important;padding:3px 5px!important}
@@ -457,6 +459,7 @@ button:disabled{opacity:.4;cursor:default}
               <button id="btnDesignPropose" title="Usulkan kontrak + daftar komponen dulu (belum bangun scene)">📐 Usul</button>
               <button id="btnDesignApprove" title="Setujui usul terakhir lalu bangun scene">✅ Bangun</button>
               <button id="btnBedahCheck" title="Render & nilai versi exploded dengan vision (gerbang bedah)">🔎 Cek Bedah</button>
+              <label id="fallbackWrap" title="Matikan bila ingin agent free dipakai apa adanya, tanpa pindah model otomatis"><input type="checkbox" id="fallbackMode" checked> ♻️ Fallback</label>
               <label id="loopWrap" title="Agent berpikir berulang: baca scene → riset → preview → koreksi → final (maks 6 langkah)"><input type="checkbox" id="loopMode"> 🧠 Loop</label>
               <input id="kbTopic" placeholder="topik riset card…" title="misal: mesin espresso portable">
               <button id="btnKbResearch" title="Cari di internet → knowledge card dengan sitasi terverifikasi">🔍 Riset Card</button>
