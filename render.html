@@ -37,7 +37,27 @@ try {
       if (sm.explode !== null) applyExplode(handle, sm.explode);
     }
   }
-  const renderer = makeRenderer(cv, W, H, { preserveDrawingBuffer: true, exposure: spec.environment?.exposure ?? 1.1 });
+  const exParam = parseFloat(params.get('explode') || '');
+  if (!isNaN(exParam) && exParam > 0) {
+    applyExplode(handle, exParam);
+    // Kamera tegak lurus sumbu exploded — kalau tidak, komponen hanya bergeser
+    // mendekat/menjauh kamera dan tampak menumpuk (vision gate mengira tidak ada bedah).
+    const axis = spec.assembly?.axis || 'z';
+    const focus = params.get('focus') || '';
+    if (focus === 'module') {
+      if (axis === 'z') handle.camera.position.set(2.6, 1.7, 2.0);
+      else if (axis === 'x') handle.camera.position.set(2.0, 1.7, 2.6);
+      else handle.camera.position.set(2.4, 3.4, 2.4);
+      handle.camera.lookAt(0, 1.0, 0);  // closeup modul internal
+    } else {
+      if (axis === 'z') handle.camera.position.set(7.5, 3.4, 4.5);
+      else if (axis === 'x') handle.camera.position.set(4.5, 3.4, 7.5);
+      else handle.camera.position.set(7, 8.5, 7);
+      handle.camera.lookAt(0, 2, 0);    // keseluruhan produk
+    }
+    handle.scene.traverse(o => { if (o.isLight) o.intensity *= 1.5; });
+  }
+  const renderer = makeRenderer(cv, W, H, { preserveDrawingBuffer: true, exposure: (!isNaN(exParam) && exParam > 0) ? 1.9 : (spec.environment?.exposure ?? 1.1) });
   handle.camera.aspect = W / H;
   handle.camera.updateProjectionMatrix();
   handle.composer = makeComposer(handle, renderer, W, H);

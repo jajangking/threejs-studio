@@ -1264,13 +1264,14 @@ def vision_gate(iter_id):
     img = base64.b64encode(open(shot, 'rb').read()).decode()
     for vm in VISION_MODELS:
         try:
+            status(f'vision: mencoba {vm} (maks 35 detik)…')
             data = http_json(ROUTER_URL, {
                 'model': vm, 'max_tokens': 700, 'temperature': 0.1,
                 'messages': [{'role': 'user', 'content': [
                     {'type': 'text', 'text': vision_question()},
                     {'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,' + img}},
                 ]}],
-            }, timeout=90)
+            }, timeout=35)
             text = _message_text((data.get('choices') or [{}])[0].get('message'))
             ms = re.search(r'komposisi=(\d+)\s+detail=(\d+)\s+material=(\d+)\s+cahaya=(\d+)\s+atmosfer=(\d+)', text)
             mv = re.search(r'VERDICT:\s*(LAYAK FINAL|MASIH TUTORIAL)', text)
@@ -1280,6 +1281,78 @@ def vision_gate(iter_id):
             scores = {k: int(v) for k, v in zip(['komposisi', 'detail', 'material', 'cahaya', 'atmosfer'], ms.groups())}
             avg = sum(scores.values()) / 5
             verdict_ok = (mv.group(1) == 'LAYAK FINAL') if mv else (avg >= 7)
+            return {'pass': bool(verdict_ok and avg >= 6.0), 'avg': avg,
+                    'scores': ', '.join(f'{k}={v}' for k, v in scores.items()),
+                    'critique': (mk.group(1).strip() if mk else text[-200:])}
+        except Exception:
+            continue
+    return None
+
+
+def bedah_question(spec):
+    spec = spec if isinstance(spec, dict) else read_json(os.path.join(ROOT, 'scene.json'), {})
+    inner = []
+    def walk(o):
+        ident = str(o.get('id') or '')
+        if ident and not re.search(r'^(langit|alas|backdrop|ground|ridge|kabel|nyamuk|cincin|tombol|led)', ident, re.I):
+            inner.append(ident)
+        for c in o.get('children') or []: walk(c)
+    for o in spec.get('objects') or []: walk(o)
+    inner = list(dict.fromkeys(inner))[:14]
+    return (
+        'Ini adalah tampilan EXPLODED / bedah dari produk 3D. Nilai sebagai karya FINAL, bukan cek teknis. '
+        f'PRODUK: {(spec.get("meta") or {}).get("name", "scene")}. '
+        f'KOMPONEN UTAMA: {", ".join(inner)}. '
+        'Komponen kecil (LED, sekrup, ridges, kabel tipis) TIDAK wajib terbaca satu per satu. '
+        'Nilai 1-10: keterpisahan (lapisan luar/dalam jelas terpisah, tidak bertumpuk), '
+        'kelengkapan (bagian internal seperti baterai/PCB/kabel/koil benar-benar ADA, bukan sekadar kulit), '
+        'keterbacaan (bentuk & fungsi tiap komponen mudah dikenali), '
+        'kerapian (tidak berantakan/terpotong/melayang tanpa alasan). '
+        'Jangan memuji objek yang tidak ada di daftar. Akhiri PERSIS dengan tiga baris:\n'
+        'SKOR: keterpisahan=<n> kelengkapan=<n> keterbacaan=<n> kerapian=<n>\n'
+        'VERDICT: BEDAH LAYAK atau BEDAH KURANG\n'
+        'KRITIK: <satu kalimat spesifik>'
+    )
+
+def bedah_gate(iter_id, factor=0.8):
+    """Render versi exploded lalu minta vision menilai isi dalamnya. None bila vision unavailable."""
+    outdir = os.path.join(ROOT, 'iterations', iter_id)
+    paths = [os.path.join(outdir, n) for n in ('bedah.png', 'bedah-detail.png')]
+    for idx, name in enumerate(('bedah', 'bedah-detail')):
+        if os.path.exists(paths[idx]):
+            continue
+        cmd = ['python3', 'scripts/render.py', iter_id, '--explode', str(factor),
+               '--name', name, '--notes', 'gerbang bedah', '--w', '960', '--h', '540']
+        if idx == 1:
+            cmd += ['--focus', 'module']
+        try:
+            subprocess.run(cmd, cwd=ROOT, capture_output=True, timeout=180)
+        except Exception:
+            return None
+    if not all(os.path.exists(p) for p in paths):
+        return None
+    spec = read_json(os.path.join(ROOT, 'scene.json'), {})
+    imgs = [base64.b64encode(open(p, 'rb').read()).decode() for p in paths]
+    for vm in VISION_MODELS:
+        try:
+            status(f'vision: mencoba {vm} (maks 35 detik)…')
+            data = http_json(ROUTER_URL, {
+                'model': vm, 'max_tokens': 700, 'temperature': 0.1,
+                'messages': [{'role': 'user', 'content': [
+                    {'type': 'text', 'text': 'GAMBAR 1 = tampilan exploded seluruh produk. GAMBAR 2 = closeup modul internal. ' + bedah_question(spec)},
+                    *[{'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,' + b}} for b in imgs],
+                ]}],
+            }, timeout=35)
+            text = _message_text((data.get('choices') or [{}])[0].get('message'))
+            ms = re.search(r'keterpisahan=(\d+)\s+kelengkapan=(\d+)\s+keterbacaan=(\d+)\s+kerapian=(\d+)', text)
+            mv = re.search(r'VERDICT:\s*(BEDAH LAYAK|BEDAH KURANG)', text)
+            mk = re.search(r'KRITIK:\s*(.+)', text)
+            if not ms:
+                continue
+            keys = ['keterpisahan', 'kelengkapan', 'keterbacaan', 'kerapian']
+            scores = {k: int(v) for k, v in zip(keys, ms.groups())}
+            avg = sum(scores.values()) / 4
+            verdict_ok = (mv.group(1) == 'BEDAH LAYAK') if mv else (avg >= 7)
             return {'pass': bool(verdict_ok and avg >= 6.0), 'avg': avg,
                     'scores': ', '.join(f'{k}={v}' for k, v in scores.items()),
                     'critique': (mk.group(1).strip() if mk else text[-200:])}
@@ -1434,7 +1507,11 @@ def loop_tool(name, args, spec, user_text):
         brief = ' '.join(out.split())[-500:]
         if name == 'vision':
             v = vision_gate('loop-preview')
-            return brief + ' | estetika: ' + (str(v) if v else 'model vision tidak tersedia')
+            out = brief + ' | estetika: ' + (str(v) if v else 'model vision tidak tersedia')
+            if (spec.get('assembly') or {}).get('mode') == 'layered':
+                b = bedah_gate('loop-preview')
+                out += ' | bedah: ' + (str(b) if b else 'model vision tidak tersedia')
+            return out
         return brief
     return f'alat {name} tidak dikenal'
 
@@ -1636,10 +1713,15 @@ def run_agent_job(job_id, user_text, model):
                       and len(d.get('upserts') or []) <= 15
                       and len(d.get('remove_ids') or []) <= 8
                       and not any(k in d for k in ('lights', 'camera', 'environment', 'post')))
-        if render['ok'] and minor_edit:
+        no_change = isinstance(result.get('diff'), dict) and not any(
+            d.get(k) for k in ('upserts', 'remove_ids', 'lights', 'camera', 'environment', 'post', 'contract'))
+        if render['ok'] and no_change:
+            status('tidak ada perubahan geometri — gerbang estetika dilewati')
+            vision_summary = 'Estetika: tidak ada perubahan yang perlu dinilai'
+        if render['ok'] and minor_edit and not no_change:
             status('edit kecil — gerbang estetika dilewati (smoke + oklusi cukup untuk perubahan minor)')
             vision_summary = 'Edit minor: cek teknis 8/8 (gerbang estetika untuk perubahan besar/scene baru)'
-        if render['ok'] and not minor_edit:
+        if render['ok'] and not minor_edit and not no_change:
             for vround in range(2):
                 if not _job_active(job_id):
                     return
@@ -1683,6 +1765,46 @@ def run_agent_job(job_id, user_text, model):
             else:
                 vision_summary = 'Estetika: belum final setelah 2 ronde perbaikan (iterasi terbaik disimpan)'
 
+        # Gerbang BEDAH — menilai versi exploded, bukan hanya tampilan rapat.
+        bedah_summary = ''
+        cur = read_json(os.path.join(ROOT, 'scene.json'), {})
+        if render['ok'] and (cur.get('assembly') or {}).get('mode') == 'layered':
+            status('gerbang bedah: render & nilai versi exploded…')
+            bg = bedah_gate(iter_id)
+            if bg is None:
+                status('vision bedah tidak tersedia — pemeriksaan internal dilewati')
+            elif bg['pass']:
+                bedah_summary = f"Bedah: LAYAK (skor {bg['scores']})"
+                status(f"bedah LAYAK (rata-rata {bg['avg']:.1f})")
+            else:
+                bedah_summary = f"Bedah: KURANG — {bg['critique']}"
+                status(f"bedah KURANG (rata-rata {bg['avg']:.1f}) — minta perbaikan internal")
+                try:
+                    raw_b, _ = ask_llm(model, user_text, repair=(
+                        'Gerbang BEDAH menolak hasil exploded.\n'
+                        f"Skor: {bg['scores']}\nKritik: {bg['critique']}\n"
+                        'Perbaiki HANYA komponen internal & urutan layer assembly: rapikan keterpisahan, '
+                        'tambahkan bagian dalam yang hilang, jangan merombak tampilan luar yang sudah lolos. '
+                        'Kirim JSON DIFF (upserts/remove_ids/assembly).'))
+                    fb = extract_json_object(raw_b)
+                    fb_spec, _ = materialize_result(fb)
+                    if fb_spec and validate_spec(fb_spec):
+                        fb['scene'] = fb_spec
+                        iter_b = next_iteration_id()
+                        _apply_result(fb, iter_b)
+                        rb = _render(iter_b, reply)
+                        if rb['ok']:
+                            iter_id, render, result = iter_b, rb, fb
+                            status(f'perbaikan bedah diterapkan · {iter_b}')
+                        else:
+                            with LOCK:
+                                write_json(os.path.join(ROOT, 'scene.json'), result['scene'])
+                            status('perbaikan bedah gagal smoke — scene dikembalikan')
+                    else:
+                        status('perbaikan bedah tidak valid — iterasi terbaik disimpan')
+                except Exception as e:
+                    status('perbaikan bedah gagal: ' + str(e)[:100])
+
         with LOCK:
             CHAT['last_iteration'] = iter_id
         smoke = render.get('smoke') or {}
@@ -1693,7 +1815,7 @@ def run_agent_job(job_id, user_text, model):
         if not _job_active(job_id):
             return
         perubahan = f"Perubahan diterapkan: {mode0}" if mode0 else ''
-        full_reply = f"{reply}\n\n{summary}" + (f"\n{sem_summary}" if sem_summary else '') + (f"\n{vision_summary}" if vision_summary else '') + (f"\n{perubahan}" if perubahan else '')
+        full_reply = f"{reply}\n\n{summary}" + (f"\n{sem_summary}" if sem_summary else '') + (f"\n{vision_summary}" if vision_summary else '') + (f"\n{bedah_summary}" if bedah_summary else '') + (f"\n{perubahan}" if perubahan else '')
         append_chat_message({
             'role': 'agent', 'text': full_reply, 'at': time.time(),
             'iteration': iter_id, 'model': used_model,
@@ -2476,6 +2598,10 @@ class Handler(SimpleHTTPRequestHandler):
             os.remove(fp)
             status(f'usul sutradara DISETUJUI — {len(cp["shots"])} shot diterapkan ke tur')
             return self._send(200, {'ok': True, 'shots': len(cp['shots'])})
+        if path == '/api/bedah/check':
+            r = bedah_gate('bedah-check', float(payload.get('factor') or 0.8))
+            return self._send(200, {'ok': True, 'result': r,
+                                    'images': ['/iterations/bedah-check/bedah.png', '/iterations/bedah-check/bedah-detail.png']})
         if path == '/api/agent/loop':
             with LOCK:
                 CHAT['loop_mode'] = bool(payload.get('enabled'))

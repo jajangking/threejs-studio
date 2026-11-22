@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://www.npr.org/sections/news",
+      "title": "",
+      "accessed": "2026-11-22"
+    },
+    {
+      "id": 2,
+      "url": "https://www.npr.org",
+      "title": "",
+      "accessed": "2026-11-22"
+    },
+    {
+      "id": 3,
+      "url": "https://prod-www.npr.org/programs/morning-edition",
+      "title": "",
+      "accessed": "2026-11-22"
+    },
+    {
+      "id": 4,
+      "url": "https://prod-www.npr.org/network",
+      "title": "",
+      "accessed": "2026-11-22"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "id": "npr-network-visualization",
+  "title": "Visualisasi 3D Jaringan NPR: 200+ Ruang Berita Lokal di Amerika Serikat",
+  "keywords": [
+    "NPR",
+    "NPR Network",
+    "local newsrooms",
+    "jaringan berita",
+    "peta AS",
+    "Three.js",
+    "visualisasi data",
+    "node graph"
+  ],
+  "facts": "NPR Network terdiri dari lebih dari 200 ruang berita lokal yang tersebar di seluruh negeri [4]. Jaringan ini menerapkan model jurnalistik campuran lokal-nasional-global dengan jurnalis yang terpasang langsung di komunitas [4]. Contoh liputan lokal adalah Texas Public Radio yang melaporkan peristiwa penembakan di sekolah Uvalde tempat 19 anak dan 2 guru tewas [4]. NPR juga menyediakan konten breaking news, analisis, musik, seni, dan podcast [2]. Program harian Morning Edition menyajikan segmen berdurasi bervariasi, misalnya segmen berita utama 11:05 dan segmen Kongres 3:40 [3]. Ruang berita anggota dapat menjadi sumber pertama di tempat kejadian saat berita besar terjadi [4].",
+  "required_parts": [
+    {
+      "key": "us_map_base",
+      "label": "Peta dasar Amerika Serikat",
+      "keywords": [
+        "US map",
+        "peta",
+        "base plane"
+      ],
+      "min": 1
+    },
+    {
+      "key": "newsroom_nodes",
+      "label": "Node penanda ruang berita lokal",
+      "keywords": [
+        "node",
+        "marker",
+        "pin",
+        "lokasi stasiun"
+      ],
+      "min": 200
+    },
+    {
+      "key": "connection_lines",
+      "label": "Garis koneksi antar-node dan ke hub pusat",
+      "keywords": [
+        "line",
+        "edge",
+        "garis koneksi"
+      ],
+      "min": 1
+    },
+    {
+      "key": "central_hub",
+      "label": "Hub pusat NPR",
+      "keywords": [
+        "hub",
+        "central node",
+        "headquarters"
+      ],
+      "min": 1
+    },
+    {
+      "key": "floating_info_panels",
+      "label": "Panel info mengambang untuk cerita unggulan",
+      "keywords": [
+        "panel",
+        "label",
+        "tooltip",
+        "info card"
+      ],
+      "min": 3
+    },
+    {
+      "key": "legend_hud",
+      "label": "Legenda danHUD jaringan",
+      "keywords": [
+        "legend",
+        "HUD",
+        "overlay"
+      ],
+      "min": 1
+    }
+  ],
+  "note": "Buat peta AS sebagai alas dan tempatkan minimal 200 node sesuai jumlah ruang berita lokal NPR Network [4]; hubungkan node ke hub pusat untuk merepresentasikan model lokal-nasional-global [4]. Sorot cerita spesifik seperti Uvalde (Texas Public Radio) dan Gulf States Newsroom untuk panel info [4]. Warna/ukuran node dapat dibedakan per wilayah, namun angka pasti pembagian per wilayah tidak tersedia di sumber [unverified].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.npr.org/sections/news/"
+    },
+    {
+      "n": 2,
+      "url": "https://www.npr.org/"
+    },
+    {
+      "n": 3,
+      "url": "https://prod-www.npr.org/programs/morning-edition/"
+    },
+    {
+      "n": 4,
+      "url": "https://prod-www.npr.org/network/"
+    }
+  ],
+  "researched_at": 1795323648.9304392
+}

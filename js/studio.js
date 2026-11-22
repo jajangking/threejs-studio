@@ -1321,6 +1321,18 @@ $('#btnProjNew').onclick = () => {
 $('#btnExpHtml').onclick = () => { location.href = '/api/export?format=html'; toast('Mengunduh HTML mandiri…'); };
 $('#btnExpZip').onclick = () => { location.href = '/api/export?format=zip'; toast('Mengunduh ZIP lengkap…'); };
 $('#btnExpJson').onclick = () => { location.href = '/api/export?format=json'; toast('Mengunduh scene.json…'); };
+$('#btnBedahCheck').onclick = async () => {
+  $('#designStatus').classList.add('show');
+  $('#designStatus').textContent = '🔎 Merender versi exploded & menilai isi dalam…';
+  try {
+    const r = await (await fetch('/api/bedah/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).json();
+    const b = r.result;
+    $('#designStatus').textContent = b
+      ? `🔎 Bedah: ${b.pass ? 'LAYAK' : 'KURANG'} · ${b.scores} · ${b.critique}`
+      : '🔎 Vision tidak tersedia — coba lagi sebentar';
+    toast(b ? (b.pass ? '🔎 Bedah LAYAK ✓' : '🔎 Bedah KURANG — lihat detail') : 'Vision sibuk');
+  } catch (e) { toast('Gagal: ' + e.message); }
+};
 $('#loopMode').onchange = async (e) => {
   try {
     const r = await fetch('/api/agent/loop', { method: 'POST', headers: { 'Content-Type': 'application/json' },
