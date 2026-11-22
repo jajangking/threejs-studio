@@ -1657,9 +1657,27 @@ def agent_loop(job_id, model, user_text):
         extra = ('\nAlat tambahan: hermes_task {"prompt":"..."} — minta agen Hermes melakukan '
                  'riset web/file dengan toolnya; jawabannya dipakai sebagai bukti. Jangan minta '
                  'Hermes mengubah scene atau memanggil server studio.\n')
+    sel = CHAT.get('selection')
+    sel_ctx = ''
+    if sel:
+        found = None
+        def seek(lst):
+            for o in lst or []:
+                if not isinstance(o, dict): continue
+                if o.get('id') == sel: return o
+                r = seek(o.get('children'))
+                if r: return r
+            return None
+        found = seek(spec.get('objects'))
+        if found is None:
+            for l in (spec.get('lights') or []):
+                if l.get('id') == sel: found = l; break
+        sel_ctx = ('\n\nTARGET SELEKSI USER (wajib diproses, jangan tanya lagi): id=' + str(sel) +
+                   '\n' + json.dumps(found or {'id': sel}, ensure_ascii=False)[:1800])
+        status(f'🎯 target seleksi diteruskan ke loop: {sel}')
     msgs = [
         {'role': 'system', 'content': LOOP_SYSTEM + extra + '\n\n' + SYSTEM_PROMPT[:3500]},
-        {'role': 'user', 'content': 'PERMINTAAN USER: ' + user_text},
+        {'role': 'user', 'content': 'PERMINTAAN USER: ' + user_text + sel_ctx},
     ]
     last_diff = None
     bad_json = 0
@@ -1676,8 +1694,7 @@ def agent_loop(job_id, model, user_text):
             msgs.append({'role': 'user', 'content': 'Pengingat: kamu BOLEH langsung final kapan saja bila diff sudah valid — tidak perlu menunggu sempurna.'})
         status(f'🧠 loop {step}/{MAX_STEPS} — berpikir…')
         if op_sid:
-            q = (LOOP_SYSTEM + extra + '\n\n' + SYSTEM_PROMPT[:3500] +
-                 '\n\nPERMINTAAN USER: ' + user_text) if step == 1 else msgs[-1]['content']
+            q = (msgs[0]['content'] + '\n\n' + msgs[1]['content']) if step == 1 else msgs[-1]['content']
             try:
                 txt = opencode_turn(op_sid, mid, q, f'🧠 loop {step}/{MAX_STEPS} — opencode berpikir…')
             except Exception as e:
