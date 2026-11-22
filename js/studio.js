@@ -1321,6 +1321,57 @@ $('#btnProjNew').onclick = () => {
 $('#btnExpHtml').onclick = () => { location.href = '/api/export?format=html'; toast('Mengunduh HTML mandiri…'); };
 $('#btnExpZip').onclick = () => { location.href = '/api/export?format=zip'; toast('Mengunduh ZIP lengkap…'); };
 $('#btnExpJson').onclick = () => { location.href = '/api/export?format=json'; toast('Mengunduh scene.json…'); };
+$('#btnDesignPropose').onclick = async () => {
+  const brief = $('#chatText').value.trim();
+  if (!brief) return toast('Tulis brief di kolom prompt dulu');
+  $('#designStatus').classList.add('show');
+  $('#designStatus').textContent = '📐 Agent menyusun usul kontrak & daftar komponen…';
+  try {
+    const r = await fetch('/api/design/propose', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brief, model: $('#chatModel').value }) }).then(x => x.json());
+    if (!r.ok) return toast('Gagal: ' + (r.error || '?'));
+    chatWasRunning = true; pollChat();
+    const poll = setInterval(async () => {
+      const st = await (await fetch('/api/chat/state')).json();
+      if (st.running) return;
+      clearInterval(poll);
+      const p = await (await fetch('/api/design/proposal')).json();
+      const d = p.proposal || {};
+      $('#designStatus').textContent = `📐 Usul: ${(d.parts || []).length} komponen · ${(d.contract || '').split('\n')[0] || 'kontrak'} — klik ✅ Bangun bila setuju`;
+      toast('📐 Usul desain siap — review di tab Agent');
+    }, 3000);
+  } catch (e) { toast('Gagal: ' + e.message); }
+};
+$('#btnKbResearch').onclick = async () => {
+  const topic = $('#kbTopic').value.trim() || $('#chatText').value.trim().slice(0, 60);
+  if (!topic) return toast('Tulis topik dulu (misal: mesin espresso portable)');
+  $('#designStatus').classList.add('show');
+  $('#designStatus').textContent = '🔍 Mencari referensi di internet…';
+  try {
+    const r = await fetch('/api/knowledge/research', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic }) }).then(x => x.json());
+    if (!r.ok) return toast('Gagal: ' + r.error);
+    const poll = setInterval(async () => {
+      const s = await (await fetch('/api/knowledge/state?job=' + r.job)).json();
+      if (s.status === 'done' || s.status === 'error') {
+        clearInterval(poll);
+        if (s.status === 'error') { $('#designStatus').textContent = '❌ Riset gagal: ' + s.error; return toast('Riset gagal'); }
+        $('#designStatus').textContent = `🔍 Card "${s.slug}" tersimpan · ${(s.card?.sources || []).length} sumber · sitasi ${s.verified ? 'terverifikasi ✓' : 'belum lolos verify'}`;
+        toast('🔍 Knowledge card dibuat dari ' + (s.card?.sources || []).length + ' sumber');
+      }
+    }, 2500);
+  } catch (e) { toast('Gagal: ' + e.message); }
+};
+$('#btnDesignApprove').onclick = async () => {
+  try {
+    const r = await fetch('/api/design/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: $('#chatModel').value }) }).then(x => x.json());
+    if (!r.ok) return toast('Gagal: ' + r.error);
+    $('#designStatus').textContent = `✅ Disetujui (${r.parts} komponen) — agent sedang membangun…`;
+    toast('✅ Usul disetujui — agent membangun scene');
+    chatWasRunning = true; pollChat();
+  } catch (e) { toast('Gagal: ' + e.message); }
+};
 $('#btnExpBom').onclick = () => { location.href = '/api/export?format=bom'; toast('Mengunduh BOM daftar part…'); };
 $('#btnCheckFinal').onclick = async () => {
   toast('Vision menilai render terakhir…', 60000);

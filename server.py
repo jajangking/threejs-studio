@@ -16,6 +16,8 @@ import threading
 import time
 import urllib.error
 import urllib.request, urllib.parse
+import html as htmlmod
+import uuid
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +47,108 @@ KNOWN_OBJECT_TYPES = {
     'capsule', 'icosahedron', 'ring', 'gltf', 'sky', 'stars', 'instances', 'group', 'rope', 'trigger',
 }
 KNOWN_LIGHT_TYPES = {'ambient', 'hemisphere', 'directional', 'point', 'spot'}
+
+# ── Riset knowledge card dari internet (web_search → extract → sitasi ledger) ──
+KB = {}
+KB_LOCK = __import__('threading').Lock()
+SOURCES_PY = os.path.expanduser('~/.hermes/skills/research/grounded-citations/scripts/sources.py')
+
+def kb_research(job, topic):
+    try:
+        ledger = os.path.join(ROOT, '.kb-ledger-' + job + '.json')
+        SC = ['python3', SOURCES_PY, '--ledger', ledger]
+        subprocess.run([*SC, 'reset'], capture_output=True, timeout=20)
+        ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36'}
+        urls = []
+        try:
+            req = urllib.request.Request('https://www.bing.com/search?q=' + urllib.parse.quote(topic), headers=ua)
+            page = urllib.request.urlopen(req, timeout=25).read().decode('utf-8', 'ignore')
+            for href in re.findall(r'<h2[^>]*>.*?<a[^>]*href="([^"]+)"', page, re.S):
+                href = htmlmod.unescape(href)
+                m = re.search(r'[?&]u=a1([^&]+)', href)
+                if m:
+                    b = m.group(1)
+                    b += '=' * (-len(b) % 4)
+                    real = base64.urlsafe_b64decode(b).decode('utf-8', 'ignore')
+                else:
+                    real = href
+                if real.startswith('http') and real not in urls:
+                    urls.append(real)
+        except Exception:
+            pass
+        if not urls:  # fallback: DDG -> Wikipedia
+            try:
+                req = urllib.request.Request('https://html.duckduckgo.com/html/?q=' + urllib.parse.quote(topic), headers=ua)
+                page = urllib.request.urlopen(req, timeout=20).read().decode('utf-8', 'ignore')
+                for href in re.findall(r'class="result__a"[^>]*href="([^"]+)"', page):
+                    real = urllib.parse.parse_qs(urllib.parse.urlparse(href).query).get('uddg', [href])[0]
+                    if real.startswith('http') and real not in urls:
+                        urls.append(real)
+            except Exception:
+                pass
+        if not urls:
+            try:
+                req = urllib.request.Request('https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' +
+                                             urllib.parse.quote(topic) + '&format=json', headers=ua)
+                hits = json.loads(urllib.request.urlopen(req, timeout=20).read().decode('utf-8', 'ignore'))
+                urls = ['https://en.wikipedia.org/wiki/' + urllib.parse.quote(x['title'].replace(' ', '_'))
+                        for x in (hits.get('query') or {}).get('search', [])[:4]]
+            except Exception:
+                pass
+        if not urls:
+            raise RuntimeError('tidak ada hasil pencarian')
+        urls = urls[:4]
+        excerpts = []
+        for i, u in enumerate(urls):
+            try:
+                rq = urllib.request.Request(u, headers={'User-Agent': 'Mozilla/5.0'})
+                raw = urllib.request.urlopen(rq, timeout=18).read().decode('utf-8', 'ignore')
+                txt = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', raw, flags=re.S | re.I)
+                txt = re.sub(r'<[^>]+>', ' ', txt)
+                txt = re.sub(r'\s+', ' ', txt).strip()
+                excerpts.append(f'[{i + 1}] {u}\n{txt[:5500]}')
+            except Exception as e:
+                excerpts.append(f'[{i + 1}] {u}\n(gagal diambil: {e})')
+        add = subprocess.run([*SC, 'add', *urls], capture_output=True, timeout=20)
+        if add.returncode != 0:
+            raise RuntimeError('ledger gagal: ' + add.stderr.decode()[-200:])
+        q = ('Kamu peneliti komponen 3D. Dari ekstrak halaman berikut, susun SATU knowledge card JSON valid '
+             'untuk agent pembuat scene Three.js. Format: '
+             '{"id":"slug","title":"judul","keywords":["kata kunci"],"facts":"fakta teknis ringkas & terukur "'
+             'dengan sitasi [n] pada tiap kalimat","required_parts":[{"key":"...","label":"...","keywords":["..."],"min":1}],'
+             '"note":"catatan"}. Gunakan HANYA nomor sumber [1]-[%d] yang diberikan. '
+             'Jangan mengarang angka tanpa sumber; beri label [unverified] bila perlu. '
+             'Balas HANYA JSON.\n\n' % len(excerpts) + '\n\n'.join(excerpts))
+        raw = call_router('tencent/hy4-flash:free', [
+            {'role': 'system', 'content': 'Kamu peneliti teknis. Balas JSON valid saja.'},
+            {'role': 'user', 'content': q}], max_tokens=3000)
+        text = raw[0] if isinstance(raw, tuple) else raw
+        card = extract_json_object(text)
+        if not card or not isinstance(card.get('required_parts'), list):
+            raise RuntimeError('model tidak menghasilkan card valid')
+        slug = re.sub(r'[^a-z0-9-]', '-', str(card.get('id') or topic).lower()).strip('-')[:48] or 'card'
+        card['sources'] = [{'n': i + 1, 'url': u} for i, u in enumerate(urls)]
+        card['researched_at'] = time.time()
+        with open(os.path.join(KNOWLEDGE_DIR, slug + '.json'), 'w') as f:
+            json.dump(card, f, ensure_ascii=False, indent=2)
+        md = (f"# {card.get('title', topic)}\n\n{card.get('facts', '')}\n\n"
+              f"## Komponen wajib\n" + '\n'.join(f"- {p.get('label')}: {p.get('keywords')} (min {p.get('min', 1)})"
+                                                   for p in card['required_parts']) + '\n')
+        mdp = os.path.join(KNOWLEDGE_DIR, slug + '.md')
+        with open(mdp, 'w') as f:
+            f.write(md)
+        render = subprocess.run([*SC, 'render', '--style', 'plain'], capture_output=True, timeout=20)
+        if render.returncode == 0:
+            with open(mdp, 'a') as f:
+                f.write('\n' + render.stdout.decode('utf-8', 'ignore'))
+        verify = subprocess.run([*SC, 'verify', mdp], capture_output=True, timeout=20)
+        with KB_LOCK:
+            KB[job] = {'status': 'done', 'slug': slug, 'card': card,
+                       'verified': verify.returncode == 0,
+                       'verify': (verify.stdout + verify.stderr).decode('utf-8', 'ignore')[-400:]}
+    except Exception as e:
+        with KB_LOCK:
+            KB[job] = {'status': 'error', 'error': str(e)}
 
 # ── Imitasi gerak kamera dari clip referensi (vision pada contact sheet) ──
 CLIP = {}
@@ -1279,6 +1383,27 @@ def run_agent_job(job_id, user_text, model):
             append_chat_message({'role': 'agent', 'text': '📋 Usul storyboard: ' + proposal['reply'][:400] +
                                  '\nKlik ✅ Setujui & Terapkan di panel Skills bila setuju.', 'at': time.time(), 'model': used_model})
             return
+        if CHAT.get('design_proposal_only'):
+            sp = result['scene'] or {}
+            prop = {
+                'brief': user_text,
+                'contract': result.get('contract') or read_text(os.path.join(ROOT, 'contract.md')),
+                'reply': str(result.get('reply') or '').strip(),
+                'assembly': sp.get('assembly'),
+                'parts': [{'id': o.get('id'), 'name': o.get('name'), 'type': o.get('type'),
+                           'layer': o.get('layer'), 'children': len(o.get('children') or [])}
+                          for o in (sp.get('objects') or [])][:120],
+                'model': used_model, 'at': time.time(),
+            }
+            with open(os.path.join(ROOT, 'design-proposal.json'), 'w') as f:
+                json.dump(prop, f, ensure_ascii=False, indent=2)
+            with LOCK:
+                CHAT['design_proposal_only'] = False
+            status(f'usul desain siap — {len(prop["parts"])} komponen diusulkan, menunggu persetujuan')
+            append_chat_message({'role': 'agent', 'text': '📐 Usul desain: ' + prop['reply'][:500] +
+                                 '\nCek usul kontrak & daftar komponen, lalu klik ✅ Setujui & Bangun.',
+                                 'at': time.time(), 'model': used_model})
+            return
         reply = str(result.get('reply') or '').strip() or 'Scene diperbarui.'
         iter_id = next_iteration_id()
         _apply_result(result, iter_id)
@@ -2006,6 +2131,9 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split('?')[0]
+        if path.startswith('/api/knowledge/state'):
+            with KB_LOCK:
+                return self._send(200, {'ok': True, **(KB.get(urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get('job', [''])[0]) or {'status': 'unknown'})})
         if path == '/api/clip/state':
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             job = (qs.get('job') or [''])[0]
@@ -2113,6 +2241,38 @@ class Handler(SimpleHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length) or b'{}')
         except Exception as e:
             return self._send(400, {'ok': False, 'error': str(e)})
+        if path == '/api/design/propose':
+            text = (payload.get('brief') or '').strip()
+            if not text:
+                return self._send(400, {'ok': False, 'error': 'brief kosong'})
+            model = payload.get('model') or CHAT.get('model') or DEFAULT_MODEL
+            with LOCK:
+                CHAT['design_proposal_only'] = True
+            jid = start_job('[USUL DESAIN — JANGAN bangun scene penuh, tulis kontrak + daftar komponen + assembly saja] ' + text, model)
+            if not jid:
+                with LOCK:
+                    CHAT['design_proposal_only'] = False
+                return self._send(409, {'ok': False, 'error': 'agent masih sibuk'})
+            return self._send(200, {'ok': True, 'job': jid})
+        if path == '/api/design/proposal':
+            return self._send(200, {'ok': True, 'proposal': read_json(os.path.join(ROOT, 'design-proposal.json'), None)})
+        if path == '/api/design/approve':
+            fp = os.path.join(ROOT, 'design-proposal.json')
+            if not os.path.isfile(fp):
+                return self._send(400, {'ok': False, 'error': 'belum ada usul desain'})
+            prop = read_json(fp, {})
+            contract = prop.get('contract') or ''
+            if contract:
+                with open(os.path.join(ROOT, 'contract.md'), 'w') as f:
+                    f.write(contract)
+            os.remove(fp)
+            brief = ('Bangun scene lengkap sesuai KONTRAK YANG SUDAH DISETUJUI di contract.md. '
+                     'Ikuti setiap komponen dalam daftar objek wajib, sertakan bagian dalam & assembly bila disebut. '
+                     'Brief awal user: ' + str(prop.get('brief') or '')[:500])
+            model = payload.get('model') or prop.get('model') or CHAT.get('model') or DEFAULT_MODEL
+            jid = start_job(brief, model)
+            status('usul desain DISETUJUI — agent mulai membangun scene sesuai kontrak')
+            return self._send(200, {'ok': bool(jid), 'job': jid, 'parts': len(prop.get('parts') or [])})
         if path == '/api/direct/propose':
             text = (payload.get('brief') or '').strip()
             if not text:
@@ -2140,6 +2300,13 @@ class Handler(SimpleHTTPRequestHandler):
             os.remove(fp)
             status(f'usul sutradara DISETUJUI — {len(cp["shots"])} shot diterapkan ke tur')
             return self._send(200, {'ok': True, 'shots': len(cp['shots'])})
+        if path == '/api/knowledge/research':
+            topic = (payload.get('topic') or '').strip()
+            if not topic:
+                return self._send(400, {'ok': False, 'error': 'topik kosong'})
+            jid = 'kb-' + uuid.uuid4().hex[:10]
+            threading.Thread(target=kb_research, args=(jid, topic), daemon=True).start()
+            return self._send(200, {'ok': True, 'job': jid})
         if path == '/api/clip/imitate':
             data = payload.get('data', '')
             if ',' in data:
