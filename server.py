@@ -655,6 +655,8 @@ def call_router(model, messages, max_tokens=20000, temperature=0.4):
             q.put((m, '', str(e)))
 
     def collect(group, deadline, errors):
+        if not group:
+            return None
         threads = []
         for m in group:
             t = threading.Thread(target=worker, args=(m,), daemon=True)
@@ -681,10 +683,13 @@ def call_router(model, messages, max_tokens=20000, temperature=0.4):
     got = collect(primary, deadline, errors)
     if got:
         return got
-    status('model utama + longcat gagal — mencoba model free lain…')
-    got = collect(secondary, deadline, errors)
-    if got:
-        return got
+    if allow_fb:
+        status('model utama + longcat gagal — mencoba model free lain…')
+        got = collect(secondary, deadline, errors)
+        if got:
+            return got
+    else:
+        status('fallback NONAKTIF — tidak ada model cadangan yang dicoba')
     raise RuntimeError('semua model router gagal — ' + ' | '.join(errors[-3:] or ['timeout']))
 
 

@@ -1,3 +1,4 @@
 {
-  "fallback_enabled": true
+  "fallback_enabled": false,
+  "loop_mode": true
 }
