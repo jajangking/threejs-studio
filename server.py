@@ -1792,7 +1792,7 @@ def agent_loop(job_id, model, user_text):
     ]
     last_diff = None
     stable_sig, stable_n = None, 0
-    bad_json = 0
+    bad_json, no_progress = 0, 0
     deadline = time.time() + 600  # pengaman 10 menit, bukan pemotong kerja normal
     MAX_STEPS = 25  # tidak memotong pekerjaan; hanya pengaman anti-muter
     for step in range(1, MAX_STEPS + 1):
@@ -1856,8 +1856,17 @@ def agent_loop(job_id, model, user_text):
         allowed = ['inspect_scene', 'read_contract', 'knowledge', 'web_research', 'semantic', 'preview', 'vision', 'create_capability', 'schema', 'validate_diff']
         if CHAT.get('hermes_bridge'): allowed.append('hermes_task')
         if action not in allowed:
-            msgs.append({'role': 'user', 'content': f'Alat {action} tidak ada. Pilih dari: {", ".join(allowed)}.'})
+            no_progress += 1
+            status(f'⚠️ loop {step}/{MAX_STEPS} — action "{action or "(kosong)"}" tidak valid ({no_progress}/3), minta langkah nyata')
+            msgs.append({'role': 'user', 'content': (
+                f'Alat "{action}" tidak dikenal. Balas HANYA JSON dengan action salah satu dari: ' +
+                ', '.join(allowed) + '. Contoh: {"thought":"alasan","action":"inspect_scene","args":{}} '
+                'atau action="final" dengan diff. Jangan balas thought tanpa action.')})
+            if no_progress >= 3:
+                status('❌ loop dihentikan — 3 langkah tanpa alat/diff yang valid')
+                break
             continue
+        no_progress = 0
         status(f'🔧 loop {step}/{MAX_STEPS} — memanggil {action}…')
         res = loop_tool(action, obj.get('args'), spec, user_text)
         if action in ('semantic', 'preview', 'vision') and isinstance((obj.get('args') or {}).get('diff'), dict):
@@ -1896,7 +1905,7 @@ def agent_loop(job_id, model, user_text):
             return json.dumps(obj, ensure_ascii=False), use
     except Exception:
         pass
-    raise RuntimeError(f'loop tidak menghasilkan diff yang bisa dipakai (JSON gagal {bad_json}×, langkah {MAX_STEPS})')
+    raise RuntimeError(f'loop tidak menghasilkan diff yang bisa dipakai (JSON gagal {bad_json}×, tanpa progres {no_progress}×, langkah {MAX_STEPS})')
 
 
 def run_agent_job(job_id, user_text, model):

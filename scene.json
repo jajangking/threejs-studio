@@ -5,8 +5,8 @@
     "seed": 1,
     "spec_version": 1,
     "last_edit": "agent",
-    "iteration": "iter-17",
-    "saved_at": 1795351613.1384265
+    "iteration": "iter-18",
+    "saved_at": 1795365300.7925081
   },
   "environment": {
     "background": "#0d1322",
@@ -780,6 +780,56 @@
       "physics": {
         "body": "fixed",
         "friction": 0.6
+      }
+    },
+    {
+      "id": "domino-spin-01",
+      "type": "box",
+      "params": {
+        "width": 0.35,
+        "height": 0.9,
+        "depth": 0.12
+      },
+      "position": [
+        0,
+        0.45,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "material": {
+        "color": "#e63946",
+        "roughness": 0.35,
+        "metalness": 0.1
+      },
+      "animation": {
+        "type": "rotate",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "speed": 1.8,
+        "loop": true
+      },
+      "physics": {
+        "type": "kinematic",
+        "angularVelocity": [
+          0,
+          1.8,
+          0
+        ]
+      },
+      "onClick": {
+        "action": "toggle"
       }
     }
   ],
