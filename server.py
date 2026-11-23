@@ -1792,7 +1792,9 @@ def agent_loop(job_id, model, user_text):
     ]
     last_diff = None
     stable_sig, stable_n = None, 0
-    bad_json, no_progress = 0, 0
+    bad_json, no_progress, empty_final = 0, 0, 0
+    wants_change = bool(re.search(r'\b(tambah|tambahkan|buat|bikinin|ubah|edit|hapus|hilangkan|perpanjang|panjangkan|pendekkan|variasi|ganti|remove|add|change|modify|delete|increase|decrease)\b',
+                                  (user_text or '').lower()))
     deadline = time.time() + 600  # pengaman 10 menit, bukan pemotong kerja normal
     MAX_STEPS = 25  # tidak memotong pekerjaan; hanya pengaman anti-muter
     for step in range(1, MAX_STEPS + 1):
@@ -1807,6 +1809,12 @@ def agent_loop(job_id, model, user_text):
         status(f'🧠 loop {step}/{MAX_STEPS} — berpikir…')
         if op_sid:
             q = (msgs[0]['content'] + '\n\n' + msgs[1]['content']) if step == 1 else msgs[-1]['content']
+            if step > 1:
+                q += ('\n\n[PENGINGAT SETIAP LANGKAH] Alat DAPAT dipanggil lewat JSON action: ' +
+                      ', '.join(['inspect_scene', 'read_contract', 'knowledge', 'schema',
+                                 'validate_diff', 'semantic', 'preview', 'vision', 'create_capability'] +
+                                (['hermes_task'] if CHAT.get('hermes_bridge') else [])) +
+                      '. JANGAN mengatakan alat tidak tersedia — gunakanlah.')
             try:
                 txt = opencode_turn(op_sid, mid, q, f'🧠 loop {step}/{MAX_STEPS} — opencode berpikir…')
             except Exception as e:
@@ -1846,10 +1854,26 @@ def agent_loop(job_id, model, user_text):
                     cand, cerrs = obj['scene'], validate_spec(obj['scene'])
             except Exception as e:
                 cerrs = [str(e)[:200]]
+            dd = obj.get('diff')
+            is_empty = isinstance(dd, dict) and not any(
+                dd.get(k) for k in ('upserts', 'remove_ids', 'lights', 'camera', 'environment',
+                                    'post', 'contract', 'assembly', 'dynamicCables', 'cameraPath', 'extensions'))
+            if not isinstance(dd, dict) and isinstance(obj.get('scene'), dict):
+                is_empty = False
             if cerrs:
                 status(f'⚠️ loop {step}/{MAX_STEPS} — final ditolak preflight: {cerrs[0][:130]}')
                 msgs.append({'role': 'user', 'content': 'Diff final DITOLAK validator: ' + '; '.join(cerrs[:5]) +
                              '. Perbaiki lalu balas JSON final lagi.'})
+                continue
+            if wants_change and is_empty:
+                empty_final += 1
+                status(f'⚠️ loop {step}/{MAX_STEPS} — final DITOLAK: diff kosong padahal user meminta perubahan ({empty_final}/2)')
+                if empty_final >= 2:
+                    raise RuntimeError('agent dua kali mengirim diff kosong untuk permintaan perubahan — klaim selesai tidak diterima')
+                msgs.append({'role': 'user', 'content': (
+                    'Diff KOSONG ditolak — user meminta perubahan nyata. Jangan bilang alat tidak tersedia: '
+                    'alat inspect_scene/schema/semantic/preview DAPAT dipanggil lewat JSON action. '
+                    'Panggil inspect_scene dulu, lalu kirim diff dengan upserts/remove_ids.' )})
                 continue
             status('✅ loop selesai — preflight schema lolos')
             return json.dumps(obj, ensure_ascii=False), use
@@ -1934,7 +1958,13 @@ def run_agent_job(job_id, user_text, model):
         if not spec0:
             raise RuntimeError('model tidak menghasilkan JSON diff/scene yang valid setelah retry')
         result['scene'] = spec0
-        status(f'mode {mode0}')
+        status(f"mode {mode0}")
+        dd0 = result.get('diff') or {}
+        no_op = isinstance(dd0, dict) and not any(
+            dd0.get(k) for k in ('upserts', 'remove_ids', 'lights', 'camera', 'environment',
+                                 'post', 'contract', 'assembly', 'dynamicCables', 'cameraPath', 'extensions'))
+        if no_op:
+            status('⚠️ NO-OP — agent tidak menerapkan perubahan apa pun pada scene')
 
         errs = validate_spec(result['scene'])
         if errs:
@@ -2147,7 +2177,7 @@ def run_agent_job(job_id, user_text, model):
         if not _job_active(job_id):
             return
         perubahan = f"Perubahan diterapkan: {mode0}" if mode0 else ''
-        full_reply = f"{reply}\n\n{summary}" + (f"\n{sem_summary}" if sem_summary else '') + (f"\n{vision_summary}" if vision_summary else '') + (f"\n{bedah_summary}" if bedah_summary else '') + (f"\n{perubahan}" if perubahan else '')
+        full_reply = ('⚠️ TIDAK ADA PERUBAHAN diterapkan — agent hanya menjawab, scene tetap sama.\n\n' if no_op else '') + f"{reply}\n\n{summary}" + (f"\n{sem_summary}" if sem_summary else '') + (f"\n{vision_summary}" if vision_summary else '') + (f"\n{bedah_summary}" if bedah_summary else '') + (f"\n{perubahan}" if perubahan else '')
         append_chat_message({
             'role': 'agent', 'text': full_reply, 'at': time.time(),
             'iteration': iter_id, 'model': used_model,
